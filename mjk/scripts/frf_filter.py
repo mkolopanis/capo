@@ -6,7 +6,7 @@ import capo.zsa as zsa
 import numpy as n, pylab as p
 import sys, os, optparse
 from scipy.special import erf
-
+from IPython import embed
 def skew(cenwid, bins):
         return n.exp(-(bins-cenwid[0])**2/(2*cenwid[1]**2))*(1+erf(cenwid[2]*(bins-cenwid[0])/(n.sqrt(2)*cenwid[1]))) 
 
@@ -56,7 +56,7 @@ else:mychan=101
 
 
 #Get only the antennas of interest
-sep2ij, blconj, bl2sep = zsa.grid2ij(aa.ant_layout)
+sep2ij, blconj, bl2sep= zsa.grid2ij(aa.ant_layout)
 print "Using normalization for old FRF: ", opts.alietal
 
 print "Looking for baselines matching ", opts.ant
@@ -71,8 +71,34 @@ print 'Current inttime use for gen_frbins: ',inttime
 baselines = ''.join(sep2ij[sep] for sep in seps)
 times, data, flags = zsa.get_dict_of_uv_data(args, baselines, pol, verbose=True)
 
+##gather up cnt and var to use in fringe rate filtering
+    #print 'Reading', filename
+print 'Getting lsts stats'
+cnt, var = {}, {}
+for filename in args:
+    uv = a.miriad.UV(filename)
+    #a.scripting.uv_selector(uv, '64_49', POL)
+    for (uvw,t,(i,j)),d,f in uv.all(raw=True):
+        bl,pol = a.miriad.ij2bl(i,j), opts.pol
+        if not cnt.has_key(bl): cnt[bl] ={}
+        if not var.has_key(bl): var[bl] ={}
+        if not cnt[bl].has_key(pol): cnt[bl][pol]= []
+        if not var[bl].has_key(pol): var[bl][pol]= []
+        cnt[bl][pol] +=  [uv['cnt']]
+        var[bl][pol] +=  [uv['var']]
+for bl in data.keys():
+    for pol in data[bl].keys():
+        cnt[bl][pol] = n.array(cnt[bl][pol])
+        var[bl][pol] = n.array(var[bl][pol])
+
+#embed()
+#print 'pol',pol
+#print 'cnt shape:', n.shape(cnt[bl]['I'])
+#print 'data shape:', n.shape(data[bl]['I'])
+#sys.exit()
+
 ##use calculated inttime to generate correct frf bins
-frbins = fringe.gen_frbins(inttime,fringe_res=1./(inttime*len(times)))
+frbins = fringe.gen_frbins(inttime)
 #frbins = n.arange( -.5/inttime+5e-5/2, .5/inttime,5e-5)
 #DEFAULT_FRBINS = n.arange(-.01+5e-5/2,.01,5e-5) # Hz
 
@@ -84,7 +110,7 @@ for sep in seps:
         bl = a.miriad.ij2bl(*ij)
         if blconj[bl]: c+=1
         else: break
-    print mychan,ij,opts.bl_scale
+    print mychan,ij,opts.bl_scale,opts.maxfr
     frp, bins = fringe.aa_to_fr_profile(aa, ij, mychan, bins=frbins,pol=opts.pol,bl_scale=opts.bl_scale)
     timebins, firs[sep] = fringe.frp_to_firs(frp, bins, aa.get_afreqs(), fq0=aa.get_afreqs()[mychan],
          bl_scale=opts.bl_scale, fr_width_scale = opts.fr_width_scale, alietal = opts.alietal,maxfr=opts.maxfr)
@@ -128,7 +154,7 @@ for bl in data.keys():
         _d[bl][pol] = n.zeros_like(data[bl][pol])
         _w[bl][pol] = n.zeros_like(data[bl][pol])
         for ch in xrange(data[bl][pol].shape[1]):
-            flg = n.logical_not(flags[bl][pol][:,ch])
+            flg = n.logical_not(flags[bl][pol][:,ch]).astype(float) * cnt[bl][pol][:,ch]
             #_d[bl][pol][:,ch] = n.convolve(flags[bl][pol][:,ch]*data[bl][pol][:,ch], n.conj(firs[ch,:]), mode='same')
             _d[bl][pol][:,ch] = n.convolve(flg*data[bl][pol][:,ch], n.conj(fir[ch,:]), mode='same')
             #_d[bl][pol][:,ch] = n.convolve(flg*data[bl][pol][:,ch], firs[ch,:], mode='same')
