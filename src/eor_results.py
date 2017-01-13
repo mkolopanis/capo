@@ -448,13 +448,13 @@ def read_bootstraps_dcj(filenames,verbose=False):
     ['err_vs_t',    #not sure
      'cmd',         #the command used to generate the file
      'pCv',         #the weighted data power spectrum (no injection) (times,kpls)
-     'pk_vs_t',     #the weighted data power spectrum with injection  (times,kpls)
+     'pC',     #the weighted data power spectrum with injection  (times,kpls)
      'times',       #lsts of data bins
      'scalar',      #conversion from mk^2 to mK^2/h^3Mpc^3 (already applied to data)
-     'nocov_vs_t',  #unweighted injected signal
+     'pI',  #unweighted injected signal
      'freq',        #center frequency of bin in GHz
      'kpl',         #list of k parallels matching the kpl axis of the power spectrum
-     'temp_noise_var',  #not sure
+     'var',  #not sure
      'pIv']             #unweighted power spectrum of data (no injection)
 
     """
@@ -466,7 +466,7 @@ def read_bootstraps_dcj(filenames,verbose=False):
                 accumulated_power_spectra[thing].append(F[thing])
             except(KeyError):
                 accumulated_power_spectra[thing] = [F[thing]]
-    power_spectrum_channels = ['pk_vs_t','nocov_vs_t','err_vs_t','pCv','temp_noise_var','pIv']
+    power_spectrum_channels = ['pC','pI','err','pCv','var','pIv']
     #stack up the various power spectrum channels
     for key in accumulated_power_spectra:
         if key in power_spectrum_channels:
