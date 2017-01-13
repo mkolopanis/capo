@@ -21,8 +21,12 @@ o.add_option('--same', action='store_true',
     help='Noise is the same for all baselines.')
 o.add_option('--diff', action='store_true',
     help='Noise is different for all baseline.') 
+o.add_option('--frf', action='store_true',
+    help='FRF noise.')
 o.add_option('-i', '--inject', type='float', default=0.,
     help='EOR injection level.')
+o.add_option('--frfeor', action='store_true',
+    help='FRF injected eor.')
 o.add_option('--output', type='string', default='',
     help='Output directory for pspec_boot files (default "")')
 o.add_option('--weight', type='string', default='L^-1',
@@ -141,7 +145,7 @@ for k in days:
         key = (k,bl,POL)
         data_dict[key] = d
         flg_dict[key] = n.logical_not(flg)
-        conj_dict[key[1]] = conj[a.miriad.ij2bl(bl[0],bl[1])]
+        conj_dict[key[1]] = conj[bl]
 keys = data_dict.keys()
 bls_master = []
 for key in keys: #populate list of baselines
@@ -150,15 +154,15 @@ print 'Baselines:', len(bls_master)
 
 #Align and create dataset
 ds = oqe.DataSet()
-lsts,data_dict,flg_dict = ds.lst_align(lsts,dsets=data_dict,wgts=flg_dict) #the lsts given is a dictionary with 'even','odd', etc., but the lsts returned is one array
+inds = oqe.lst_align(lsts)
+data_dict,flg_dict,lsts = oqe.lst_align_data(inds,dsets=data_dict,wgts=flg_dict,lsts=lsts) #the lsts given is a dictionary with 'even','odd', etc., but the lsts returned is one array
 
 #Prep FRF Stuff
 timelen = data_dict[keys[0]].shape[0]
 ij = bls_master[0] #ij = (1,4)
 if blconj[a.miriad.ij2bl(ij[0],ij[1])]: #makes sure FRP will be the same whether bl is a conjugated one or not
     if ij[0] < ij[1]: temp = (ij[1],ij[0]); ij=temp
-
-sep_type = bl2sep(bls[0])
+sep_type = bl2sep[a.miriad.ij2bl(ij[0],ij[1])]
 uvw = aa.get_baseline( ij[0], ij[1], src='z')
 bins = fringe.gen_frbins(inttime)
 frp, bins = fringe.aa_to_fr_profile(aa, ij, len(afreqs)/2, bins=bins)
@@ -170,10 +174,12 @@ if opts.noise_only:
     if opts.same == None and opts.diff == None: 
         print 'Need to specify if noise is the same on all baselines (--same) or different (--diff)'
         sys.exit()
-    if opts.same: NOISE = frf((len(chans),timelen),loc=0,scale=1) #same noise on all bls
+    if opts.same and opts.frf: NOISE = frf((len(chans),timelen)) #same noise on all bls
+    if opts.same and opts.frf == None: NOISE = oqe.noise(size=(len(chans),timelen))
     for key in data_dict:
         if opts.same: thing = NOISE.T
-        if opts.diff: thing = frf((len(chans),timelen),loc=0,scale=1).T
+        if opts.diff and opts.frf: thing = frf((len(chans),timelen)).T
+        if opts.diff and opts.frf == None: thing = oqe.noise(size=(len(chans),timelen)).T
         if blconj[a.miriad.ij2bl(key[1][0],key[1][1])]: data_dict[key] = n.conj(thing)
         else: data_dict[key] = thing
         flg_dict[key] = n.ones_like(data_dict[key])
@@ -219,7 +225,8 @@ for boot in xrange(opts.nboot):
  
     if True: #shuffle and group baselines for bootstrapping
         gps = ds.gen_gps(bls_master, ngps=NGPS)
-        newkeys,dsC,dsI = ds.group_data(keys,gps) 
+        newkeys,dsC = ds.group_data(keys,gps)
+        newkeys,dsI = ds.group_data(keys,gps,use_cov=False)
     else: #no groups (slower)
         newkeys = [random.choice(keys) for key in keys] #sample w/replacement for bootstrapping
         dsI,dsC = ds,ds #identity and covariance case dataset is the same
@@ -238,10 +245,10 @@ for boot in xrange(opts.nboot):
             if key1[0] == key2[0] or key1[1] == key2[1]: 
                 continue #don't do even w/even or bl w/same bl
             else:
-                FC += dsC.get_F(key1,key2)
-                FI += dsI.get_F(key1,key2,use_cov=False)    
-                qC += dsC.q_hat(key1,key2)
-                qI += dsI.q_hat(key1,key2,use_cov=False) 
+                FC += dsC.get_F(key1,key2,cov_flagging=False)
+                FI += dsI.get_F(key1,key2,use_cov=False,cov_flagging=False)    
+                qC += dsC.q_hat(key1,key2,cov_flagging=False)
+                qI += dsI.q_hat(key1,key2,use_cov=False,cov_flagging=False) 
 
     MC,WC = dsC.get_MW(FC,mode='L^-1') #Cholesky decomposition
     MI,WI = dsI.get_MW(FI,mode='I')
@@ -274,15 +281,20 @@ for boot in xrange(opts.nboot):
     pCv = pC.copy()
     pIv = pI
     
-    ### Loop to calculate pC of (data/noise+eor) and pI of eor ###
-    print '   Getting pCr and pIe'
+    ### Loop to calculate pCr (data+eor), pIr, and pIe (eor) ###
+    print '   Getting pCr, pIr, pIe'
 
     if INJECT_SIG > 0.: #Create a fake EoR signal to inject
         print '     INJECTING SIMULATED SIGNAL'
-        eor = (frf((len(chans),timelen),loc=0,scale=1) * INJECT_SIG).T #create FRF-ered noise
+        if opts.frfeor:
+            eor = (frf((len(chans),timelen),loc=0,scale=1) * INJECT_SIG).T #create FRF-ered noise
+        else:
+            eor = (oqe.noise((len(chans),timelen)) * INJECT_SIG).T
         data_dict_2 = {}
         data_dict_eor = {}
         for key in data_dict:
+            if conj_dict[key[1]] == True: eorinject = n.conj(eor.copy()) #conjugate eor for certain baselines
+            else: eorinject = eor.copy()
             data_dict_2[key] = data_dict[key].copy() + eor.copy() #add injected signal to data
             data_dict_eor[key] = eor.copy()
 
@@ -293,47 +305,54 @@ for boot in xrange(opts.nboot):
     dse.set_data(dsets=data_dict_eor,conj=conj_dict,wgts=flg_dict)
    
     if True:
-        newkeys,ds2C,ds2I = ds2.group_data(keys,gps) #group data (gps already determined before)
-        newkeys,dseC,dseI = dse.group_data(keys,gps)
+        newkeys,ds2C = ds2.group_data(keys,gps) #group data (gps already determined before)
+        newkeys,ds2I = ds2.group_data(keys,gps,use_cov=False)
+        newkeys,dseC = dse.group_data(keys,gps)
+        newkeys,dseI = dse.group_data(keys,gps,use_cov=False)
     else: #no groups (slower)
         ds2I,ds2C = ds2,ds2 #identity and covariance case dataset is the same
         dseI,dseC = dse,dse
     
     #OQE stuff
-    FI = n.zeros((nchan,nchan), dtype=n.complex)
-    FC = n.zeros((nchan,nchan), dtype=n.complex)
-    qI = n.zeros((nchan,data_dict[key].shape[0]), dtype=n.complex)
-    qC = n.zeros((nchan,data_dict[key].shape[0]), dtype=n.complex)
+    FCr = n.zeros((nchan,nchan), dtype=n.complex)
+    FIr = n.zeros((nchan,nchan), dtype=n.complex)
+    FCe = n.zeros((nchan,nchan), dtype=n.complex)
+    FIe = n.zeros((nchan,nchan), dtype=n.complex)
+    qCr = n.zeros((nchan,data_dict[key].shape[0]), dtype=n.complex)
+    qIr = n.zeros((nchan,data_dict[key].shape[0]), dtype=n.complex)
+    qCe = n.zeros((nchan,data_dict[key].shape[0]), dtype=n.complex)
+    qIe = n.zeros((nchan,data_dict[key].shape[0]), dtype=n.complex)
     for k,key1 in enumerate(newkeys):
         #print '   ',k+1,'/',len(keys)
         for key2 in newkeys[k:]:
             if key1[0] == key2[0] or key1[1] == key2[1]:
                 continue #don't do even w/even or bl w/same bl
             else:
-                FC += ds2C.get_F(key1,key2)
-                FI += dseI.get_F(key1,key2,use_cov=False) #only eor
-                qC += ds2C.q_hat(key1,key2)
-                qI += dseI.q_hat(key1,key2,use_cov=False)
+                FCr += ds2C.get_F(key1,key2,cov_flagging=False)
+                FIr += ds2I.get_F(key1,key2,use_cov=False,cov_flagging=False)
+                FCe += dseC.get_F(key1,key2,cov_flagging=False) #only eor
+                FIe += dseI.get_F(key1,key2,use_cov=False,cov_flagging=False) #only eor
+                qCr += ds2C.q_hat(key1,key2,cov_flagging=False)
+                qIr += ds2I.q_hat(key1,key2,use_cov=False,cov_flagging=False)
+                qCe += dseC.q_hat(key1,key2,cov_flagging=False) #only eor
+                qIe += dseI.q_hat(key1,key2,use_cov=False,cov_flagging=False) #only eor
 
-    MC,WC = ds2C.get_MW(FC,mode=opts.weight) #Cholesky decomposition
-    MI,WI = dseI.get_MW(FI,mode='I')
-    pC = ds2C.p_hat(MC,qC,scalar=scalar)
-    pI = dseI.p_hat(MI,qI,scalar=scalar)
-    #print 'pC ~ ', n.median(pC)
-    #print 'pI ~ ', n.median(pI)
+    MCr,WCr = ds2C.get_MW(FCr,mode=opts.weight) 
+    MIr,WIr = ds2I.get_MW(FIr,mode='I')
+    MCe,WCe = dseC.get_MW(FCe,mode=opts.weight)
+    MIe,WIe = dseI.get_MW(FIe,mode='I')
+    pCr = ds2C.p_hat(MCr,qCr,scalar=scalar)
+    pIr = ds2I.p_hat(MIr,qIr,scalar=scalar)
+    pCe = dseC.p_hat(MCe,qCe,scalar=scalar)
+    pIe = dseI.p_hat(MIe,qIe,scalar=scalar)
     
-    #XXX Overwriting to new variables
-    pCr = pC
-    pIe = pI
-    #XXX Final variables
-    pI = pIe
-    pC = pCr # - pCv
-
-    print '   pI=', n.average(pI.real), 'pC=', n.average(pC.real), 'pI/pC=', n.average(pI.real)/n.average(pC.real)
+    print '   pCv=', n.median(pCv.real), 'pIv=', n.median(pIv)
+    print '   pIe=', n.median(pI.real), 'pCr=', n.median(pC.real), 'pIe/pCr=', n.median(pI.real)/n.median(pC.real)
 
     if PLOT:
-        p.plot(kpl, n.average(pC.real, axis=1), 'b.-')
-        p.plot(kpl, n.average(pI.real, axis=1), 'k.-')
+        p.plot(kpl, n.average(pCr.real, axis=1), 'b.-')
+        p.plot(kpl, n.average(pIr.real, axis=1), 'k.-')
+        p.title('Data + eor')
         p.show()
 
     #Save Output
@@ -341,8 +360,8 @@ for boot in xrange(opts.nboot):
     else: outpath = 'pspec_bootsigloss%04d.npz' % boot
     print '   Writing '+outpath
     n.savez(outpath, kpl=kpl, scalar=scalar, lsts=n.array(lsts),
-            pC=pC, pI=pI, pCv=pCv, pIv=pIv, err=1./cnt, var=var,
-            sep=sep_type, uvw=uvw, inject_level=INJECT_SIG,
+            pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe, pIe=pIe, 
+            err=1./cnt, var=var, sep=sep_type, uvw=uvw, inject_level=INJECT_SIG,
             freq=fq, afreqs=afreqs, cmd=' '.join(sys.argv))
 
 
