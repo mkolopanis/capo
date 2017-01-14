@@ -45,7 +45,7 @@ INJECT_SIG = opts.inject
 
 ### FUNCTIONS ###
 
-def frf(shape): #FRF NOISE
+def frf(shape,loc=0,scale=1): #FRF NOISE
     shape = shape[1]*2,shape[0] #(2*times,freqs)
     dij = oqe.noise(size=shape)
     wij = n.ones(shape,dtype=bool) #XXX flags are all true (times,freqs)
@@ -92,17 +92,13 @@ uv = a.miriad.UV(dsets.values()[0][0])
 freqs = a.cal.get_freqs(uv['sdf'], uv['sfreq'], uv['nchan'])
 sdf = uv['sdf']
 chans = a.scripting.parse_chans(opts.chan, uv['nchan'])
-#inttime = uv['inttime']
-#manually find inttime by differencing file times
-(uvw,t1,(i,j)),d = uv.read()
-(uvw,t2,(i,j)),d = uv.read()
-while t1 == t2: (uvw,t2,(i,j)),d = uv.read()
-inttime = (t2-t1)* (3600*24)
+inttime = uv['inttime']
 
 afreqs = freqs.take(chans)
 nchan = chans.size
 fq = n.average(afreqs)
 z = capo.pspec.f2z(fq)
+
 aa = a.cal.get_aa(opts.cal, afreqs)
 bls,conj = capo.red.group_redundant_bls(aa.ant_layout)
 sep2ij, blconj, bl2sep = capo.zsa.grid2ij(aa.ant_layout)
@@ -291,7 +287,7 @@ for boot in xrange(opts.nboot):
     if INJECT_SIG > 0.: #Create a fake EoR signal to inject
         print '     INJECTING SIMULATED SIGNAL'
         if opts.frfeor:
-            eor = (frf((len(chans),timelen)) * INJECT_SIG).T #create FRF-ered noise
+            eor = (frf((len(chans),timelen),loc=0,scale=1) * INJECT_SIG).T #create FRF-ered noise
         else:
             eor = (oqe.noise((len(chans),timelen)) * INJECT_SIG).T
         data_dict_2 = {}
@@ -299,8 +295,8 @@ for boot in xrange(opts.nboot):
         for key in data_dict:
             if conj_dict[key[1]] == True: eorinject = n.conj(eor.copy()) #conjugate eor for certain baselines
             else: eorinject = eor.copy()
-            data_dict_2[key] = data_dict[key].copy() + eorinject #add injected signal to data
-            data_dict_eor[key] = eorinject
+            data_dict_2[key] = data_dict[key].copy() + eor.copy() #add injected signal to data
+            data_dict_eor[key] = eor.copy()
 
     #Set data
     ds2 = oqe.DataSet() #data + eor
