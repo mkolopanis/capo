@@ -496,8 +496,8 @@ def average_bootstraps(indata,Nt_eff,avg_func=np.median,Nboots=100):
                         pCv         --> pCv,
                         pIv         --> pIv
     """
-    pspec_channels = {'pC':'pC',
-                        'pI':'pI',
+    pspec_channels = {'pCr':'pC',
+                        'pIr':'pI',
                         'pCv':'pCv',
                         'pIv':'pIv',
                         'pCe':'pCE',
