@@ -351,7 +351,7 @@ for boot in xrange(opts.nboot):
     pIe = dseI.p_hat(MIe,qIe,scalar=scalar)
     
     print '   pCv=', n.median(pCv.real), 'pIv=', n.median(pIv)
-    print '   pIe=', n.median(pI.real), 'pCr=', n.median(pC.real), 'pIe/pCr=', n.median(pI.real)/n.median(pC.real)
+    print '   pIe=', n.median(pIe.real), 'pCr=', n.median(pCr.real), 'pIe/pCr=', n.median(pIe.real)/n.median(pCr.real)
 
     if PLOT:
         p.plot(kpl, n.average(pCr.real, axis=1), 'b.-')
