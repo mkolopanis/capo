@@ -144,7 +144,7 @@ except:
 # manually find inttime by differencing file times
 
 print 'inttime:', inttime
-print 'frf_inttime', frf_inttime
+print 'frf_inttime:', frf_inttime
 afreqs = freqs.take(chans)
 nchan = chans.size
 fq = n.average(afreqs)
