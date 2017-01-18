@@ -39,14 +39,13 @@ o.add_option('-i', '--inject', type='float', default=0.,
              help='EOR injection level.')
 o.add_option('--frfeor', action='store_true',
              help='FRF injected eor.')
-o.add_options('--frf_inttime', type='float', default=1.,
-             help='Noise equivalent bandwidth of fringe rate filter used.')
+o.add_option('--frf_inttime', type='float', default=1.0,
+             help='Noise equivalent bandwidth of fringe rate filter.')
 o.add_option('--output', type='string', default='',
              help='Output directory for pspec_boot files (default "")')
 o.add_option('--weight', type='string', default='L^-1',
              help=('Choice for MC normalization '
                    'Options available L^-1 F^-1/2 I F^-1'))
-
 opts, args = o.parse_args(sys.argv[1:])
 
 # Basic parameters
