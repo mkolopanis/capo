@@ -44,6 +44,9 @@ o.add_option('--output', type='string', default='',
 o.add_option('--weight', type='string', default='L^-1',
              help=('Choice for MC normalization '
                    'Options available L^-1 F^-1/2 I F^-1'))
+o.add_option('--rmbls', dest='rmbls', type='string',
+             help=('List of baselines (ex:1_4,2_33) '
+                   'to remove from the power spectrum analysis.'))
 
 opts, args = o.parse_args(sys.argv[1:])
 
@@ -55,6 +58,17 @@ DELAY = False
 NGPS = 5  # number of groups to break the random sampled bls into
 PLOT = opts.plot
 INJECT_SIG = opts.inject
+
+try:
+    rmbls = []
+    rmbls_list = opts.rmbls.split(',')
+    for bl in rmbls_list:
+        i, j = bl.split('_')
+        rmbls.append(a.miriad.ij2bl(int(i), int(j)))
+    print 'Removing baselines:', rmbls
+    # rmbls = map(int, opts.rmbls.split(','))
+except:
+    rmbls = []
 
 # FUNCTIONS #
 
@@ -183,6 +197,14 @@ for k in days:
                                                        polstr=POL,
                                                        verbose=True)
     lsts[k] = n.array(lsts[k]['lsts'])
+    if rmbls:
+        print "Removing baselines:",
+
+    for bl in rmbls:
+        data[k].pop(a.miriad.bl2ij(bl), None)
+        flgs[k].pop(a.miriad.bl2ij(bl), None)
+        print bl,
+
     for bl in data[k]:
         d = n.array(data[k][bl][POL])[:, chans] * jy2T
         # extract frequency range
