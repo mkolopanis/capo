@@ -82,6 +82,8 @@ for sep in seps:
                                              fq0=aa.get_freqs()[mychan])
 
 frps_neqb, frp_freqs = fringe.fir_to_frp(firs[sep], tbins=timebins)
+# 1.2 multiplication, Calibrated against square filter of
+# equivalent size.
 frf_inttime = 1.2/noise_equivalent_bandwidth(frp_freqs, frps_neqb[mychan])
 
 print 'The FRF has a noise equivalent bandwidth [s]: ', frf_inttime
