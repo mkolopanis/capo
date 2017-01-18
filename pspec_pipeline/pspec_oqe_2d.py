@@ -134,14 +134,18 @@ uv = a.miriad.UV(dsets.values()[0][0])
 freqs = a.cal.get_freqs(uv['sdf'], uv['sfreq'], uv['nchan'])
 sdf = uv['sdf']
 chans = a.scripting.parse_chans(opts.chan, uv['nchan'])
-# inttime = uv['inttime']
+inttime = uv['inttime']
+# try to take the frf_inttime from the file
+# for old filtered files, need to use parameter still
+try:
+    frf_inttime = uv['FRF_NEBW']
+except:
+    frf_inttime = opts.frf_inttime
 # manually find inttime by differencing file times
-(uvw, t1, (i, j)), d = uv.read()
-(uvw, t2, (i, j)), d = uv.read()
-while t1 == t2:  # This will break for UV files with only 1 time
-    (uvw, t2, (i, j)), d = uv.read()
-inttime = (t2-t1) * (3600*24)
 
+print 'inttime:', inttime
+print 'frf_inttime', frf_inttime
+sys.exit(0)
 afreqs = freqs.take(chans)
 nchan = chans.size
 fq = n.average(afreqs)
@@ -241,7 +245,6 @@ sep_type = bl2sep[a.miriad.ij2bl(ij[0], ij[1])]
 # convert uvw in light-nanoseconds to m, (cosmo_units.c in m/s)
 uvw = aa.get_baseline(ij[0], ij[1], src='z') * cosmo_units.c * 1e-9
 bins = fringe.gen_frbins(inttime)
-frf_inttime = opts.frf_inttime
 frp, bins = fringe.aa_to_fr_profile(aa, ij, len(afreqs)/2, bins=bins)
 timebins, firs = fringe.frp_to_firs(frp, bins, aa.get_freqs(),
                                     fq0=aa.get_freqs()[len(afreqs)/2])
