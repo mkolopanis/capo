@@ -205,7 +205,7 @@ for k in days:
         data[k].pop(a.miriad.bl2ij(bl), None)
         flgs[k].pop(a.miriad.bl2ij(bl), None)
         print bl,
-
+    print ''
     for bl in data[k]:
         d = n.array(data[k][bl][POL])[:, chans] * jy2T
         # extract frequency range
