@@ -24,7 +24,7 @@ parser.add_argument('files', metavar='<FILE>', type=str, nargs='+',
 #                    help='length of baseline in meters')
 parser.add_argument('--sub_pCv', action='store_true',
                     help='Remove pCv back from pC before averaging')
-parser.add_argument('--outfile', type=str, default='./',
+parser.add_argument('--output', type=str, default='./',
                     help='Specifically specify out directory.')
 parser.add_argument('--nboots', type=int, default=100,
                     help='Number of Bootstraps (averages) default=100')
@@ -83,5 +83,5 @@ for key in pk_pspecs.keys():
     except:
         import ipdb
         ipdb.set_trace()
-print args.outfile + 'pspec_pk_k3pk.npz'
-np.savez(args.outfile + 'pspec_pk_k3pk.npz', **pk_pspecs)
+print args.output + 'pspec_pk_k3pk.npz'
+np.savez(args.output + 'pspec_pk_k3pk.npz', **pk_pspecs)
