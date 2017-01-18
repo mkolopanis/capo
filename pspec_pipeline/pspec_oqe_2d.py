@@ -39,6 +39,8 @@ o.add_option('-i', '--inject', type='float', default=0.,
              help='EOR injection level.')
 o.add_option('--frfeor', action='store_true',
              help='FRF injected eor.')
+o.add_options('--frf_inttime', type='float', default=1.,
+             help='Noise equivalent bandwidth of fringe rate filter used.')
 o.add_option('--output', type='string', default='',
              help='Output directory for pspec_boot files (default "")')
 o.add_option('--weight', type='string', default='L^-1',
@@ -218,6 +220,7 @@ sep_type = bl2sep[a.miriad.ij2bl(ij[0], ij[1])]
 # convert uvw in light-nanoseconds to m, (a.const.c in cm/s)
 uvw = aa.get_baseline(ij[0], ij[1], src='z') * a.const.c*1e-9*1e-2
 bins = fringe.gen_frbins(inttime)
+frf_inttime = opts.frf_inttime
 frp, bins = fringe.aa_to_fr_profile(aa, ij, len(afreqs)/2, bins=bins)
 timebins, firs = fringe.frp_to_firs(frp, bins, aa.get_freqs(),
                                     fq0=aa.get_freqs()[len(afreqs)/2])
@@ -461,6 +464,7 @@ for boot in xrange(opts.nboot):
     print '   Writing ' + outpath
     n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
             pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe, pIe=pIe,
-            err=1./cnt, var=var, sep=sep_type, uvw=uvw,
+            err=1./cnt, var=var, sep=sep_type, uvw=uvw, 
+            frf_inttime=frf_inttime, inttime=inttime,
             inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
             cmd=' '.join(sys.argv))
