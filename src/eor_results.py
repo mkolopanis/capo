@@ -489,16 +489,8 @@ def average_bootstraps(indata,Nt_eff,avg_func=np.median,Nboots=100):
         Nt_eff:effective number of independent time samples
     output: a matching dictionary of arrays such as read in by power spectrum
     plotting tools.
-    NB: the important pspec channels are renamed for consistency
-        pspec channels: (input --> output)
-                        pk_vs_t     --> pC,
-                        nocov_vs_t  --> pI,
-                        pCv         --> pCv,
-                        pIv         --> pIv
     """
-    pspec_channels = {'pCr':'pC',
-                        'pIr':'pI',
-                        'pCv':'pCv',
+    pspec_channels = {  'pCv':'pCv',
                         'pIv':'pIv',
                         'pCe':'pCE',
                         'pIe':'pIe',
