@@ -65,7 +65,7 @@ print "freq = ", pspecs['freq']
 print "kperp = ", kperp
 pk_pspecs['k'] = np.sqrt(kperp**2 + pk_pspecs['kpl_fold']**2)
 # apply corrections to all the various channels
-pspec_channels = ['pC', 'pI', 'pCv', 'pIv']
+pspec_channels = ['pCr', 'pIr', 'pCv', 'pIv']
 corrections = [1/np.sqrt(2),  # the median overestimates by sqrt(2)
                1.39]        # beam^2
 # for chan in pspec_channels:
