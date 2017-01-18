@@ -152,7 +152,7 @@ def frp_to_firs(frp0, bins, fqs, fq0=.150, limit_maxfr=True, limit_xtalk=True, f
         firs /= n.sqrt(n.sum(n.abs(firs)**2,axis=1).reshape(-1,1)) # normalize so that n.sum(abs(fir)**2) = 1
     return tbins, firs
 
-def apply_frf(aa, data, wgts, i, j, pol='I', firs=None, alietal=alietal,
+def apply_frf(aa, data, wgts, i, j, pol='I', firs=None, alietal=False,
               **kwargs):
     '''Generate & apply fringe-rate filter to data for baseline (i,j).'''
     freqs, nchan = aa.get_afreqs(), data.shape[-1]
