@@ -145,7 +145,6 @@ except:
 
 print 'inttime:', inttime
 print 'frf_inttime', frf_inttime
-sys.exit(0)
 afreqs = freqs.take(chans)
 nchan = chans.size
 fq = n.average(afreqs)
