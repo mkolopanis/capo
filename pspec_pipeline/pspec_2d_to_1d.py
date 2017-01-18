@@ -16,7 +16,8 @@ import numpy as np
 from IPython import embed
 
 parser = argparse.ArgumentParser(
-            description='Calculate power spectra for a run from pspec_oqe_2d.py')
+            description=('Calculate power spectra for a run '
+                         'from pspec_oqe_2d.py'))
 parser.add_argument('files', metavar='<FILE>', type=str, nargs='+',
                     help='List of files to average')
 # parser.add_argument('--bl_length', type=float,  required=True,

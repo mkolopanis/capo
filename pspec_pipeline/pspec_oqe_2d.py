@@ -12,7 +12,7 @@ import glob
 import optparse
 import sys
 import random
-from capo import zsa, oqe, frf_conv as fringe
+from capo import zsa, oqe, cosmo_units, frf_conv as fringe
 import capo
 
 o = optparse.OptionParser()
@@ -46,6 +46,9 @@ o.add_option('--output', type='string', default='',
 o.add_option('--weight', type='string', default='L^-1',
              help=('Choice for MC normalization '
                    'Options available L^-1 F^-1/2 I F^-1'))
+o.add_option('--rmbls', dest='rmbls', type='string',
+             help=('List of baselines (ex:1_4,2_33) '
+                   'to remove from the power spectrum analysis.'))
 opts, args = o.parse_args(sys.argv[1:])
 
 # Basic parameters
@@ -56,6 +59,17 @@ DELAY = False
 NGPS = 5  # number of groups to break the random sampled bls into
 PLOT = opts.plot
 INJECT_SIG = opts.inject
+
+try:
+    rmbls = []
+    rmbls_list = opts.rmbls.split(',')
+    for bl in rmbls_list:
+        i, j = bl.split('_')
+        rmbls.append(a.miriad.ij2bl(int(i), int(j)))
+    print 'Removing baselines:', rmbls
+    # rmbls = map(int, opts.rmbls.split(','))
+except:
+    rmbls = []
 
 # FUNCTIONS #
 
@@ -184,6 +198,14 @@ for k in days:
                                                        polstr=POL,
                                                        verbose=True)
     lsts[k] = n.array(lsts[k]['lsts'])
+    if rmbls:
+        print "Removing baselines:",
+
+    for bl in rmbls:
+        data[k].pop(a.miriad.bl2ij(bl), None)
+        flgs[k].pop(a.miriad.bl2ij(bl), None)
+        print bl,
+
     for bl in data[k]:
         d = n.array(data[k][bl][POL])[:, chans] * jy2T
         # extract frequency range
@@ -216,8 +238,8 @@ if blconj[a.miriad.ij2bl(ij[0], ij[1])]:
         temp = (ij[1], ij[0])
         ij = temp
 sep_type = bl2sep[a.miriad.ij2bl(ij[0], ij[1])]
-# convert uvw in light-nanoseconds to m, (a.const.c in cm/s)
-uvw = aa.get_baseline(ij[0], ij[1], src='z') * a.const.c*1e-9*1e-2
+# convert uvw in light-nanoseconds to m, (cosmo_units.c in m/s)
+uvw = aa.get_baseline(ij[0], ij[1], src='z') * cosmo_units.c * 1e-9
 bins = fringe.gen_frbins(inttime)
 frf_inttime = opts.frf_inttime
 frp, bins = fringe.aa_to_fr_profile(aa, ij, len(afreqs)/2, bins=bins)
@@ -447,7 +469,8 @@ for boot in xrange(opts.nboot):
     pIe = dseI.p_hat(MIe, qIe, scalar=scalar)
 
     print '   pCv=', n.median(pCv.real), 'pIv=', n.median(pIv)
-    print '   pIe=', n.median(pIe.real), 'pCr=', n.median(pCr.real), 'pIe/pCr=', n.median(pIe.real)/n.median(pCr.real)
+    print '   pIe=', n.median(pIe.real), 'pCr=', n.median(pCr.real),
+    print ' pIe/pCr=', n.median(pIe.real)/n.median(pCr.real)
 
     if PLOT:
         p.plot(kpl, n.average(pCr.real, axis=1), 'b.-')
@@ -463,7 +486,7 @@ for boot in xrange(opts.nboot):
     print '   Writing ' + outpath
     n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
             pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe, pIe=pIe,
-            err=1./cnt, var=var, sep=sep_type, uvw=uvw, 
+            err=1./cnt, var=var, sep=sep_type, uvw=uvw,
             frf_inttime=frf_inttime, inttime=inttime,
             inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
             cmd=' '.join(sys.argv))
