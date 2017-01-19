@@ -11,8 +11,8 @@ DIRNAME=$2
 ### My Options ###
 RA='4_10'
 CALFILE='psa6622_v003'
-EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} "${EVEN_FILES[@]}"`
-ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} "${ODD_FILES[@]}"`
+EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
+ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
 SEP='0,2'
 CHAN='79_99'
 NBOOT=20
