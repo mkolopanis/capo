@@ -31,8 +31,10 @@ args = parser.parse_args(sys.argv[1:])
 pspecs = read_bootstraps_dcj(args.files)
 Nlstbins = np.shape(pspecs['pCr'])[-1]
 # get the number of lst integrations in the dataset
-try: t_eff = pspecs['frf_inttime']/pspecs['inttime']
-except: t_eff = 3887./32. #XXX PSA128
+try:
+    t_eff = pspecs['frf_inttime']/pspecs['inttime']
+except:
+    t_eff = 3887./32.  # XXX PSA128S
 Neff_lst = np.ceil(Nlstbins/t_eff)
 # compute the effective number of LST bins
 # print Neff_lst
@@ -64,8 +66,8 @@ for key in pk_pspecs.keys():
     if pk_pspecs[key].dtype not in [np.float]:
         continue
     try:
-        pk_pspecs[key].fill_value = 0 #fills invalid values with 0's
-        pk_pspecs[key] = pk_pspecs[key].filled() #returns corrected array
+        pk_pspecs[key].fill_value = 0  # fills invalid values with 0's
+        pk_pspecs[key] = pk_pspecs[key].filled()  # returns corrected array
     except:
         import ipdb
         ipdb.set_trace()
