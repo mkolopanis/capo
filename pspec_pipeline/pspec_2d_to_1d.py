@@ -50,7 +50,7 @@ if args.sub_pCv:
 
 # compute Pk vs kpl vs bootstraps
 pk_pspecs = average_bootstraps(pspecs, Nt_eff=Neff_lst,
-                               Nboots=args.nboots, avg_func=np.mean)
+                               Nboots=args.nboots, avg_func=np.median)
 
 # Compute |k|
 bl_length = np.linalg.norm(pspecs['uvw'])
@@ -64,8 +64,8 @@ for key in pk_pspecs.keys():
     if pk_pspecs[key].dtype not in [np.float]:
         continue
     try:
-        pk_pspecs[key].fill_value = 0
-        pk_pspecs[key] = pk_pspecs[key].filled()
+        pk_pspecs[key].fill_value = 0 #fills invalid values with 0's
+        pk_pspecs[key] = pk_pspecs[key].filled() #returns corrected array
     except:
         import ipdb
         ipdb.set_trace()
