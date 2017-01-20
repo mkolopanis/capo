@@ -470,7 +470,7 @@ for boot in xrange(opts.nboot):
     pCe = dseC.p_hat(MCe, qCe, scalar=scalar)
     pIe = dseI.p_hat(MIe, qIe, scalar=scalar)
 
-    print '   pCv=', n.median(pCv.real), 'pIv=', n.median(pIv)
+    print '   pCv=', n.median(pCv.real), 'pIv=', n.median(pIv.real)
     print '   pIe=', n.median(pIe.real), 'pCr=', n.median(pCr.real),
     print ' pIe/pCr=', n.median(pIe.real)/n.median(pCr.real)
 
