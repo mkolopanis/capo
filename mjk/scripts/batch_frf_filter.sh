@@ -8,7 +8,7 @@ chan='101'
 indir=$1
 outdir=$2
 
-scriptsdir=/home/mkolopanis/src/capo/mjk/scripts
+scriptsdir=/home/mkolopanis/src/capo/pspec_pipeline
 
 alietal=false
 
