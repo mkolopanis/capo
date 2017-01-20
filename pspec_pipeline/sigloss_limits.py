@@ -105,12 +105,12 @@ def atanh(p, m, s, c, a):
 # read in the bootstrapped pspecs
 pspec_channels = ['pCv_fold', 'pCv_fold_err',  # weighted data pspec
                   'pIv_fold', 'pIv_fold_err',  # unweighted data pspec
-                  'pC_fold', 'pC_fold_err',  # weighted data+inj pspec
-                  'pI_fold', 'pI_fold_err',  # unweighted inj pspec
+                  'pCr_fold', 'pCr_fold_err',  # weighted data+inj pspec
+                  'pIe_fold', 'pIe_fold_err',  # unweighted inj pspec
                   'pCv', 'pCv_err',  # weighted data pspec
                   'pIv', 'pIv_err',  # unweighted data pspec
-                  'pC', 'pC_err',  # weighted data+inj pspec
-                  'pI', 'pI_err']  # unweighted inj pspec pos and neg kpls
+                  'pCr', 'pCr_err',  # weighted data+inj pspec
+                  'pIe', 'pIe_err']  # unweighted inj pspec pos and neg kpls
 pspecs = {}
 
 # sort the input files. makes things easier later
@@ -147,11 +147,11 @@ for inj in xrange(Ninj):
                        pspecs['pCv_fold_err'][0, k_ind])
         if k_ind == 5:
             print "lossy_limit: ", lossy_limit
-            print "pC lower limit", (pspecs['pC_fold'][inj, k_ind] -
-                                     pspecs['pC_fold_err'][inj, k_ind])
+            print "pCr lower limit", (pspecs['pCr_fold'][inj, k_ind] -
+                                     pspecs['pCr_fold_err'][inj, k_ind])
         probs[inj, k_ind] = G_mc(lossy_limit,  # limit
-                                 pspecs['pC_fold'][inj, k_ind],
-                                 pspecs['pC_fold_err'][inj, k_ind])
+                                 pspecs['pCr_fold'][inj, k_ind],
+                                 pspecs['pCr_fold_err'][inj, k_ind])
         # probs_full[inj, k_ind] = G_mc_full(lossy_limit,  # limit
         #                                    pspecs['pC_fold'][inj, k_ind],
         #                                    pspecs['pC_fold_err'][inj, k_ind])
@@ -161,7 +161,7 @@ tanh_parms = []
 # tanh_parms_full = []
 for k_ind in xrange(Nk):
     tanh_parms.append(fit_prob_to_tanh(probs[:, k_ind],
-                      pspecs['pI_fold'][:, k_ind]))
+                      pspecs['pIe_fold'][:, k_ind]))
     # tanh_parms_full.append(fit_prob_to_tanh(probs_full[:, k_ind],
     #                        pspecs['pI_fold'][:, k_ind]))
 # figure(10)
@@ -192,7 +192,7 @@ for k_ind in xrange(Nk):
 # plt.close(10)
 figure()
 for k_ind in xrange(Nk):
-    plt.semilogx(pspecs['pI_fold'][:, k_ind], probs[:, k_ind],
+    plt.semilogx(pspecs['pIe_fold'][:, k_ind], probs[:, k_ind],
                  '-', label=k[k_ind])
     # plt.semilogx(pspecs['pI_fold'][:,k_ind],
     #              tanh(pspecs['pI_fold'][:, k_ind],
