@@ -17,6 +17,7 @@ SEP='0,1'
 CHAN='95_115'
 NBOOT=30
 POL='I'
+weight='L^-1'
 WINDOW='none'
 FRFEOR='--frfeor' #to FRF the injected EOR, leave this on
 SUBPCV='' #to subtract pCv before bootstrapping, leave this on
@@ -31,7 +32,7 @@ echo Making Directory ${DIRNAME}
 for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-2,3,10)))"` ; do
     mkdir ${DIRNAME}/inject_sep${SEP}_${inject}
     echo SIGNAL_LEVEL=${inject}
-    ~/src/capo/pspec_pipeline/pspec_oqe_2d.py --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -b ${NBOOT} ${FRFEOR} -i ${inject} --output ${DIRNAME}/inject_sep${SEP}_${inject} ${EVEN_FILES} ${ODD_FILES}
+    ~/src/capo/pspec_pipeline/pspec_oqe_2d.py --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -b ${NBOOT} ${FRFEOR} -i ${inject} --weight=${weight} --output ${DIRNAME}/inject_sep${SEP}_${inject} ${EVEN_FILES} ${ODD_FILES}
 
     # Stage 2: pspec_2d_to_1d.py
     ~/src/capo/pspec_pipeline/pspec_2d_to_1d.py ${SUBPCV} --output ${DIRNAME}/inject_sep${SEP}_${inject}/ ${DIRNAME}/inject_sep${SEP}_${inject}/*boot*
