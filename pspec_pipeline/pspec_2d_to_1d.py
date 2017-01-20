@@ -66,8 +66,8 @@ for key in pk_pspecs.keys():
     if pk_pspecs[key].dtype not in [np.float]:
         continue
     try:
-        pk_pspecs[key].fill_value = 0 #fills invalid values with 0's
-        pk_pspecs[key] = pk_pspecs[key].filled() #returns corrected array
+        pk_pspecs[key].fill_value = 0  # fills invalid values with 0's
+        pk_pspecs[key] = pk_pspecs[key].filled()  # returns corrected array
     except:
         import ipdb
         ipdb.set_trace()
