@@ -4,23 +4,23 @@
 
 ### My Paths ###
 DATA=$1
-EVEN_FILES=${DATA}'/even/sep0,1/lst.*.uvGAL'
-ODD_FILES=${DATA}'/odd/sep0,1/lst.*.uvGAL'
+EVEN_FILES=${DATA}'/even/sep0,2/*I.uvGAL'
+ODD_FILES=${DATA}'/odd/sep0,2/*I.uvGAL'
 DIRNAME=$2
 
 ### My Options ###
-RA='0_8.5'
-CALFILE='psa6240_v003'
+RA='4_10'
+CALFILE='psa6622_v003'
 EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
-SEP='0,1'
-CHAN='95_115'
-NBOOT=30
+SEP='0,2'
+CHAN='79_99'
+NBOOT=20
 POL='I'
 weight='L^-1'
 WINDOW='none'
 FRFEOR='--frfeor' #to FRF the injected EOR, leave this on
-SUBPCV='' #to subtract pCv before bootstrapping, leave this on
+SUBPCV='--sub_pCv' #to subtract pCv before bootstrapping, leave this on
 
 #-----------------------------------------------------------------
 
