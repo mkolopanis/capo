@@ -63,13 +63,11 @@ for path in $days; do
 
             printf '%s/frf_filter.py -C %s  --alietal -a %s -c %s  --outpath=%s/' \
             $scriptsdir  $cal ${ants[$sep]} $chan h ${outpath}
-            printf '%s\n' $path/$sep
             "${scriptsdir}/frf_filter.py" -C $cal -a ${ants[$sep]} -C $cal --alietal \
             $files --outpath=${outpath} -c $chan
 
         else
             printf '%s/frf_filter.py -C %s   -a %s -c %s --outpath=%s/' $scriptsdir $cal ${ants[$sep]} $chan ${outpath}
-            printf '%s\n' $path/$sep
             "${scriptsdir}/frf_filter.py" -C $cal -a ${ants[$sep]} -C $cal\
             $files --outpath=${outpath} -c $chan --pol=I
 

@@ -145,6 +145,8 @@ def mfunc(uv, p, d, f):
 
 for filename in args:
     if opts.outpath:
+        # split on last directory if writing to new directory
+        new_name = filename.split('/')[-1]
         outfile = opts.outpath + '/'+filename+'L'
     else:
         outfile = filename+'L'
