@@ -351,7 +351,7 @@ for boot in xrange(opts.nboot):
     pI = dsI.p_hat(MI, qI, scalar=scalar)
     # print 'pC ~ ', n.median(pC)
     # print 'pI ~ ', n.median(pI)
-    import IPython;IPython.embed()
+    
     if PLOT:
         p.subplot(121)
         capo.arp.waterfall(FC, drng=4)
