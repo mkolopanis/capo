@@ -1,3 +1,4 @@
+#!/bin/bash
 ### Sample Call ###
 #   $ pspec_batch.sh <path to LST-binned files> <directory name to save all outputs>#   ex: pspec_batch.sh /data4/paper/2013EoR/Analysis/ProcessedData/epoch2/omni_v3_xtalk/lstbin pspec_jan2017
 
@@ -16,6 +17,7 @@ SEP='0,2'
 CHAN='79_99'
 NBOOT=20
 POL='I'
+weight='L^-1'
 WINDOW='none'
 FRFEOR='--frfeor' #to FRF the injected EOR, leave this on
 SUBPCV='--sub_pCv' #to subtract pCv before bootstrapping, leave this on
@@ -27,12 +29,11 @@ mkdir ${DIRNAME}
 echo Making Directory ${DIRNAME}
 
 # Stage 1: pspec_oqe_2d.py over range of injection levels
-for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-1,3,10)))"` ; do
+for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-2,3,10)))"` ; do
     mkdir ${DIRNAME}/inject_sep${SEP}_${inject}
     echo SIGNAL_LEVEL=${inject}
-    ~/capo/pspec_pipeline/pspec_oqe_2d.py --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -b ${NBOOT} ${FRFEOR} -i ${inject} --output ${DIRNAME}/inject_sep${SEP}_${inject} ${EVEN_FILES} ${ODD_FILES}
-done
-    
-    # Stage 2: pspec_2d_to_1d.py 
-    ~/capo/pspec_pipeline/pspec_2d_to_1d.py ${SUBPCV} --output ${DIRNAME} ${DIRNAME}/inject_sep${SEP}_${inject}/*boot*
+    ~/src/capo/pspec_pipeline/pspec_oqe_2d.py --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -b ${NBOOT} ${FRFEOR} -i ${inject} --weight=${weight} --output ${DIRNAME}/inject_sep${SEP}_${inject} ${EVEN_FILES} ${ODD_FILES}
 
+    # Stage 2: pspec_2d_to_1d.py
+    ~/src/capo/pspec_pipeline/pspec_2d_to_1d.py ${SUBPCV} --output ${DIRNAME}/inject_sep${SEP}_${inject}/ ${DIRNAME}/inject_sep${SEP}_${inject}/*boot*
+done
