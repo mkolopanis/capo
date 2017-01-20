@@ -8,7 +8,7 @@ chan='101'
 indir=$1
 outdir=$2
 
-scriptsdir=/home/mjk/scripts
+scriptsdir=/home/mkolopanis/src/capo/mjk/scripts
 
 alietal=false
 
