@@ -106,7 +106,7 @@ def atanh(p, m, s, c, a):
 pspec_channels = ['pCv_fold', 'pCv_fold_err',  # weighted data pspec
                   'pIv_fold', 'pIv_fold_err',  # unweighted data pspec
                   'pCr_fold', 'pCr_fold_err',  # weighted data+inj pspec
-                  'pIr_fold', 'pIr_fold_err',  # unweighted inj pspec
+                  'pIe_fold', 'pIe_fold_err',  # unweighted inj pspec
                   'pCv', 'pCv_err',  # weighted data pspec
                   'pIv', 'pIv_err',  # unweighted data pspec
                   'pCr', 'pCr_err',  # weighted data+inj pspec
