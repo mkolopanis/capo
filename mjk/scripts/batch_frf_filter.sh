@@ -24,7 +24,7 @@ sleep 1.5
 if [ ! -d $out   ]; then
     printf 'This output director appears to be new\n'
     printf 'Creating Directoires now\n'
-    for path in $paths; do
+    for path in $days; do
         for sep in $seps; do
             mkdir -p ${out}/${path}/${sep}
         done
