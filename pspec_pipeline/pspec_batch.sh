@@ -34,5 +34,5 @@ for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-
     ~/src/capo/pspec_pipeline/pspec_oqe_2d.py --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -b ${NBOOT} ${FRFEOR} -i ${inject} --output ${DIRNAME}/inject_sep${SEP}_${inject} ${EVEN_FILES} ${ODD_FILES}
 
     # Stage 2: pspec_2d_to_1d.py
-    ~/src/capo/pspec_pipeline/pspec_2d_to_1d.py ${SUBPCV} --output ${DIRNAME} ${DIRNAME}/inject_sep${SEP}_${inject}/*boot*
+    ~/src/capo/pspec_pipeline/pspec_2d_to_1d.py ${SUBPCV} --output ${DIRNAME}/inject_sep${SEP}_${inject}/ ${DIRNAME}/inject_sep${SEP}_${inject}/*boot*
 done
