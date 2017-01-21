@@ -2,7 +2,6 @@ import numpy as n,os
 from capo import pspec
 from capo.cosmo_units import f212z, c
 import glob
-import ipdb
 import matplotlib.pyplot as p
 import numpy as np
 #measurements
