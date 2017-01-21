@@ -39,6 +39,8 @@ o.add_option('-i', '--inject', type='float', default=0.,
              help='EOR injection level.')
 o.add_option('--frfeor', action='store_true',
              help='FRF injected eor.')
+o.add_option('--doublefrf', action='store_true',
+             help='Double FRF injected eor.')
 o.add_option('--frf_inttime', type='float', default=1.0,
              help='Noise equivalent bandwidth of fringe rate filter.')
 o.add_option('--output', type='string', default='',
@@ -82,6 +84,12 @@ def frf(shape):  # FRF NOISE
     # dij and wij are (times,freqs)
     _d, _w, _, _ = fringe.apply_frf(aa, dij, wij, ij[0], ij[1],
                                     pol=POL, bins=bins, firs=fir)
+    if opts.doublefrf == True and opts.frf == None: #XXX can't do double FRF of eor and single FRF of noise, since they both call the same function
+        _d, _w, _, _ = fringe.apply_frf(aa, _d, wij, ij[0], ij[1],
+                                            pol=POL, bins=bins, firs=fir)
+    if opts.doublefrf == True and opts.frf == True:
+        print "Not supported yet!!!"
+        exit() 
     _d = n.transpose(_d)
     _d = _d[:, shape[0]/4:shape[0]/2+shape[0]/4]
     return _d
@@ -398,7 +406,7 @@ for boot in xrange(opts.nboot):
     print '   Getting pCr, pIr, pIe'
 
     if INJECT_SIG > 0.:  # Create a fake EoR signal to inject
-        print '     INJECTING SIMULATED SIGNAL'
+        print '     INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
         if opts.frfeor:
             eor = (frf((len(chans), timelen)) * INJECT_SIG).T
             # create FRF-ered noise
