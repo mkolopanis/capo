@@ -20,8 +20,6 @@ parser = argparse.ArgumentParser(
                          'from pspec_oqe_2d.py'))
 parser.add_argument('files', metavar='<FILE>', type=str, nargs='+',
                     help='List of files to average')
-parser.add_argument('--sub_pCv', action='store_true',
-                    help='Remove pCv back from pC before averaging')
 parser.add_argument('--output', type=str, default='./',
                     help='Specifically specify out directory.')
 parser.add_argument('--nboots', type=int, default=100,
@@ -47,8 +45,8 @@ for key in pspecs.keys():
     except:
         import ipdb
         ipdb.set_trace()
-if args.sub_pCv:
-    pspecs['pCr'] -= pspecs['pCv']
+
+pspecs['pCr-pCv'] = pspecs['pCr']-pspecs['pCv'] #subtracted 
 
 # compute Pk vs kpl vs bootstraps
 pk_pspecs = average_bootstraps(pspecs, Nt_eff=Neff_lst,
