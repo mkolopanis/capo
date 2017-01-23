@@ -1,6 +1,7 @@
 #!/bin/bash
+
 ### Sample Call ###
-#   $ pspec_batch.sh <path to LST-binned files> <directory name to save all outputs>#   ex: pspec_batch.sh /data4/paper/2013EoR/Analysis/ProcessedData/epoch2/omni_v3_xtalk/lstbin pspec_jan2017
+#   $ pspec_batch.sh <path to LST-binned files> <directory name to save all outputs>
 
 ### My Paths ###
 DATA=$1
