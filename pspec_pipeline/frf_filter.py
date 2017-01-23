@@ -18,7 +18,9 @@ def noise_equivalent_bandwidth(t, H):
 
 
 o = optparse.OptionParser()
-a.scripting.add_standard_options(o, cal=True, ant=True, pol=True, chan=True)
+a.scripting.add_standard_options(o, cal=True, ant=True, pol=True)
+o.add_option('-c', '--chan', type='int', default=None,
+            help='Channel to use in making the fringe rate filter.')
 o.add_option('--alietal', action='store_true',
              help='Uses normalization for alietal frf,(default=False)')
 o.add_option('--outpath', action='store',
@@ -48,7 +50,7 @@ inttime = (t2-t1) * (3600*24)
 del(uv)
 
 # set channel to calculate the FRF
-if opts.chan:
+if opts.chan != None:
     mychan = int(opts.chan)
 else:
     mychan = 101
