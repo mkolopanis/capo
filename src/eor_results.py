@@ -9,7 +9,7 @@ import matplotlib.pyplot as p
 import numpy as np
 
 
-def (data, axis=1, per=95):
+def errorbars(data, axis=1, per=95):
     """Calculate upper, middle and lower limits of given percentile range."""
     mean = n.percentile(data, 50, axis=axis)
     lower = mean - n.percentile(data, 50 - per / 2., axis=axis)
