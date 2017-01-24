@@ -47,6 +47,7 @@ for key in pspecs.keys():
         ipdb.set_trace()
 
 pspecs['pCr-pCv'] = pspecs['pCr']-pspecs['pCv'] #subtracted 
+pspecs['pCs-pCn'] = pspecs['pCs']-pspecs['pCn']
 
 # compute Pk vs kpl vs bootstraps
 pk_pspecs = average_bootstraps(pspecs, Nt_eff=Neff_lst,
