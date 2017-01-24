@@ -67,5 +67,5 @@ for key in pk_pspecs.keys():
     except:
         import ipdb
         ipdb.set_trace()
-print args.output + 'pspec_pk_k3pk.npz'
+print 'Saving', args.output + 'pspec_pk_k3pk.npz'
 np.savez(args.output + 'pspec_pk_k3pk.npz', **pk_pspecs)
