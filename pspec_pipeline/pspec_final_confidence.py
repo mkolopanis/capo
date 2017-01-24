@@ -161,7 +161,7 @@ for k_ind in xrange(Nk):
 
 figure()
 for k_ind in xrange(Nk):
-    plt.semilogx(pspecs['pIe_fold'][:, k_ind], probs[:, k_ind],
+    plt.semilogx(pspecs['pIe_fold'][:, k_ind], probs_data[:, k_ind],
                  '-', label=k[k_ind])
 grid()
 legend(loc='best')
