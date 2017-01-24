@@ -29,12 +29,8 @@ o.add_option('--sep', default='sep0,1', action='store',
              help='Which separation directory to use for signal loss data.')
 o.add_option('-i', '--inject', type='float', default=0.,
              help='EOR injection level.')
-o.add_option('--frfeor', action='store_true',
-             help='FRF injected eor.')
 o.add_option('--doublefrf', action='store_true',
-             help='Double FRF injected eor.')
-o.add_option('--frf_inttime', type='float', default=1.0,
-             help='Noise equivalent bandwidth of fringe rate filter.')
+             help='Double FRF injected eor and noise.')
 o.add_option('--output', type='string', default='',
              help='Output directory for pspec_boot files (default "")')
 o.add_option('--weight', type='string', default='L^-1',
@@ -69,7 +65,7 @@ except:
 # FUNCTIONS #
 
 
-def frf(shape):  # FRF NOISE
+def frf(shape):  # Create and fringe rate filter noise
     """Generate White Noise and Apply FRF."""
     shape = shape[1]*2, shape[0]  # (2*times,freqs)
     dij = oqe.noise(size=shape)
@@ -80,8 +76,7 @@ def frf(shape):  # FRF NOISE
     if opts.doublefrf == True:
         _d, _w, _, _ = fringe.apply_frf(aa, _d, wij, ij[0], ij[1],
                                             pol=POL, bins=bins, firs=fir)
-    _d = n.transpose(_d)
-    _d = _d[:, shape[0]/4:shape[0]/2+shape[0]/4]
+    _d = _d[shape[0]/4:shape[0]/2+shape[0]/4,:]
     return _d
 
 
@@ -197,10 +192,7 @@ chans = a.scripting.parse_chans(opts.chan, uv['nchan'])
 inttime = uv['inttime']
 # try to take the frf_inttime from the file
 # for old filtered files, need to use parameter still
-try:
-    frf_inttime = uv['FRF_NEBW']
-except:
-    frf_inttime = opts.frf_inttime
+frf_inttime = uv['FRF_NEBW']
 print 'inttime:', inttime
 print 'frf_inttime:', frf_inttime
 afreqs = freqs.take(chans)
@@ -307,8 +299,10 @@ fir = {(ij[0], ij[1], POL): firs}
 
 # Make noise dataset
 data_dict_n = {}
+print '\n  Creating noise'
+if opts.doublefrf: print '  Fringe-rate-filtering noise twice'
 for key in data_dict_v:
-    data_dict_n[key] = frf((len(chans),nlst)).T
+    data_dict_n[key] = frf((len(chans),nlst)) #different on each baseline
 
 # Set data
 dsv = oqe.DataSet() # just data
@@ -355,55 +349,55 @@ if PLOT and False:
 
 # Bootstrapping
 for boot in xrange(opts.nboot):
-    print 'Bootstrap %d / %d' % (boot+1, opts.nboot) 
+    print '\nBootstrap %d / %d' % (boot+1, opts.nboot) 
 
     # Make groups 
     gps = dsv.gen_gps(bls_master, ngps=NGPS)
 
     # Only data
-    print '   Getting pCv, pIv'
     pCv, pIv = make_PS(keys,dsv,grouping=True)
       
     # Only noise
-    print '   Getting pCn, pIn'
     pCn, pIn = make_PS(keys,dsn,grouping=True)
 
-    # Loop to calculate pCr & pIr (data+eor), and pCe & pIe (eor) #
+    # Calculate pCr & pIr (data+eor), pCs & pIs (noise+eor), and pCe & pIe (eor) #
     if INJECT_SIG > 0.:  # Create a fake EoR signal to inject
-        print '     INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
-        if opts.frfeor:
-            eor = (frf((nchan, nlst)) * INJECT_SIG).T
-            # create FRF-ered noise
-        else:
-            eor = (oqe.noise((nchan, nlst)) * INJECT_SIG).T
+        print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
+        if opts.doublefrf: print '  Fringe-rate-filtering EoR twice'
+        eor = (frf((nchan, nlst)) * INJECT_SIG) #same on all baselines
         data_dict_r = {}
         data_dict_e = {}
+        data_dict_s = {}
         for key in data_dict_v:
             if conj_dict[key[1]] is True:
-                eorinject = n.conj(eor.copy())
-                # conjugate eor for certain baselines
+                eorinject = n.conj(eor.copy()) # conjugate eor for certain baselines
             else:
                 eorinject = eor.copy()
-            data_dict_r[key] = data_dict_v[key].copy() + eorinject
-            # add injected signal to data
+            data_dict_r[key] = data_dict_v[key].copy() + eorinject # add injected signal to data
             data_dict_e[key] = eorinject
+            data_dict_s[key] = data_dict_n[key].copy() + eorinject # add injected signal to noise
 
     # Set data
     dsr = oqe.DataSet()  # data + eor
     dsr.set_data(dsets=data_dict_r, conj=conj_dict, wgts=flg_dict)
     dse = oqe.DataSet()  # just eor
     dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
-    
-    print '   Getting pCr, pIr'
+    dss = oqe.DataSet() # noise + eor
+    dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)   
+ 
     pCr,pIr = make_PS(keys,dsr,grouping=True)
-    print '   Getting pCe, pIe'
     pCe,pIe = make_PS(keys,dse,grouping=True)
-   
-    print '   pCv=', n.median(pCv.real), 'pIv=', n.median(pIv.real)
-    print '   pIe=', n.median(pIe.real), 'pCr=', n.median(pCr.real),
-    print ' pIe/pCr=', n.median(pIe.real)/n.median(pCr.real)
-    print '   pCn=', n.median(pCn.real), 'pIn=', n.median(pIn.real)
-    
+    pCs,pIs = make_PS(keys,dss,grouping=True)
+ 
+    print '     Data:         pCv=', n.median(pCv.real), 'pIv=', n.median(pIv.real)
+    print '     EoR:          pCe=', n.median(pCe.real), 'pIe=', n.median(pIe.real)
+    print '     Noise:        pCn=', n.median(pCn.real), 'pIn=', n.median(pIn.real)
+    print '     Data + EoR:   pCr=', n.median(pCr.real), 'pIr=', n.median(pIr.real)  
+    print '     Noise + EoR:  pCs=', n.median(pCs.real), 'pIs=', n.median(pIs.real)
+
+    print '       Signal Loss Data  ~ pIe/pCr=', n.median(pIe.real)/n.median(pCr.real)
+    print '       Signal Loss Noise ~ pIe/pCs=', n.median(pIe.real)/n.median(pCs.real)
+
     if PLOT:
         p.plot(kpl, n.average(pCr.real, axis=1), 'b.-')
         p.plot(kpl, n.average(pIr.real, axis=1), 'k.-')
@@ -417,7 +411,8 @@ for boot in xrange(opts.nboot):
         outpath = 'pspec_bootsigloss%04d.npz' % boot
     print '   Writing ' + outpath
     n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
-            pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe, pIe=pIe,
+            pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe, 
+            pIe=pIe, pCn=pCn, pIn=pIn, pCs=pCs, pIs=pIs,
             err=1./cnt, var=var, sep=sep_type, uvw=uvw,
             frf_inttime=frf_inttime, inttime=inttime,
             inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
