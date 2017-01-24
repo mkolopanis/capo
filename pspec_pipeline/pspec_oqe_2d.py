@@ -379,7 +379,7 @@ for boot in xrange(opts.nboot):
             else:
                 eorinject = eor.copy()
             # Track eor in separate dict
-            data_dict_[key] = eorinject
+            data_dict_e[key] = eorinject
             # add injected signal to data
             data_dict_r[key] = data_dict_v[key].copy() + eorinject
             # add injected signal to noise
