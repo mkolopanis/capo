@@ -16,8 +16,8 @@ import numpy as np
 from IPython import embed
 
 parser = argparse.ArgumentParser(
-            description=('Calculate power spectra for a run '
-                         'from pspec_oqe_2d.py'))
+    description=('Calculate power spectra for a run '
+                 'from pspec_oqe_2d.py'))
 parser.add_argument('files', metavar='<FILE>', type=str, nargs='+',
                     help='List of files to average')
 parser.add_argument('--output', type=str, default='./',
@@ -29,8 +29,8 @@ args = parser.parse_args(sys.argv[1:])
 pspecs = read_bootstraps_dcj(args.files)
 Nlstbins = np.shape(pspecs['pCr'])[-1]
 # get the number of lst integrations in the dataset
-t_eff = pspecs['frf_inttime']/pspecs['inttime']
-Neff_lst = np.ceil(Nlstbins/t_eff)
+t_eff = pspecs['frf_inttime'] / pspecs['inttime']
+Neff_lst = np.ceil(Nlstbins / t_eff)
 # compute the effective number of LST bins
 # print Neff_lst
 # lets round up because this 'N' is only approximate
@@ -43,8 +43,8 @@ for key in pspecs.keys():
         import ipdb
         ipdb.set_trace()
 
-pspecs['pCr-pCv'] = pspecs['pCr']-pspecs['pCv'] #subtracted 
-pspecs['pCs-pCn'] = pspecs['pCs']-pspecs['pCn']
+pspecs['pCr-pCv'] = pspecs['pCr'] - pspecs['pCv']  # subtracted
+pspecs['pCs-pCn'] = pspecs['pCs'] - pspecs['pCn']
 
 # compute Pk vs kpl vs bootstraps
 pk_pspecs = average_bootstraps(pspecs, Nt_eff=Neff_lst,
@@ -52,9 +52,9 @@ pk_pspecs = average_bootstraps(pspecs, Nt_eff=Neff_lst,
 
 # Compute |k|
 bl_length = np.linalg.norm(pspecs['uvw'])
-wavelength = cosmo_units.c/(pspecs['freq']*1e9)
-ubl = bl_length/wavelength
-kperp = dk_du(pspecs['freq'])*ubl
+wavelength = cosmo_units.c / (pspecs['freq'] * 1e9)
+ubl = bl_length / wavelength
+kperp = dk_du(pspecs['freq']) * ubl
 print "freq = ", pspecs['freq']
 print "kperp = ", kperp
 pk_pspecs['k'] = np.sqrt(kperp**2 + pk_pspecs['kpl_fold']**2)

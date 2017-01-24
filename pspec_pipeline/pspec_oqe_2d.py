@@ -67,23 +67,25 @@ except:
 
 def frf(shape):  # Create and fringe rate filter noise
     """Generate White Noise and Apply FRF."""
-    shape = shape[1]*2, shape[0]  # (2*times,freqs)
+    shape = shape[1] * 2, shape[0]  # (2*times,freqs)
     dij = oqe.noise(size=shape)
     wij = n.ones(shape, dtype=bool)  # XXX flags are all true (times,freqs)
     # dij and wij are (times,freqs)
     _d, _w, _, _ = fringe.apply_frf(aa, dij, wij, ij[0], ij[1],
                                     pol=POL, bins=bins, firs=fir)
-    if opts.doublefrf == True:
+    if opts.doublefrf:
         _d, _w, _, _ = fringe.apply_frf(aa, _d, wij, ij[0], ij[1],
-                                            pol=POL, bins=bins, firs=fir)
-    _d = _d[shape[0]/4:shape[0]/2+shape[0]/4,:]
+                                        pol=POL, bins=bins, firs=fir)
+    _d = _d[shape[0] / 4:shape[0] / 2 + shape[0] / 4, :]
     return _d
 
 
-def make_PS(keys,ds,grouping=True): 
-    """Use OQE formalism to generate power spectrum 
-        using covariance and identity weightings."""
-    if grouping == True:
+def make_PS(keys, ds, grouping=True):
+    """Use OQE formalism to generate power spectrum.
+
+    Output weighted and identity weightings.
+    """
+    if grouping:
         newkeys, dsC = ds.group_data(keys, gps)
         newkeys, dsI = ds.group_data(keys, gps, use_cov=False)
     else:  # no groups (slower)
@@ -139,7 +141,7 @@ def make_PS(keys,ds,grouping=True):
         p.plot(kpl, n.average(pI.real, axis=1), 'k.-', label='pI')
         p.legend()
         p.show()
-    return pC,pI
+    return pC, pI
 
 
 def cov(m):
@@ -175,10 +177,9 @@ def get_Q(mode, n_k):
 
 # Read even&odd data
 if 'even' in args[0] or 'odd' in args[0]:
-    dsets = {
-            'even': [x for x in args if 'even' in x],
-            'odd': [x for x in args if 'odd' in x]
-            }
+    dsets = {'even': [x for x in args if 'even' in x],
+             'odd': [x for x in args if 'odd' in x]
+             }
 else:
     dsets = {'even': args, 'odd': args}
 print dsets
@@ -276,7 +277,7 @@ print 'Baselines:', len(bls_master)
 # Align dataset
 inds = oqe.lst_align(lsts)
 data_dict_v, flg_dict, lsts = oqe.lst_align_data(inds, dsets=data_dict_v,
-                                               wgts=flg_dict, lsts=lsts)
+                                                 wgts=flg_dict, lsts=lsts)
 # the lsts given is a dictionary with 'even','odd', etc.
 # but the lsts returned is one array
 
@@ -292,22 +293,23 @@ sep_type = bl2sep[a.miriad.ij2bl(ij[0], ij[1])]
 # convert uvw in light-nanoseconds to m, (cosmo_units.c in m/s)
 uvw = aa.get_baseline(ij[0], ij[1], src='z') * cosmo_units.c * 1e-9
 bins = fringe.gen_frbins(inttime)
-frp, bins = fringe.aa_to_fr_profile(aa, ij, len(afreqs)/2, bins=bins)
+frp, bins = fringe.aa_to_fr_profile(aa, ij, len(afreqs) / 2, bins=bins)
 timebins, firs = fringe.frp_to_firs(frp, bins, aa.get_freqs(),
-                                    fq0=aa.get_freqs()[len(afreqs)/2])
+                                    fq0=aa.get_freqs()[len(afreqs) / 2])
 fir = {(ij[0], ij[1], POL): firs}
 
 # Make noise dataset
 data_dict_n = {}
 print '\n  Creating noise'
-if opts.doublefrf: print '  Fringe-rate-filtering noise twice'
+if opts.doublefrf:
+    print '  Fringe-rate-filtering noise twice'
 for key in data_dict_v:
-    data_dict_n[key] = frf((len(chans),nlst)) #different on each baseline
+    data_dict_n[key] = frf((len(chans), nlst))  # different on each baseline
 
 # Set data
-dsv = oqe.DataSet() # just data
+dsv = oqe.DataSet()  # just data
 dsv.set_data(dsets=data_dict_v, conj=conj_dict, wgts=flg_dict)
-dsn = oqe.DataSet() #just noise
+dsn = oqe.DataSet()  # just noise
 dsn.set_data(dsets=data_dict_n, conj=conj_dict, wgts=flg_dict)
 
 # Get some statistics
@@ -349,54 +351,67 @@ if PLOT and False:
 
 # Bootstrapping
 for boot in xrange(opts.nboot):
-    print '\nBootstrap %d / %d' % (boot+1, opts.nboot) 
+    print '\nBootstrap %d / %d' % (boot + 1, opts.nboot)
 
-    # Make groups 
+    # Make groups
     gps = dsv.gen_gps(bls_master, ngps=NGPS)
 
     # Only data
-    pCv, pIv = make_PS(keys,dsv,grouping=True)
-      
-    # Only noise
-    pCn, pIn = make_PS(keys,dsn,grouping=True)
+    pCv, pIv = make_PS(keys, dsv, grouping=True)
 
-    # Calculate pCr & pIr (data+eor), pCs & pIs (noise+eor), and pCe & pIe (eor) #
+    # Only noise
+    pCn, pIn = make_PS(keys, dsn, grouping=True)
+
+    # Calculate pCr & pIr (data+eor), pCs & pIs (noise+eor)
+    # and pCe & pIe (eor) #
     if INJECT_SIG > 0.:  # Create a fake EoR signal to inject
         print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
-        if opts.doublefrf: print '  Fringe-rate-filtering EoR twice'
-        eor = (frf((nchan, nlst)) * INJECT_SIG) #same on all baselines
+        if opts.doublefrf:
+            print '  Fringe-rate-filtering EoR twice'
+        eor = (frf((nchan, nlst)) * INJECT_SIG)  # same on all baselines
         data_dict_r = {}
         data_dict_e = {}
         data_dict_s = {}
         for key in data_dict_v:
             if conj_dict[key[1]] is True:
-                eorinject = n.conj(eor.copy()) # conjugate eor for certain baselines
+                eorinject = n.conj(eor.copy())
+                # conjugate eor for certain baselines
             else:
                 eorinject = eor.copy()
-            data_dict_r[key] = data_dict_v[key].copy() + eorinject # add injected signal to data
+            # Track eor in separate dict
             data_dict_e[key] = eorinject
-            data_dict_s[key] = data_dict_n[key].copy() + eorinject # add injected signal to noise
+            # add injected signal to data
+            data_dict_r[key] = data_dict_v[key].copy() + eorinject
+            # add injected signal to noise
+            data_dict_s[key] = data_dict_n[key].copy() + eorinject
 
     # Set data
     dsr = oqe.DataSet()  # data + eor
     dsr.set_data(dsets=data_dict_r, conj=conj_dict, wgts=flg_dict)
     dse = oqe.DataSet()  # just eor
     dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
-    dss = oqe.DataSet() # noise + eor
-    dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)   
- 
-    pCr,pIr = make_PS(keys,dsr,grouping=True)
-    pCe,pIe = make_PS(keys,dse,grouping=True)
-    pCs,pIs = make_PS(keys,dss,grouping=True)
- 
-    print '     Data:         pCv =', n.median(pCv.real), 'pIv =', n.median(pIv.real)
-    print '     EoR:          pCe =', n.median(pCe.real), 'pIe =', n.median(pIe.real)
-    print '     Noise:        pCn =', n.median(pCn.real), 'pIn =', n.median(pIn.real)
-    print '     Data + EoR:   pCr =', n.median(pCr.real), 'pIr =', n.median(pIr.real)  
-    print '     Noise + EoR:  pCs =', n.median(pCs.real), 'pIs =', n.median(pIs.real)
+    dss = oqe.DataSet()  # noise + eor
+    dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)
 
-    print '       Signal Loss Data  ~ pIe/(pCr-pCv) =', n.abs(n.median(pIe.real))/n.abs(n.median(pCr.real)-n.median(pCv))
-    print '       Signal Loss Noise ~ pIe/(pCs-pCn) =', n.abs(n.median(pIe.real))/n.abs(n.median(pCs.real)-n.median(pCn))
+    pCr, pIr = make_PS(keys, dsr, grouping=True)
+    pCe, pIe = make_PS(keys, dse, grouping=True)
+    pCs, pIs = make_PS(keys, dss, grouping=True)
+
+    print '     Data:         pCv =', n.median(pCv.real),
+    print 'pIv =', n.median(pIv.real)
+    print '     EoR:          pCe =', n.median(pCe.real),
+    print 'pIe =', n.median(pIe.real)
+    print '     Noise:        pCn =', n.median(pCn.real),
+    print 'pIn =', n.median(pIn.real)
+    print '     Data + EoR:   pCr =', n.median(pCr.real),
+    print 'pIr =', n.median(pIr.real)
+    print '     Noise + EoR:  pCs =', n.median(pCs.real),
+    print 'pIs =', n.median(pIs.real)
+
+    print '       Signal Loss Data  ~ pIe/(pCr-pCv) =',
+    print n.abs(n.median(pIe.real)) / n.abs(n.median(pCr.real) - n.median(pCv))
+    print '       Signal Loss Noise ~ pIe/(pCs-pCn) =',
+    print n.abs(n.median(pIe.real)) / n.abs(n.median(pCs.real) - n.median(pCn))
 
     if PLOT:
         p.plot(kpl, n.average(pCr.real, axis=1), 'b.-')
@@ -411,9 +426,9 @@ for boot in xrange(opts.nboot):
         outpath = 'pspec_bootsigloss%04d.npz' % boot
     print '   Writing ' + outpath
     n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
-            pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe, 
+            pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe,
             pIe=pIe, pCn=pCn, pIn=pIn, pCs=pCs, pIs=pIs,
-            err=1./cnt, var=var, sep=sep_type, uvw=uvw,
+            err=1. / cnt, var=var, sep=sep_type, uvw=uvw,
             frf_inttime=frf_inttime, inttime=inttime,
             inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
             cmd=' '.join(sys.argv))
