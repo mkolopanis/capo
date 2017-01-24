@@ -29,10 +29,7 @@ args = parser.parse_args(sys.argv[1:])
 pspecs = read_bootstraps_dcj(args.files)
 Nlstbins = np.shape(pspecs['pCr'])[-1]
 # get the number of lst integrations in the dataset
-try:
-    t_eff = pspecs['frf_inttime']/pspecs['inttime']
-except:
-    t_eff = 3887./32.  # XXX PSA128S
+t_eff = pspecs['frf_inttime']/pspecs['inttime']
 Neff_lst = np.ceil(Nlstbins/t_eff)
 # compute the effective number of LST bins
 # print Neff_lst
