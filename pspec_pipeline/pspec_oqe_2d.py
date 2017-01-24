@@ -389,14 +389,14 @@ for boot in xrange(opts.nboot):
     pCe,pIe = make_PS(keys,dse,grouping=True)
     pCs,pIs = make_PS(keys,dss,grouping=True)
  
-    print '     Data:         pCv=', n.median(pCv.real), 'pIv=', n.median(pIv.real)
-    print '     EoR:          pCe=', n.median(pCe.real), 'pIe=', n.median(pIe.real)
-    print '     Noise:        pCn=', n.median(pCn.real), 'pIn=', n.median(pIn.real)
-    print '     Data + EoR:   pCr=', n.median(pCr.real), 'pIr=', n.median(pIr.real)  
-    print '     Noise + EoR:  pCs=', n.median(pCs.real), 'pIs=', n.median(pIs.real)
+    print '     Data:         pCv =', n.median(pCv.real), 'pIv =', n.median(pIv.real)
+    print '     EoR:          pCe =', n.median(pCe.real), 'pIe =', n.median(pIe.real)
+    print '     Noise:        pCn =', n.median(pCn.real), 'pIn =', n.median(pIn.real)
+    print '     Data + EoR:   pCr =', n.median(pCr.real), 'pIr =', n.median(pIr.real)  
+    print '     Noise + EoR:  pCs =', n.median(pCs.real), 'pIs =', n.median(pIs.real)
 
-    print '       Signal Loss Data  ~ pIe/pCr=', n.median(pIe.real)/n.median(pCr.real)
-    print '       Signal Loss Noise ~ pIe/pCs=', n.median(pIe.real)/n.median(pCs.real)
+    print '       Signal Loss Data  ~ pIe/(pCr-pCv) =', n.abs(n.median(pIe.real))/n.abs(n.median(pCr.real)-n.median(pCv))
+    print '       Signal Loss Noise ~ pIe/(pCs-pCn) =', n.abs(n.median(pIe.real))/n.abs(n.median(pCs.real)-n.median(pCn))
 
     if PLOT:
         p.plot(kpl, n.average(pCr.real, axis=1), 'b.-')
