@@ -61,15 +61,7 @@ for s in args:
     #print s,aa.sidereal_time(),repr(aa.sidereal_time())
     sun.compute(aa)
     #print ra1,aa.sidereal_time(),ra2
-    if ra1 < 0:
-        if (2 * n.pi + ra1) < aa.sidereal_time() < (ra2 + 2 * n.pi):
-            if active == 0 and opts.dchar is not None:
-                print opts.dchar
-            active = 1
-            is_listed = True
-            if opts.debug is not None:
-                print 'ra range',
-    elif aa.sidereal_time()>(ra1-pad) and aa.sidereal_time()<(ra2+pad):
+    if aa.sidereal_time()>(ra1-pad) and aa.sidereal_time()<(ra2+pad):
         if active==0 and not opts.dchar is None: print opts.dchar
 #        print s,
         active=1
@@ -91,6 +83,14 @@ for s in args:
                 is_listed = True
                 if not opts.debug is None: print obj.src_name,
                 break
+    elif ra1 < 0 and (2 * n.pi + ra1) < aa.sidereal_time() < (ra2 + 2 * n.pi):
+        # check if negative ra1 given, if so check jd around branch cut
+        if active == 0 and opts.dchar is not None:
+            print opts.dchar
+        active = 1
+        is_listed = True
+        if opts.debug is not None:
+                print 'ra range',
     else:
         active=0
         is_listed = False
