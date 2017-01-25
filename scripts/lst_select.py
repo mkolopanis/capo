@@ -45,7 +45,11 @@ else: srclist =[]
 #parse the ra range
 if not opts.ra_rng is None:
     ra1,ra2 = map(ephem.hours, opts.ra_rng.split('_'))
-    if ra1>ra2: ra1,ra2 = ra2,ra2
+    if ra1>ra2: ra1,ra2 = ra2,ra1
+    if ra1 < 0 and ra2 < 0:
+        print 'Both inputs RA\'s should not be negative'
+        print 'Exiting'
+        sys.exit()
 else:
     ra1,ra2  = (0,0)
 active=0
@@ -58,14 +62,14 @@ for s in args:
     sun.compute(aa)
     #print ra1,aa.sidereal_time(),ra2
     if ra1 < 0:
-        if (2 * n.pi + ra1) < aa.sidereal_time() < 2 * n.pi:
+        if (2 * n.pi + ra1) < aa.sidereal_time() < ra2 + 2 n.pi:
             if active == 0 and opts.dchar is not None:
                 print opts.dchar
             active = 1
             is_listed = True
             if opts.debug is not None:
                 print 'ra range',
-    if aa.sidereal_time()>(ra1-pad) and aa.sidereal_time()<(ra2+pad):
+    elif aa.sidereal_time()>(ra1-pad) and aa.sidereal_time()<(ra2+pad):
         if active==0 and not opts.dchar is None: print opts.dchar
 #        print s,
         active=1
