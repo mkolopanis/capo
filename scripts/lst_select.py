@@ -27,7 +27,7 @@ opts, args = o.parse_args(sys.argv[1:])
 
 if opts.debug:
     logging.basicConfig(level=logging.DEBUG)
-else: 
+else:
     logging.disable(logging.WARNING)
 log = logging.getLogger('lst_select')
 
@@ -45,6 +45,7 @@ else: srclist =[]
 #parse the ra range
 if not opts.ra_rng is None:
     ra1,ra2 = map(ephem.hours, opts.ra_rng.split('_'))
+    import ipdb; ipdb.set_trace()
     if ra1>ra2: ra1,ra2 = ra2,ra2
 else:
     ra1,ra2  = (0,0)
@@ -99,4 +100,3 @@ for s in args:
 #    print '     Day:', aa.date
 #    print 'Sun is at (RA, DEC):', str((str(sun.ra), str(sun.dec)))
 #    print '-' * 70
-
