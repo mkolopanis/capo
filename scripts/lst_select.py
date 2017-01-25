@@ -58,6 +58,14 @@ for s in args:
     sun.compute(aa)
     #print ra1,aa.sidereal_time(),ra2
     import ipdb; ipdb.set_trace()
+    if ra1 < 0:
+        if (2 * n.pi + ra1) < aa.sidereal_time() < 2 * n.pi:
+            if active == 0 and opts.dchar is not None:
+                print opts.dchar
+            active = 1
+            is_listed = True
+            if opts.debug is not None:
+                print 'ra range',
     if aa.sidereal_time()>(ra1-pad) and aa.sidereal_time()<(ra2+pad):
         if active==0 and not opts.dchar is None: print opts.dchar
 #        print s,
