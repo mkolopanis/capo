@@ -45,7 +45,6 @@ else: srclist =[]
 #parse the ra range
 if not opts.ra_rng is None:
     ra1,ra2 = map(ephem.hours, opts.ra_rng.split('_'))
-    import ipdb; ipdb.set_trace()
     if ra1>ra2: ra1,ra2 = ra2,ra2
 else:
     ra1,ra2  = (0,0)
@@ -58,6 +57,7 @@ for s in args:
     #print s,aa.sidereal_time(),repr(aa.sidereal_time())
     sun.compute(aa)
     #print ra1,aa.sidereal_time(),ra2
+    import ipdb; ipdb.set_trace()
     if aa.sidereal_time()>(ra1-pad) and aa.sidereal_time()<(ra2+pad):
         if active==0 and not opts.dchar is None: print opts.dchar
 #        print s,
