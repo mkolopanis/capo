@@ -13,7 +13,6 @@ from capo.eor_results import read_bootstraps_dcj, average_bootstraps
 from capo.pspec import dk_du
 from capo import cosmo_units
 import numpy as np
-from IPython import embed
 
 parser = argparse.ArgumentParser(
     description=('Calculate power spectra for a run '
