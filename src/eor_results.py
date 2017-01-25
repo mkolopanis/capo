@@ -500,25 +500,25 @@ def read_bootstraps_dcj(filenames, verbose=False):
     return a single set of power spectra stacked along the bootstrap dimension
     only keep the real part!
     """
-    ['err_vs_t',    # not sure
-     'cmd',         # the command used to generate the file
-     'times',       # lsts of data bins
-     'scalar',      # conversion from mk^2 to mK^2/h^3Mpc^3
-                    # (already applied to data)
-     'freq',        # center frequency of bin in GHz
-     'kpl',         # list of k parallels matching
-                    # the kpl axis of the power spectrum
-     'var',         # not sure
-     'pCv',         # weighted data power spectrum (no injection)
-     'pIv',         # unweighted data power spectrum (no injection)
-     'pCn',         # weighted noise power spectrum (no injection)
-     'pIn',         # unweighted noise power spectrum (no injection)
-     'pCe',         # weighted injected eor power spectrum
-     'pIe',         # unweighted injected eor power spectrum
-     'pCr',         # weighted data+injection power spectrum
-     'pIr',         # unweighted data+injection power spectrum
-     'pCs',         # weighted noise+injection power spectrum
-     'pIs', ]        # unweighted noise+injection power spectrum
+    # ['err_vs_t',    # not sure
+    #  'cmd',         # the command used to generate the file
+    #  'times',       # lsts of data bins
+    #  'scalar',      # conversion from mk^2 to mK^2/h^3Mpc^3
+    #                 # (already applied to data)
+    #  'freq',        # center frequency of bin in GHz
+    #  'kpl',         # list of k parallels matching
+    #                 # the kpl axis of the power spectrum
+    #  'var',         # not sure
+    #  'pCv',         # weighted data power spectrum (no injection)
+    #  'pIv',         # unweighted data power spectrum (no injection)
+    #  'pCn',         # weighted noise power spectrum (no injection)
+    #  'pIn',         # unweighted noise power spectrum (no injection)
+    #  'pCe',         # weighted injected eor power spectrum
+    #  'pIe',         # unweighted injected eor power spectrum
+    #  'pCr',         # weighted data+injection power spectrum
+    #  'pIr',         # unweighted data+injection power spectrum
+    #  'pCs',         # weighted noise+injection power spectrum
+    #  'pIs', ]        # unweighted noise+injection power spectrum
 
     accumulated_power_spectra = {}
     for filename in filenames:
