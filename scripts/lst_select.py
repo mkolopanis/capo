@@ -62,7 +62,7 @@ for s in args:
     sun.compute(aa)
     #print ra1,aa.sidereal_time(),ra2
     if ra1 < 0:
-        if (2 * n.pi + ra1) < aa.sidereal_time() < ra2 + 2 n.pi:
+        if (2 * n.pi + ra1) < aa.sidereal_time() < (ra2 + 2 * n.pi):
             if active == 0 and opts.dchar is not None:
                 print opts.dchar
             active = 1
