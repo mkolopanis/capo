@@ -24,7 +24,7 @@ parser.add_argument('--output', type=str, default='./',
                     help='Specifically specify out directory.')
 parser.add_argument('--nboots', type=int, default=100,
                     help='Number of Bootstraps (averages) default=100')
-args = parser.parse_args(sys.argv[1:])
+args = parser.parse_args()
 
 pspecs = read_bootstraps_dcj(args.files)
 Nlstbins = np.shape(pspecs['pCr'])[-1]
@@ -67,5 +67,5 @@ for key in pk_pspecs.keys():
     except:
         import ipdb
         ipdb.set_trace()
-print 'Saving', args.output + 'pspec_pk_k3pk.npz'
+print args.output + 'pspec_pk_k3pk.npz'
 np.savez(args.output + 'pspec_pk_k3pk.npz', **pk_pspecs)
