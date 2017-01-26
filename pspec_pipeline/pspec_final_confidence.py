@@ -90,6 +90,7 @@ def atanh(p, m, s, c, a):
     """Compute atanh."""
     return 2 * s * np.arctanh((p - c) / a) + m
 
+
 # read in the bootstrapped pspecs
 pspec_channels = ['pCv_fold', 'pCv_fold_err',  # weighted data pspec
                   'pIv_fold', 'pIv_fold_err',  # unweighted data pspec
