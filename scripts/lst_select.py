@@ -27,7 +27,7 @@ opts, args = o.parse_args(sys.argv[1:])
 
 if opts.debug:
     logging.basicConfig(level=logging.DEBUG)
-else: 
+else:
     logging.disable(logging.WARNING)
 log = logging.getLogger('lst_select')
 
@@ -45,7 +45,11 @@ else: srclist =[]
 #parse the ra range
 if not opts.ra_rng is None:
     ra1,ra2 = map(ephem.hours, opts.ra_rng.split('_'))
-    if ra1>ra2: ra1,ra2 = ra2,ra2
+    if ra1>ra2: ra1,ra2 = ra2,ra1
+    if ra1 < 0 and ra2 < 0:
+        print 'Both inputs RA\'s should not be negative'
+        print 'Exiting'
+        sys.exit()
 else:
     ra1,ra2  = (0,0)
 active=0
@@ -79,6 +83,14 @@ for s in args:
                 is_listed = True
                 if not opts.debug is None: print obj.src_name,
                 break
+    elif ra1 < 0 and (2 * n.pi + ra1) < aa.sidereal_time() < (ra2 + 2 * n.pi):
+        # check if negative ra1 given, if so check jd around branch cut
+        if active == 0 and opts.dchar is not None:
+            print opts.dchar
+        active = 1
+        is_listed = True
+        if opts.debug is not None:
+                print 'ra range',
     else:
         active=0
         is_listed = False
@@ -99,4 +111,3 @@ for s in args:
 #    print '     Day:', aa.date
 #    print 'Sun is at (RA, DEC):', str((str(sun.ra), str(sun.dec)))
 #    print '-' * 70
-
