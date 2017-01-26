@@ -26,6 +26,7 @@ parser.add_argument('--nboots', type=int, default=100,
                     help='Number of Bootstraps (averages) default=100')
 args = parser.parse_args(sys.argv[1:])
 
+np.random.seed(0)
 pspecs = read_bootstraps_dcj(args.files)
 Nlstbins = np.shape(pspecs['pCr'])[-1]
 # get the number of lst integrations in the dataset
