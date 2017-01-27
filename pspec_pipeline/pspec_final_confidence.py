@@ -100,6 +100,7 @@ pspec_channels = ['pCv_fold', 'pCv_fold_err',  # weighted data pspec
                   'pCn_fold', 'pCn_fold_err',  # weighted noise
                   'pCs_fold', 'pCs_fold_err',  # weighted noise + eor
                   'pIs_fold', 'pIs_fold_err',  # unweighte noise + eor
+                  'pIn', 'pIn_err',  # unweighted noise
                   'pCv', 'pCv_err',  # weighted data pspec
                   'pIv', 'pIv_err',  # unweighted data pspec
                   'pCr', 'pCr_err',  # weighted data+inj pspec
@@ -126,6 +127,7 @@ k = F['k']
 kpls = F['kpl_fold']
 Nk = len(k)
 freq = F['freq']
+afreqs = F['afreqs']
 print "found injects:", Ninj
 print "found k bins:", Nk
 
@@ -169,24 +171,44 @@ legend(loc='best')
 xlabel('$P_{inj}$')
 ylabel('Probability to find $P_{inj}$')
 savefig('p_inj_prob.png', format='png')
-prob_limits = [.2, .225, .25, .3, .35, .4, .5, .68, .85, .9, .95, .97, .99]
+
+# pI and pIn values are not dependen on probability
+pIn, pIn_up = pspecs['pIn_fold'][0, :], pspecs['pIn_fold_err'][0, :]
+pIn_fold = pspecs['pIn_fold'][0, :]
+pIn_fold_up = pspecs['pIn_fold_err'][0, :]
+pIn_fold = k**3 / (2 * np.pi**2) * pIn_fold
+pIn_fold_up = k**3 / (2 * np.pi**2) * pIn_fold_up
+
+pI, pI_up = pspecs['pIv_fold'][0, :], pspecs['pIv_fold_err'][0, :]
+pI_fold = pspecs['pIv_fold'][0, :]
+pI_fold_up = pspecs['pIv_fold_err'][0, :]
+pI_fold = k**3 / (2 * np.pi**2) * pI_fold
+pI_fold_up = k**3 / (2 * np.pi**2) * pI_fold_up
+
+prob_limits = [.2, .25, .3, .35, .4, .5, .68, .85, .9, .95, .97, .99]
+
+# all of the probabilities will be the same
+# generate a list of all the names of probs with and without folds
+# assign each name to per in a dict that can be unraveled in the save
+names = ['pI', 'pC', 'pCn', 'pIn']
+fold_names = [name+'_fold' for name in names]
+prob_names = [name+'_prob' for name in names]
+prob_fold_names = [name+'_prob' for name in fold_names]
+all_prob_names = np.concatenate([prob_names, prob_fold_names])
 
 for per in prob_limits:
-    pk, pkerr, k3pk, k3err = get_pk_k3pk(per, k, tanh_parms_data)
-    np.savez((args.outfile +
-             'pspec_limits_k3pk_pC_{0:02d}'.format(int(per * 100)) + '.npz'),
-             freq=freq, k=k, k3pk=k3pk, k3err=k3err,
-             pk=pk, err=pkerr, kpl=kpls)
+    all_probs = {name: per for name in all_prob_names}
 
-    pkn, pknerr, k3pn, k3nerr = get_pk_k3pk(per, k, tanh_parms_noise)
-    np.savez((args.outfile +
-             'pspec_limits_k3pk_pN_{0:02d}'.format(int(per * 100)) + '.npz'),
-             freq=freq, k=k, k3pk=k3pn, k3err=k3nerr,
-             pk=pkn, err=pknerr, kpl=kpls)
+    pC, pC_up, pC_fold, pC_fold_up = get_pk_k3pk(per, k, tanh_parms_data)
+    pCn, pCn_up, pCn_fold, pCn_fold_up = get_pk_k3pk(per, k, tanh_parms_noise)
 
-    pI, pIerr = pspecs['pIv_fold'][0, :], pspecs['pIv_fold_err'][0, :]
-    k3pI, k3Ierr = k**3 / (2 * np.pi**2) * pI, k**3 / (2 * np.pi**2) * pIerr
+    print 'Saving: ' + args.outfile,
+    print 'pspec_final_confidence_{0:02d}'.format(int(per * 100)) + '.npz'
     np.savez((args.outfile +
-             'pspec_limits_k3pk_pI_{0:02d}'.format(int(per * 100)) + '.npz'),
-             freq=freq, k=k, k3pk=k3pI, k3err=k3Ierr,
-             pk=pI, err=pIerr, kpl=kpls)
+             'pspec_final_confidence_{0:02d}'.format(int(per * 100)) + '.npz'),
+             freq=freq, k=k, kpl=kpls, afreqs=afreqs, pC=pC, pC_up=pC_up,
+             pC_fold=pC_fold, pC_fold_up=pC_fold_up, pI=pI, pI_up=pI_up,
+             pI_fold=pI_fold, pI_fold_up=pI_fold_up, pCn=pCn, pCn_up=pCn_up,
+             pCn_fold=pCn_fold, pCn_fold_up=pCn_fold_up, pIn=pIn,
+             pIn_up=pIn_up, pIn_fold=pIn_fold, pIn_fold_up=pIn_fold_up,
+             **all_probs)
