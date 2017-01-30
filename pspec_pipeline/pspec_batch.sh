@@ -8,13 +8,13 @@ DATA=$1
 DIRNAME=$2
 
 ### My Options ###
-RA='1_10'
-CALFILE='psa6622_v003'
+RA='-.1_8.6'
+CALFILE='psa6240_v003'
 SEP='0,1 1,1 -1,1'
-CHAN='79_99'
-NBOOT=20
+CHAN='95_115'
+NBOOT=10
 POL='I'
-weight='L^-1'
+weight='I'
 WINDOW='none'
 FRF='--frf'
 
