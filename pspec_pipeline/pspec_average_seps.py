@@ -133,5 +133,5 @@ for key1, key2 in zip(folded_power_spectra, folded_errors):
     out_dict[key2] = np.array([1. / np.sqrt(summed_weights[key2][_k])
                                for _k in k])
 
-print 'Saving output to:' args.outfile
+print 'Saving output to: '+args.outfile
 np.savez(args.outfile, **out_dict)
