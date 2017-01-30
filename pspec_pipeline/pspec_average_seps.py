@@ -9,7 +9,7 @@ import sys
 import os
 
 parser = argparse.ArgumentParser(
- description='Perform inverse variance weighting on input power spetrum files.'
+ description='Perform inverse variance weighting on input power spectrum files.'
 )
 
 parser.add_argument('files', metavar='<FILE>', type=str, nargs='+',
@@ -42,8 +42,8 @@ print 'Averaging Separations'
 
 flat_power_spectra = [p + x for p in ['pC',  'pI']
                       for x in ['e', 'r', 's', 'v', 'n']]
-flat_power_spetra.append(['pCr-pCv'])
-flat_power_spetra.append(['pCs-pCn'])
+flat_power_spectra.append(['pCr-pCv'])
+flat_power_spectra.append(['pCs-pCn'])
 folded_power_spectra = [x + '_fold' for x in flat_power_spectra]
 flat_errors = [x + '_err' for x in flat_power_spectra]
 folded_errors = [x + '_err' for x in folded_power_spectra]
