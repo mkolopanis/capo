@@ -55,18 +55,18 @@ echo Making Directory ${DIRNAME}
 
 for sep in $SEP; do
     mkdir ${DIRNAME}/sep${sep}
-    EVEN_FILES=${DATA}'/even/sep'${sep}'/*I.uvGAL'
-    ODD_FILES=${DATA}'/odd/sep'${sep}'/*I.uvGAL'
+    EVEN_FILES=${DATA}'/even/sep'${sep}'/*.uvGAL'
+    ODD_FILES=${DATA}'/odd/sep'${sep}'/*.uvGAL'
     EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
     ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
     # Stage 1: pspec_oqe_2d.py over range of injection levels
     for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-2,4,10)))"` ; do
         mkdir ${DIRNAME}/sep${sep}/inject_sep${SEP}_${inject}
         echo SIGNAL_LEVEL=${inject}
-        # ~/capo/pspec_pipeline/pspec_oqe_2d.py --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -b ${NBOOT} -i ${inject} --weight=${weight} --output ${DIRNAME}/sep${sep}/inject_sep${sep}_${inject} ${EVEN_FILES} ${ODD_FILES}
+        # ~/src/capo/pspec_pipeline/pspec_oqe_2d.py --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -b ${NBOOT} -i ${inject} --weight=${weight} --output ${DIRNAME}/sep${sep}/inject_sep${sep}_${inject} ${EVEN_FILES} ${ODD_FILES}
     
         # Stage 2: pspec_2d_to_1d.py
-        ~/capo/pspec_pipeline/pspec_2d_to_1d.py --output ${DIRNAME}/sep${sep}/inject_sep${sep}_${inject}/ ${DIRNAME}/sep${sep}/inject_sep${sep}_${inject}/*boot*
+        ~/src/capo/pspec_pipeline/pspec_2d_to_1d.py --output ${DIRNAME}/sep${sep}/inject_sep${sep}_${inject}/ ${DIRNAME}/sep${sep}/inject_sep${sep}_${inject}/*boot*
     done
 done
 
