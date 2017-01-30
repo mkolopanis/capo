@@ -106,9 +106,10 @@ for filename in args.files:
             print ' keys in your pspec data:', key1, key2
             pass
 
-# only keep one copy of the unique k (kpl) and freq (afreqs) values
+# only keep one copy of the unique k (kpl _fold) and freq (afreqs) values
 out_dict['freq'] = np.unique(out_dict['freq'])
 out_dict['afreqs'] = np.unique(out_dict['afreqs'])
+out_dict['kpl_fold'] = np.unique(out_dict['kpl_fold'])
 kpl = np.unique(kpls)
 k = np.unique(ks)
 # these two statements might seem silly but 0. is in kpl and it becomes
