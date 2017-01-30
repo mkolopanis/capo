@@ -134,5 +134,23 @@ for key1, key2 in zip(folded_power_spectra, folded_errors):
     out_dict[key2] = np.array([1. / np.sqrt(summed_weights[key2][_k])
                                for _k in k])
 
+# take smallest to for the bins
+ks = np.sqrt(np.min(out_dict['kperp'])**2 + out_dict['kpl_fold']**2)
+digitized = np.digitize(out_dict['k'], ks)
+# rest k values to be the averaged value
+out_dict['k'] = np.sqrt(np.mean(out_dict['kperp'])**2
+                        + out_dict['kpl_fold']**2)
+
+for key1, key2 in zip(folded_power_spectra, folded_errors):
+    out_dict[key1] = np.array([np.sum(out_dict[key1][digitized == _k]
+                               / out_dict[key2][digitized == _k]**2)
+                               for _k in xrange(1, len(ks)+1)])
+
+    out_dict[key2] = np.array([np.sum(1.
+                               / out_dict[key2][digitzied == _k]**2)
+                               for _k in xrange(1, len(ks) + 1)])
+    # renormalized summed pspec values and uncertainties
+    out_dict[key1] = out_dict[key1]/out_dict[key2]
+    out_dict[key2] = np.sqrt(1./out_dict[key2])
 print 'Saving output to: '+args.outfile
 np.savez(args.outfile, **out_dict)
