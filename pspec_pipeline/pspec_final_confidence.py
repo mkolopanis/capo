@@ -193,12 +193,8 @@ prob_limits = [.2, .25, .3, .35, .4, .5, .68, .85, .9, .95, .97, .99]
 names = ['pI', 'pC', 'pCn', 'pIn']
 fold_names = [name+'_fold' for name in names]
 prob_names = [name+'_prob' for name in names]
-prob_fold_names = [name+'_prob' for name in fold_names]
-all_prob_names = np.concatenate([prob_names, prob_fold_names])
 
 for per in prob_limits:
-    all_probs = {name: per for name in all_prob_names}
-
     pC, pC_up, pC_fold, pC_fold_up = get_pk_k3pk(per, k, tanh_parms_data)
     pCn, pCn_up, pCn_fold, pCn_fold_up = get_pk_k3pk(per, k, tanh_parms_noise)
 
@@ -211,4 +207,4 @@ for per in prob_limits:
              pI_fold=pI_fold, pI_fold_up=pI_fold_up, pCn=pCn, pCn_up=pCn_up,
              pCn_fold=pCn_fold, pCn_fold_up=pCn_fold_up, pIn=pIn,
              pIn_up=pIn_up, pIn_fold=pIn_fold, pIn_fold_up=pIn_fold_up,
-             **all_probs)
+             prob=per)
