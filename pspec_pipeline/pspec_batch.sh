@@ -52,7 +52,7 @@ done
 
 for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-2,4,10)))"` ; do
     mkdir ${DIRNAME}/inject_${inject}
-    python ~/src/capo/pspec_pipeline/pspec_average_seps.py --outfile ${DIRNAME}/inject_${inject}/psepc_pk_k3pk.npz ${DIRNAME}/sep*/inject_sep*_${inject}/pspec_pk_k3pk.npz
+    python ~/src/capo/pspec_pipeline/pspec_average_seps.py --outfile ${DIRNAME}/inject_${inject}/pspec_pk_k3pk.npz ${DIRNAME}/sep*/inject_sep*_${inject}/pspec_pk_k3pk.npz
 done
 
-python ~/src/capo/pspec_pipeline/pspec_final_confidence.py inject_*/pspec_pk_k3pk.npz --outfile ${DIRNAME}
+python ~/src/capo/pspec_pipeline/pspec_final_confidence.py ${DIRNAME}/inject_*/pspec_pk_k3pk.npz --outfile ${DIRNAME}
