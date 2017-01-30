@@ -170,7 +170,7 @@ grid()
 legend(loc='best')
 xlabel('$P_{inj}$')
 ylabel('Probability to find $P_{inj}$')
-savefig('p_inj_prob.png', format='png')
+savefig(args.outfile + 'p_inj_prob.png', format='png')
 
 # pI and pIn values are not dependen on probability
 pIn, pIn_up = pspecs['pIn_fold'][0, :], pspecs['pIn_fold_err'][0, :]
