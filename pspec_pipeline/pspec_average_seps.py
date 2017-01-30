@@ -9,7 +9,8 @@ import sys
 import os
 
 parser = argparse.ArgumentParser(
- description='Perform inverse variance weighting on input power spectrum files.'
+    description=('Perform inverse variance weighting on'
+                 ' input power spectrum files.')
 )
 
 parser.add_argument('files', metavar='<FILE>', type=str, nargs='+',
