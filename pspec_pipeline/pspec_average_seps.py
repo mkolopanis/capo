@@ -38,10 +38,11 @@ def perform_sum(dsum=None, weights=None, kpl=None, values=None, errors=None):
     return dsum, weights
 
 
-flat_power_spectra = ['pC',  'pI', 'pCn', 'pIn']
+flat_power_spectra = [p + x for p in ['pC',  'pI']
+                      for x in ['e', 'r', 's', 'v', 'n']]
 folded_power_spectra = [x + '_fold' for x in flat_power_spectra]
-flat_errors = [x + '_up' for x in flat_power_spectra]
-folded_errors = [x + '_up' for x in folded_power_spectra]
+flat_errors = [x + '_err' for x in flat_power_spectra]
+folded_errors = [x + '_err' for x in folded_power_spectra]
 
 summed_pspec = {key: {} for key in np.concatenate([flat_power_spectra,
                                                    folded_power_spectra])}
@@ -57,15 +58,15 @@ for filename in args.files:
     # like freq, afreqs, the probability:
     # if these aren't the same you should not be
     # averaging these quantities anyway
-    # For all these extra key words, we only want to keep a single copy
+    # For all these extra key words, we will keep all of the info for now.
     generator = (x for x in f.keys() if x not in np.concatenate([['kpl', 'k'],
                  flat_power_spectra, flat_errors,
                  folded_power_spectra, folded_errors]))
     for key in generator:
-        if key in out_dict.keys():
-            continue
+        if key not in out_dict.keys():
+            out_dict[key] = [f[key]]
         else:
-            out_dict[key] = f[key]
+            out_dict[key].append(f[key])
 
     kpls.append(f['kpl'])
     ks.append(f['k'])
