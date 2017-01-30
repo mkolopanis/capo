@@ -97,14 +97,14 @@ for filename in args.files:
     ax1[gs_ind].plot(pspec_dict['k'], pspec_dict['pI_fold'] +
                      pspec_dict['pI_fold_up'], '--', label='unweighted')
     ax1[gs_ind].errorbar(pspec_dict['k'], pspec_dict['pC_fold'],
-                         pspec_dict['pC_fold_up'], label='weighted {0}'
-                         .format(pspec_dict['prob']),
+                         pspec_dict['pC_fold_up'], label='weighted {0:02d}'
+                         .format(int(pspec_dict['prob']*100)), linestyle='',
                          marker=marker)
     ax2[gs_ind].plot(pspec_dict['kpl'], pspec_dict['pI'] +
                      pspec_dict['pI_up'], '--', label='unweighted')
     ax2[gs_ind].errorbar(pspec_dict['kpl'], pspec_dict['pC'],
-                         pspec_dict['pC_up'], label='weighted {0}'
-                         .format(pspec_dict['prob']),
+                         pspec_dict['pC_up'], label='weighted {0:02d}'
+                         .format(int(pspec_dict['prob']*100)), linestyle='',
                          marker=marker)
 
 
