@@ -54,7 +54,6 @@ mkdir ${DIRNAME}
 echo Making Directory ${DIRNAME}
 
 for sep in $SEP; do
-    continue
     mkdir ${DIRNAME}/sep${sep}
     EVEN_FILES=${DATA}'/even/sep'${sep}'/*I.uvGAL'
     ODD_FILES=${DATA}'/odd/sep'${sep}'/*I.uvGAL'
@@ -64,7 +63,7 @@ for sep in $SEP; do
     for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-2,4,10)))"` ; do
         mkdir ${DIRNAME}/sep${sep}/inject_sep${SEP}_${inject}
         echo SIGNAL_LEVEL=${inject}
-        ~/capo/pspec_pipeline/pspec_oqe_2d.py --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -b ${NBOOT} -i ${inject} --weight=${weight} --output ${DIRNAME}/sep${sep}/inject_sep${sep}_${inject} ${EVEN_FILES} ${ODD_FILES}
+        # ~/capo/pspec_pipeline/pspec_oqe_2d.py --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -b ${NBOOT} -i ${inject} --weight=${weight} --output ${DIRNAME}/sep${sep}/inject_sep${sep}_${inject} ${EVEN_FILES} ${ODD_FILES}
     
         # Stage 2: pspec_2d_to_1d.py
         ~/capo/pspec_pipeline/pspec_2d_to_1d.py --output ${DIRNAME}/sep${sep}/inject_sep${sep}_${inject}/ ${DIRNAME}/sep${sep}/inject_sep${sep}_${inject}/*boot*
