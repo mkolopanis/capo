@@ -58,6 +58,7 @@ kperp = dk_du(pspecs['freq']) * ubl
 print "freq = ", pspecs['freq']
 print "kperp = ", kperp
 pk_pspecs['k'] = np.sqrt(kperp**2 + pk_pspecs['kpl_fold']**2)
+pk_pspecs['kperp'] = kperp
 for key in pk_pspecs.keys():
     if pk_pspecs[key].dtype not in [np.float]:
         continue
