@@ -38,6 +38,8 @@ def perform_sum(dsum=None, weights=None, kpl=None, values=None, errors=None):
     return dsum, weights
 
 
+print 'Averaging Separations'
+
 flat_power_spectra = [p + x for p in ['pC',  'pI']
                       for x in ['e', 'r', 's', 'v', 'n']]
 flat_power_spetra.append(['pCr-pCv'])
@@ -129,4 +131,5 @@ for key1, key2 in zip(folded_power_spectra, folded_errors):
     out_dict[key2] = np.array([1. / np.sqrt(summed_weights[key2][_k])
                                for _k in k])
 
+print 'Saving output to:' args.outfile
 np.savez(args.outfile, **out_dict)
