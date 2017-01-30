@@ -40,6 +40,8 @@ def perform_sum(dsum=None, weights=None, kpl=None, values=None, errors=None):
 
 flat_power_spectra = [p + x for p in ['pC',  'pI']
                       for x in ['e', 'r', 's', 'v', 'n']]
+flat_power_spetra.append(['pCr-pCv'])
+flat_power_spetra.append(['pCs-pCn'])
 folded_power_spectra = [x + '_fold' for x in flat_power_spectra]
 flat_errors = [x + '_err' for x in flat_power_spectra]
 folded_errors = [x + '_err' for x in folded_power_spectra]
