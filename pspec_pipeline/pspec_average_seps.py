@@ -42,8 +42,8 @@ print 'Averaging Separations'
 
 flat_power_spectra = [p + x for p in ['pC',  'pI']
                       for x in ['e', 'r', 's', 'v', 'n']]
-flat_power_spectra.append(['pCr-pCv'])
-flat_power_spectra.append(['pCs-pCn'])
+flat_power_spectra.append('pCr-pCv')
+flat_power_spectra.append('pCs-pCn')
 folded_power_spectra = [x + '_fold' for x in flat_power_spectra]
 flat_errors = [x + '_err' for x in flat_power_spectra]
 folded_errors = [x + '_err' for x in folded_power_spectra]
