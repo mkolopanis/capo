@@ -6,7 +6,6 @@ from capo import pspec
 from capo.cosmo_units import f212z, c
 import glob
 import matplotlib.pyplot as p
-import numpy as np
 
 
 def errorbars(data, axis=1, per=95):
@@ -522,7 +521,7 @@ def read_bootstraps_dcj(filenames, verbose=False):
 
     accumulated_power_spectra = {}
     for filename in filenames:
-        F = np.load(filename)
+        F = n.load(filename)
         for thing in F.files:
             try:
                 accumulated_power_spectra[thing].append(F[thing])
@@ -534,7 +533,7 @@ def read_bootstraps_dcj(filenames, verbose=False):
     # stack up the various power spectrum channels
     for key in accumulated_power_spectra:
         if key in power_spectrum_channels:
-            accumulated_power_spectra[key] = np.real(np.array(accumulated_power_spectra[key]))
+            accumulated_power_spectra[key] = n.real(n.array(accumulated_power_spectra[key]))
         else:
             # otherwise just keep the first entry,
             # assuming they are all the same but
@@ -543,7 +542,7 @@ def read_bootstraps_dcj(filenames, verbose=False):
     return accumulated_power_spectra
 
 
-def average_bootstraps(indata, Nt_eff, avg_func=np.median, Nboots=100):
+def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
     """
     "Scramble average" the various power spectrum channels across time.
 
@@ -579,7 +578,7 @@ def average_bootstraps(indata, Nt_eff, avg_func=np.median, Nboots=100):
                                              func=avg_func, Nboots=Nboots)
             # power spectrum is the mean and std dev over scramble dimension
             outdata[outname] = avg_func(Z, axis=0)
-            outdata[outname + '_err'] = np.std(Z, axis=0)
+            outdata[outname + '_err'] = n.std(Z, axis=0)
 
             # also do the folded version
             outname += '_fold'
@@ -587,7 +586,7 @@ def average_bootstraps(indata, Nt_eff, avg_func=np.median, Nboots=100):
             Z = scramble_avg_bootstrap_array(X, Nt_eff=Nt_eff, func=avg_func,
                                              Nboots=Nboots)
             outdata[outname] = avg_func(Z, axis=0)
-            outdata[outname + '_err'] = np.std(Z, axis=0)
+            outdata[outname + '_err'] = n.std(Z, axis=0)
             outdata['kpl_fold'] = kpl_fold
 
         else:
@@ -595,7 +594,7 @@ def average_bootstraps(indata, Nt_eff, avg_func=np.median, Nboots=100):
     return outdata
 
 
-def scramble_avg_bootstrap_array(X, Nt_eff=10, Nboots=100, func=np.median):
+def scramble_avg_bootstrap_array(X, Nt_eff=10, Nboots=100, func=n.median):
     """Perform scrambling of times and bls.
 
     choose randomly a time (axis=-1) from a random bootstrap (axis=-2)
@@ -605,10 +604,10 @@ def scramble_avg_bootstrap_array(X, Nt_eff=10, Nboots=100, func=np.median):
     """
     bboots = []
     for i in xrange(Nboots):
-        times_i = np.random.choice(X.shape[-1], Nt_eff, replace=True)
-        bls_i = np.random.choice(X.shape[0], Nt_eff, replace=True)
+        times_i = n.random.choice(X.shape[-1], Nt_eff, replace=True)
+        bls_i = n.random.choice(X.shape[0], Nt_eff, replace=True)
         bboots.append(X[bls_i, :, times_i].squeeze().T)
-    bboots = n.ma.masked_invalid(np.array(bboots))
+    bboots = n.ma.masked_invalid(n.array(bboots))
     return func(bboots, axis=-1)
 
 
@@ -622,21 +621,21 @@ def split_stack_kpl(X, kpl):
     # make sure that kpl matches the kpl axis
     # if theres an odd number of kpls, then there better be a zero value
     assert(X.shape[1] == len(kpl))
-    assert(len(kpl) % 2 == 0 or np.abs(kpl).min() == 0)
-    if np.abs(kpl).min() == 0:
-        kpl0_split_index = np.argmin(np.abs(kpl))
+    assert(len(kpl) % 2 == 0 or n.abs(kpl).min() == 0)
+    if n.abs(kpl).min() == 0:
+        kpl0_split_index = n.argmin(n.abs(kpl))
         X_kpos = X[:, kpl0_split_index:, :]
         # select and flip simultaneously
         X_kneg = X[:, kpl0_split_index::-1, :]
     else:
-        kpl0_split_index = np.where(np.logical_and(
+        kpl0_split_index = n.where(n.logical_and(
                                     kpl > 0,
-                                    np.abs(kpl) == np.min(np.abs(kpl))
+                                    n.abs(kpl) == n.min(n.abs(kpl))
                                     ))[0][0]
         X_kpos = X[:, kpl0_split_index:, :]
         # select and flip simultaneously
         X_kneg = X[:, kpl0_split_index - 1::-1, :]
-    return kpl[kpl0_split_index:], np.concatenate([X_kpos, X_kneg], axis=0)
+    return kpl[kpl0_split_index:], n.concatenate([X_kpos, X_kneg], axis=0)
 
 
 # Matt's power spectrum bits
