@@ -13,7 +13,6 @@ from capo.eor_results import read_bootstraps_dcj, average_bootstraps
 from capo.pspec import dk_du
 from capo import cosmo_units
 import numpy as np
-from IPython import embed
 
 parser = argparse.ArgumentParser(
     description=('Calculate power spectra for a run '
@@ -24,7 +23,7 @@ parser.add_argument('--output', type=str, default='./',
                     help='Specifically specify out directory.')
 parser.add_argument('--nboots', type=int, default=100,
                     help='Number of Bootstraps (averages) default=100')
-args = parser.parse_args(sys.argv[1:])
+args = parser.parse_args()
 
 np.random.seed(0)
 pspecs = read_bootstraps_dcj(args.files)
@@ -59,6 +58,7 @@ kperp = dk_du(pspecs['freq']) * ubl
 print "freq = ", pspecs['freq']
 print "kperp = ", kperp
 pk_pspecs['k'] = np.sqrt(kperp**2 + pk_pspecs['kpl_fold']**2)
+pk_pspecs['kperp'] = np.ma.masked_invalid(kperp)
 for key in pk_pspecs.keys():
     if pk_pspecs[key].dtype not in [np.float]:
         continue
@@ -68,5 +68,5 @@ for key in pk_pspecs.keys():
     except:
         import ipdb
         ipdb.set_trace()
-print 'Saving', args.output + 'pspec_pk_k3pk.npz'
+print args.output + 'pspec_pk_k3pk.npz'
 np.savez(args.output + 'pspec_pk_k3pk.npz', **pk_pspecs)
