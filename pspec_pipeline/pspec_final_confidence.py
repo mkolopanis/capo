@@ -191,8 +191,6 @@ prob_limits = [.2, .25, .3, .35, .4, .5, .68, .85, .9, .95, .97, .99]
 # generate a list of all the names of probs with and without folds
 # assign each name to per in a dict that can be unraveled in the save
 names = ['pI', 'pC', 'pCn', 'pIn']
-fold_names = [name+'_fold' for name in names]
-prob_names = [name+'_prob' for name in names]
 
 for per in prob_limits:
     pC, pC_up, pC_fold, pC_fold_up = get_pk_k3pk(per, k, tanh_parms_data)
