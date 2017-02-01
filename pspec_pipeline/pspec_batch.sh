@@ -32,10 +32,8 @@ DIRNAME=$2
 ## psa64 Options ###
 RA='-0.1_8.6'
 CALFILE='psa6240_v003'
-EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
-ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
-SEP='0,1'
-CHAN='95_115'
+SEP='0,1 1,1 -1,1'
+CHAN='30_50'
 NBOOT=60
 POL='I'
 weight='I'
