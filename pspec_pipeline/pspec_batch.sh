@@ -36,7 +36,7 @@ EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
 SEP='0,1'
 CHAN='95_115'
-NBOOT=20
+NBOOT=60
 POL='I'
 weight='I'
 WINDOW='none'
