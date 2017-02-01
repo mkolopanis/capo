@@ -90,22 +90,27 @@ for filename in args.files:
     if np.max(np.abs(pspec_dict['kpl'])) > k_par_max:
         k_par_max = np.max(np.abs(pspec_dict['kpl']))
 
-    # get special index for gridspec to plot all psecs on same z value
+    # get special index for gridspec to plot all pspecs on same z value
     redshift = f212z(pspec_dict['freq'] * 1e9)
     gs_ind = np.where(zs == redshift)[0].item()
     marker = markers.next()
-    ax1[gs_ind].plot(pspec_dict['k'], pspec_dict['pI_fold'] +
-                     pspec_dict['pI_fold_up'], '--', label='pI')
+    ax1[gs_ind].plot(pspec_dict['k'], pspec_dict['pI_fold']+pspec_dict['pI_fold_up'], '--', label='pI')
     ax1[gs_ind].errorbar(pspec_dict['k'], pspec_dict['pC_fold'],
                          pspec_dict['pC_fold_up'], label='pC {0:02d}%'
                          .format(int(pspec_dict['prob']*100)), linestyle='',
                          marker=marker,color='black')
-    ax2[gs_ind].plot(pspec_dict['kpl'], pspec_dict['pI'] +
-                     pspec_dict['pI_up'], '--', label='pI')
+    ax2[gs_ind].plot(pspec_dict['kpl'], pspec_dict['pI']+pspec_dict['pI_up'], '--', label='pI')
     ax2[gs_ind].errorbar(pspec_dict['kpl'], pspec_dict['pC'],
                          pspec_dict['pC_up'], label='pC {0:02d}%'
                          .format(int(pspec_dict['prob']*100)), linestyle='',
                          marker=marker,color='black')
+    try: # grey points for negative values 
+        neg_ind_fold = pspec_dict['neg_ind_fold']
+        neg_ind = pspec_dict['neg_ind']
+        ax1[gs_ind].errorbar(pspec_dict['k'][neg_ind_fold][0], pspec_dict['pC_fold'][neg_ind_fold][0], pspec_dict['pC_fold_up'][neg_ind_fold][0], linestyle='', marker=marker, color='0.5')
+        ax2[gs_ind].errorbar(pspec_dict['kpl'][neg_ind][0], pspec_dict['pC'][neg_ind][0], pspec_dict['pC_up'][neg_ind][0], linestyle='', marker=marker, color='0.5')
+    except: 
+        pass
 
 
 # set up some parameters to make the figures pretty
