@@ -142,10 +142,6 @@ for key1, key2 in zip(folded_power_spectra, folded_errors):
 
     out_dict[key2] = np.array([1. / np.sqrt(summed_weights[key2][_k])
                                for _k in k])
-# should we average to closest k_perp value?
-ks = np.sqrt(np.min(out_dict['kperp'])**2 + out_dict['kpl_fold']**2)
-out_dict['k'] = ks  # rest k values to be the bins
-digitized = np.digitize(out_dict['k'], ks)
 
 # take smallest to for the bins
 ks = np.sqrt(np.min(out_dict['kperp'])**2 + out_dict['kpl_fold']**2)
