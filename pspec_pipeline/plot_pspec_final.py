@@ -41,7 +41,7 @@ Nzs = len(zs)
 # colors = ['r', 'g', 'k', 'b']
 markers = ['o', ',', 'd', '^', 's', 'v']
 # markers = itertools.cycle(markers)
-marker_count = np.zeros(Nzs)
+marker_count = [ 0 for i in xrnage(Nzs)]
 # Create figure and prep subplot sizes for Delta^2
 fig = plt.figure()
 gs = gridspec.GridSpec(1, Nzs)
@@ -90,7 +90,7 @@ for filename in args.files:
 
     # get special index for gridspec to plot all pspecs on same z value
     redshift = f212z(pspec_dict['freq'] * 1e9)
-    gs_ind = np.where(zs == redshift)[0].item()
+    gs_ind = int(np.where(zs == redshift)[0].item())
     marker = markers[marker_count[gs_ind]]
     marker_count[gs_ind] += 1
     ax1[gs_ind].plot(pspec_dict['k'],
