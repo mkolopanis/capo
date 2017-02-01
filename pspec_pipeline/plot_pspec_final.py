@@ -41,7 +41,7 @@ Nzs = len(zs)
 # colors = ['r', 'g', 'k', 'b']
 markers = ['o', ',', 'd', '^', 's', 'v']
 # markers = itertools.cycle(markers)
-marker_count = [ 0 for i in xrnage(Nzs)]
+marker_count = [0 for i in xrange(Nzs)]
 # Create figure and prep subplot sizes for Delta^2
 fig = plt.figure()
 gs = gridspec.GridSpec(1, Nzs)
