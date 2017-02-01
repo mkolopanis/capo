@@ -73,7 +73,7 @@ if args.noisefiles:
         d2_n = noises[gs_ind]
         pk_n = 2*np.pi**2/(np.array(noise_ks[gs_ind])**3)*d2_n
         ax2[gs_ind].plot(noise_ks[gs_ind], pk_n, '-', color='cyan')
-        ax2[gs_ind].plot(-noise_ks[gs_ind], pk_n, '-', color='cyan')
+        ax2[gs_ind].plot(-np.array(noise_ks[gs_ind]), pk_n, '-', color='cyan')
 
 
 k_max = 0
