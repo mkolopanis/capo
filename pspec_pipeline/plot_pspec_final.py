@@ -80,12 +80,15 @@ if args.noisefiles:
 
     # Plot the Noise files on the plot
     for gs_ind in xrange(Nzs):
-        ax1[gs_ind].plot(noise_ks[gs_ind], noises[gs_ind], 'k-')
+        ax1[gs_ind].plot(noise_ks[gs_ind], noises[gs_ind], 'c-', label='21cmSense')
 
         d2_n = noises[gs_ind]
         pk_n = 2*np.pi**2/(np.array(noise_ks[gs_ind])**3)*d2_n
-        ax2[gs_ind].plot(noise_ks[gs_ind], pk_n, '-', color='cyan')
-        ax2[gs_ind].plot(-np.array(noise_ks[gs_ind]), pk_n, '-', color='cyan')
+        ax2[gs_ind].plot(noise_ks[gs_ind], pk_n, '-', color='c')
+        ax2[gs_ind].plot(-np.array(noise_ks[gs_ind]), pk_n, '-', color='c', label='21cmSense')
+        ax3[gs_ind].plot(noise_ks[gs_ind], noises[gs_ind], 'c-', label='21cmSense')
+        ax4[gs_ind].plot(noise_ks[gs_ind], pk_n, '-', color='c')
+        ax4[gs_ind].plot(-np.array(noise_ks[gs_ind]), pk_n, '-', color='c', label='21cmSense')
 
 
 k_max = 0
