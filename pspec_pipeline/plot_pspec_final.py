@@ -162,8 +162,14 @@ for filename in args.files:
 
 # set up some parameters to make the figures pretty
 for gs_ind in xrange(Nzs):
+    # only set ylabel for first plot
+    if gs_ind == 0:
+        ax1[gs_ind].set_ylabel('$\\frac{k^{3}}{2\pi^{2}}$ $P(k)$ $[mK^{2}]$')
+        ax2[gs_ind].set_ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$')
+        ax3[gs_ind].set_ylabel('$\\frac{k^{3}}{2\pi^{2}}$ $P(k)$ $[mK^{2}]$')
+        ax4[gs_ind].set_ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$')
+
     ax1[gs_ind].set_title('z = {0:.2f}'.format(zs[gs_ind]))
-    ax1[gs_ind].set_ylabel('$\\frac{k^{3}}{2\pi^{2}}$ $P(k)$ $[mK^{2}]$')
     ax1[gs_ind].set_yscale('log', nonposy='clip')
     ax1[gs_ind].set_xlabel('$k$ [$h$ Mpc$^{-1}$]')
     ax1[gs_ind].set_xlim(0, k_max * 1.01)
@@ -172,14 +178,12 @@ for gs_ind in xrange(Nzs):
 
     ax2[gs_ind].set_yscale('log', nonposy='clip')
     ax2[gs_ind].set_title('z = {0:.2f}'.format(zs[gs_ind]))
-    ax2[gs_ind].set_ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$')
     ax2[gs_ind].set_xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]')
     ax2[gs_ind].set_xlim(-1.01 * k_par_max, k_par_max * 1.01)
     ax2[gs_ind].get_shared_y_axes().join(ax2[0], ax2[gs_ind])
     ax2[gs_ind].grid(True)
 
     ax3[gs_ind].set_title('z = {0:.2f}'.format(zs[gs_ind]))
-    ax3[gs_ind].set_ylabel('$\\frac{k^{3}}{2\pi^{2}}$ $P(k)$ $[mK^{2}]$')
     ax3[gs_ind].set_yscale('log', nonposy='clip')
     ax3[gs_ind].set_xlabel('$k$ [$h$ Mpc$^{-1}$]')
     ax3[gs_ind].set_xlim(0, k_max * 1.01)
@@ -188,7 +192,6 @@ for gs_ind in xrange(Nzs):
 
     ax4[gs_ind].set_yscale('log', nonposy='clip')
     ax4[gs_ind].set_title('z = {0:.2f}'.format(zs[gs_ind]))
-    ax4[gs_ind].set_ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$')
     ax4[gs_ind].set_xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]')
     ax4[gs_ind].set_xlim(-1.01 * k_par_max, k_par_max * 1.01)
     ax4[gs_ind].get_shared_y_axes().join(ax2[0], ax2[gs_ind])
