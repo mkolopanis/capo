@@ -43,25 +43,25 @@ markers = ['o', ',', 'd', '^', 's', 'v']
 # markers = itertools.cycle(markers)
 marker_count = [0 for i in xrange(Nzs)]
 # Create figure and prep subplot sizes for Delta^2
-fig = plt.figure(figsize=(5,6))
+fig = plt.figure(figsize=(5, 6))
 gs = gridspec.GridSpec(1, Nzs)
 gs.update(hspace=0.0, wspace=0.2)
 ax1 = [plt.subplot(gs[:, i]) for i in range(Nzs)]
 
 # Create figure and prep subplots for P(k)
-fig2 = plt.figure(figsize=(5,6))
+fig2 = plt.figure(figsize=(5, 6))
 gs = gridspec.GridSpec(1, Nzs)
 gs.update(hspace=0.0, wspace=0.2)
 ax2 = [plt.subplot(gs[:, i]) for i in range(Nzs)]
 
 # Create figure and prep subplot sizes for Delta^2 Noise
-fig3 = plt.figure(figsize=(5,6))
+fig3 = plt.figure(figsize=(5, 6))
 gs = gridspec.GridSpec(1, Nzs)
 gs.update(hspace=0.0, wspace=0.2)
 ax3 = [plt.subplot(gs[:, i]) for i in range(Nzs)]
 
 # Create figure and prep subplot sizes for P(k) Noise
-fig4 = plt.figure(figsize=(5,6))
+fig4 = plt.figure(figsize=(5, 6))
 gs = gridspec.GridSpec(1, Nzs)
 gs.update(hspace=0.0, wspace=0.2)
 ax4 = [plt.subplot(gs[:, i]) for i in range(Nzs)]
@@ -80,12 +80,14 @@ if args.noisefiles:
 
     # Plot the Noise files on the plot
     for gs_ind in xrange(Nzs):
-        ax1[gs_ind].plot(noise_ks[gs_ind], noises[gs_ind], 'k-')
+        ax1[gs_ind].plot(noise_ks[gs_ind], noises[gs_ind], '-',
+                         color='cyan', label='21cmSense')
 
         d2_n = noises[gs_ind]
         pk_n = 2*np.pi**2/(np.array(noise_ks[gs_ind])**3)*d2_n
         ax2[gs_ind].plot(noise_ks[gs_ind], pk_n, '-', color='cyan')
-        ax2[gs_ind].plot(-np.array(noise_ks[gs_ind]), pk_n, '-', color='cyan')
+        ax2[gs_ind].plot(-np.array(noise_ks[gs_ind]), pk_n, '-', color='cyan',
+                         label='21cmSense')
 
 
 k_max = 0
@@ -116,28 +118,44 @@ for filename in args.files:
     ax2[gs_ind].errorbar(pspec_dict['kpl'], pspec_dict['pC'],
                          pspec_dict['pC_up'], label='pC {0:02d}%'
                          .format(int(pspec_dict['prob']*100)), linestyle='',
-                         marker=marker,color='black')
-    ax3[gs_ind].plot(pspec_dict['k'], pspec_dict['pIn_fold']+pspec_dict['pIn_fold_up'], '--', label='pIn')
+                         marker=marker, color='black')
+    ax3[gs_ind].plot(pspec_dict['k'],
+                     pspec_dict['pIn_fold'] + pspec_dict['pIn_fold_up'], '--',
+                     label='pIn')
     ax3[gs_ind].errorbar(pspec_dict['k'], pspec_dict['pCn_fold'],
                          pspec_dict['pCn_fold_up'], label='pCn {0:02d}%'
                          .format(int(pspec_dict['prob']*100)), linestyle='',
-                         marker=marker,color='black')
-    ax4[gs_ind].plot(pspec_dict['kpl'], pspec_dict['pIn']+pspec_dict['pIn_up'], '--', label='pIn')
+                         marker=marker, color='black')
+    ax4[gs_ind].plot(pspec_dict['kpl'],
+                     pspec_dict['pIn'] + pspec_dict['pIn_up'], '--',
+                     label='pIn')
     ax4[gs_ind].errorbar(pspec_dict['kpl'], pspec_dict['pCn'],
                          pspec_dict['pCn_up'], label='pCn {0:02d}%'
                          .format(int(pspec_dict['prob']*100)), linestyle='',
-                         marker=marker,color='black')
+                         marker=marker, color='black')
 
-    try: # grey points for negative values 
+    try:  # grey points for negative values
         neg_ind_fold = pspec_dict['neg_ind_fold']
         neg_ind = pspec_dict['neg_ind']
         neg_ind_noise_fold = pspec_dict['neg_ind_noise_fold']
         neg_ind_noise = pspec_dict['neg_ind_noise']
-        ax1[gs_ind].errorbar(pspec_dict['k'][neg_ind_fold][0], pspec_dict['pC_fold'][neg_ind_fold][0], pspec_dict['pC_fold_up'][neg_ind_fold][0], linestyle='', marker=marker, color='0.5')
-        ax2[gs_ind].errorbar(pspec_dict['kpl'][neg_ind][0], pspec_dict['pC'][neg_ind][0], pspec_dict['pC_up'][neg_ind][0], linestyle='', marker=marker, color='0.5')
-        ax3[gs_ind].errorbar(pspec_dict['k'][neg_ind_noise_fold][0], pspec_dict['pCn_fold'][neg_ind_noise_fold][0], pspec_dict['pCn_fold_up'][neg_ind_noise_fold][0], linestyle='', marker=marker, color='0.5')
-        ax4[gs_ind].errorbar(pspec_dict['kpl'][neg_ind_noise][0], pspec_dict['pCn'][neg_ind_noise][0], pspec_dict['pCn_up'][neg_ind_noise][0], linestyle='', marker=marker, color='0.5')
-    except: 
+        ax1[gs_ind].errorbar(pspec_dict['k'][neg_ind_fold][0],
+                             pspec_dict['pC_fold'][neg_ind_fold][0],
+                             pspec_dict['pC_fold_up'][neg_ind_fold][0],
+                             linestyle='', marker=marker, color='0.5')
+        ax2[gs_ind].errorbar(pspec_dict['kpl'][neg_ind][0],
+                             pspec_dict['pC'][neg_ind][0],
+                             pspec_dict['pC_up'][neg_ind][0], linestyle='',
+                             marker=marker, color='0.5')
+        ax3[gs_ind].errorbar(pspec_dict['k'][neg_ind_noise_fold][0],
+                             pspec_dict['pCn_fold'][neg_ind_noise_fold][0],
+                             pspec_dict['pCn_fold_up'][neg_ind_noise_fold][0],
+                             linestyle='', marker=marker, color='0.5')
+        ax4[gs_ind].errorbar(pspec_dict['kpl'][neg_ind_noise][0],
+                             pspec_dict['pCn'][neg_ind_noise][0],
+                             pspec_dict['pCn_up'][neg_ind_noise][0],
+                             linestyle='', marker=marker, color='0.5')
+    except:
         pass
 
 
@@ -158,16 +176,16 @@ for gs_ind in xrange(Nzs):
     ax2[gs_ind].set_xlim(-1.01 * k_par_max, k_par_max * 1.01)
     ax2[gs_ind].get_shared_y_axes().join(ax2[0], ax2[gs_ind])
     ax2[gs_ind].grid(True)
-    
+
     ax3[gs_ind].set_title('z = {0:.2f}'.format(zs[gs_ind]))
     ax3[gs_ind].set_ylabel('$\\frac{k^{3}}{2\pi^{2}}$ $P(k)$ $[mK^{2}]$')
-    ax3[gs_ind].set_yscale('log',nonposy='clip')
+    ax3[gs_ind].set_yscale('log', nonposy='clip')
     ax3[gs_ind].set_xlabel('$k$ [$h$ Mpc$^{-1}$]')
     ax3[gs_ind].set_xlim(0, k_max * 1.01)
     ax3[gs_ind].get_shared_y_axes().join(ax1[0], ax1[gs_ind])
     ax3[gs_ind].grid(True)
 
-    ax4[gs_ind].set_yscale('log',nonposy='clip')
+    ax4[gs_ind].set_yscale('log', nonposy='clip')
     ax4[gs_ind].set_title('z = {0:.2f}'.format(zs[gs_ind]))
     ax4[gs_ind].set_ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$')
     ax4[gs_ind].set_xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]')
@@ -178,11 +196,11 @@ for gs_ind in xrange(Nzs):
 ax1[0].set_ylim([1e-1, 1e12])
 ax1[0].set_xlim([0.0, 0.6])
 ax2[0].set_ylim([1e-1, 1e12])
-ax2[0].set_xlim([-0.6,0.6])
+ax2[0].set_xlim([-0.6, 0.6])
 ax3[0].set_ylim([1e-1, 1e12])
-ax3[0].set_xlim([0.0,0.6])
+ax3[0].set_xlim([0.0, 0.6])
 ax4[0].set_ylim([1e-1, 1e12])
-ax4[0].set_xlim([-0.6,0.6])
+ax4[0].set_xlim([-0.6, 0.6])
 
 handles, labels = ax1[-1].get_legend_handles_labels()
 ax1[-1].legend(handles, labels, loc='lower right', numpoints=1)
