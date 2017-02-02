@@ -35,7 +35,8 @@ for filename in args.files:
     freq = F['freq']
     zs.append(f212z(freq * 1e9))
 
-zs = np.unique(zs)
+# reverse order to make high redshift of left of plot
+zs = np.unique(zs)[::-1]
 Nzs = len(zs)
 # define some color format sets for the plotter
 # colors = ['r', 'g', 'k', 'b']
@@ -192,6 +193,13 @@ for gs_ind in xrange(Nzs):
     ax4[gs_ind].set_xlim(-1.01 * k_par_max, k_par_max * 1.01)
     ax4[gs_ind].get_shared_y_axes().join(ax2[0], ax2[gs_ind])
     ax4[gs_ind].grid(True)
+
+    # if multi redshift, make shared axes invisible
+    if gs_ind > 0:
+        ax1[gs_ind].get_yaxis().set_visible(False)
+        ax2[gs_ind].get_yaxis().set_visible(False)
+        ax3[gs_ind].get_yaxis().set_visible(False)
+        ax4[gs_ind].get_yaxis().set_visible(False)
 
 ax1[0].set_ylim([1e-1, 1e12])
 ax1[0].set_xlim([0.0, 0.6])
