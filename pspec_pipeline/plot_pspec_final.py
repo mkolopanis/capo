@@ -43,26 +43,27 @@ Nzs = len(zs)
 markers = ['o', ',', 'd', '^', 's', 'v']
 # markers = itertools.cycle(markers)
 marker_count = [0 for i in xrange(Nzs)]
+figsize = (5 * (1 + Nzs)/2., 6)
 # Create figure and prep subplot sizes for Delta^2
-fig = plt.figure(figsize=(5, 6))
+fig = plt.figure(figsize=figsize)
 gs = gridspec.GridSpec(1, Nzs)
 gs.update(hspace=0.0, wspace=0.2)
 ax1 = [plt.subplot(gs[:, i]) for i in range(Nzs)]
 
 # Create figure and prep subplots for P(k)
-fig2 = plt.figure(figsize=(5, 6))
+fig2 = plt.figure(figsize=figsize)
 gs = gridspec.GridSpec(1, Nzs)
 gs.update(hspace=0.0, wspace=0.2)
 ax2 = [plt.subplot(gs[:, i]) for i in range(Nzs)]
 
 # Create figure and prep subplot sizes for Delta^2 Noise
-fig3 = plt.figure(figsize=(5, 6))
+fig3 = plt.figure(figsize=figsize)
 gs = gridspec.GridSpec(1, Nzs)
 gs.update(hspace=0.0, wspace=0.2)
 ax3 = [plt.subplot(gs[:, i]) for i in range(Nzs)]
 
 # Create figure and prep subplot sizes for P(k) Noise
-fig4 = plt.figure(figsize=(5, 6))
+fig4 = plt.figure(figsize=figsize)
 gs = gridspec.GridSpec(1, Nzs)
 gs.update(hspace=0.0, wspace=0.2)
 ax4 = [plt.subplot(gs[:, i]) for i in range(Nzs)]
