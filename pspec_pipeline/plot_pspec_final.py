@@ -196,10 +196,10 @@ for gs_ind in xrange(Nzs):
 
     # if multi redshift, make shared axes invisible
     if gs_ind > 0:
-        ax1[gs_ind].get_yaxis().set_visible(False)
-        ax2[gs_ind].get_yaxis().set_visible(False)
-        ax3[gs_ind].get_yaxis().set_visible(False)
-        ax4[gs_ind].get_yaxis().set_visible(False)
+        ax1[gs_ind].get_yticklabels().set_visible(False)
+        ax2[gs_ind].get_yticklabels().set_visible(False)
+        ax3[gs_ind].get_yticklabels().set_visible(False)
+        ax4[gs_ind].get_yticklabels().set_visible(False)
 
 ax1[0].set_ylim([1e-1, 1e12])
 ax1[0].set_xlim([0.0, 0.6])
