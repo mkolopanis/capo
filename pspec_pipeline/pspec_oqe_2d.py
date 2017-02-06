@@ -193,7 +193,8 @@ chans = a.scripting.parse_chans(opts.chan, uv['nchan'])
 inttime = uv['inttime']
 # try to take the frf_inttime from the file
 # for old filtered files, need to use parameter still
-frf_inttime = uv['FRF_NEBW']
+try: frf_inttime = uv['FRF_NEBW']
+except: frf_inttime = inttime
 print 'inttime:', inttime
 print 'frf_inttime:', frf_inttime
 afreqs = freqs.take(chans)
@@ -264,7 +265,7 @@ for k in days:
         # extract frequency range
         flg = n.array(flgs[k][bl][POL])[:, chans]
         key = (k, bl, POL)
-        data_dict_v[key] = d
+        data_dict_v[key] = d 
         flg_dict[key] = n.logical_not(flg)
         conj_dict[key[1]] = conj[bl]
 keys = data_dict_v.keys()
@@ -304,7 +305,7 @@ print '\n  Creating noise'
 if opts.doublefrf:
     print '  Fringe-rate-filtering noise twice'
 for key in data_dict_v:
-    data_dict_n[key] = frf((len(chans), nlst))  # different on each baseline
+    data_dict_n[key] = frf((len(chans), nlst))*100  # different on each baseline
 
 # Set data
 dsv = oqe.DataSet()  # just data
