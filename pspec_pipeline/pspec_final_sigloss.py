@@ -11,7 +11,7 @@ import optparse, sys
 
 fig = p.figure(1, figsize=(15,7))
 pklo,pkhi = 1e1,1e12
-Pin_points = {}
+Pin_points = {} # for interpolator
 Pout_points = {}
 Pout_noise_points = {}
 
@@ -20,7 +20,6 @@ pCv = n.abs(file['pCv']); pCv_err = file['pCv_err']
 pIv = n.abs(file['pIv']); pIv_err = file['pIv_err']
 pCn = n.abs(file['pCn']); pCn_err = file['pCn_err']
 pIn = n.abs(file['pIn']); pIn_err = file['pIn_err'] # absolute values only used for signal loss estimation - both positive/negative values are saved in npz file lalr
-
 for inject in glob.glob('inject_*'):
     print 'Reading', inject
     file = n.load(inject + '/pspec_pk_k3pk.npz')
@@ -28,13 +27,12 @@ for inject in glob.glob('inject_*'):
     Pout = n.abs(file['pCr-pCv']); Pout_err = file['pCr-pCv_err']
     Pout_noise = n.abs(file['pCs-pCn']); Pout_noise_err = file['pCs-pCn_err']
     Pin = n.abs(file['pIe']); pIe_err = file['pIe_err']
-
     for ind in range(len(kpl)): # plot for each k
         p.figure(1)
         p.subplot(3,7,ind)
         try:
             Pin_points[kpl[ind]].append(Pin[ind])
-            Pout_points[kpl[ind]].append(Pout[ind])
+            Pout_points[kpl[ind]].append(Pout[ind]) 
             Pout_noise_points[kpl[ind]].append(Pout_noise[ind])
         except:
             Pin_points[kpl[ind]] = [Pin[ind]]
@@ -74,7 +72,7 @@ for ind in range(len(kpl)): # interpolation for signal loss factors for each k
     sigfactors_noise.append(sig_factor_interp_noise(pCn[ind]+2*pCn_err[ind])) # 2-sigma upper limit for pCn
 
 # Signal loss factor vs. k
-"""
+
 p.figure(2)
 for ind in range(len(kpl)):
     p.plot(kpl[ind],sigfactors[ind],'k.',label='Data' if ind==0 else "")
@@ -82,7 +80,7 @@ for ind in range(len(kpl)):
     p.xlabel('kpl')
     p.ylabel('Signal Loss Factor')
 p.legend()
-"""
+
 split_index = n.argmin(n.abs(kpl))
 sigfactors_pos = sigfactors[split_index:]
 sigfactors_neg = sigfactors[split_index::-1]
