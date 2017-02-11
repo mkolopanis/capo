@@ -626,6 +626,7 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
                       'pCs-pCn': 'pCs-pCn',
                       'pCr-pCv': 'pCr-pCv'}
     outdata = {}
+    vals = {} # for all values
     for inname in indata:
         if inname in pspec_channels.keys():
             outname = pspec_channels[inname]
@@ -634,6 +635,7 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
             # only draw as many times as we have independent lsts (Nt_eff)
             Z = scramble_avg_bootstrap_array(indata[inname], Nt_eff=Nt_eff,
                                              func=avg_func, Nboots=Nboots)
+            vals[outname] = Z.data
             # power spectrum is the mean and std dev over scramble dimension
             outdata[outname] = avg_func(Z, axis=0)
             outdata[outname + '_err'] = n.std(Z, axis=0)
@@ -649,7 +651,7 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
 
         else:
             outdata[inname] = indata[inname]
-    return outdata
+    return outdata, vals
 
 
 def scramble_avg_bootstrap_array(X, Nt_eff=10, Nboots=100, func=n.median):
