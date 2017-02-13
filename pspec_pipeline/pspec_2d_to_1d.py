@@ -48,11 +48,11 @@ pspecs['pCr-pCv'] = pspecs['pCr'] - pspecs['pCv']  # subtracted
 pspecs['pCs-pCn'] = pspecs['pCs'] - pspecs['pCn']
 
 # compute Pk vs kpl vs bootstraps
-pk_pspecs,vals = average_bootstraps(pspecs, Nt_eff=Neff_lst,
-                               Nboots=args.nboots, avg_func=np.median)
+pk_pspecs, vals = average_bootstraps(pspecs, Nt_eff=Neff_lst,
+                                     Nboots=args.nboots, avg_func=np.median)
 
-print 'Saving pspec_2d_to_1d.npz' # save all values used in bootstrapping
-np.savez(args.output + 'pspec_2d_to_1d.npz',**vals)
+print 'Saving pspec_2d_to_1d.npz'  # save all values used in bootstrapping
+np.savez(args.output + 'pspec_2d_to_1d.npz', **vals)
 
 # Compute |k|
 bl_length = np.linalg.norm(pspecs['uvw'])
