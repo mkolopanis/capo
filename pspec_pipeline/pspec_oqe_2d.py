@@ -87,7 +87,7 @@ def make_PS(keys, ds, grouping=True):
     """
     if grouping:
         newkeys, dsC = ds.group_data(keys, gps)
-        newkeys, dsI = ds.group_data(keys, gps, use_cov=False)
+        newkeys, dsI = ds.group_data(keys, gps, use_cov=False)  
     else:  # no groups (slower)
         newkeys = [random.choice(keys) for key in keys]
         # sample w/replacement for bootstrapping
