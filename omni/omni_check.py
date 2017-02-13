@@ -64,7 +64,7 @@ if opts.gains == True or opts.chisqant == True:
                 except: continue
                 try: gains[a].append(value)
                 except: gains[a] = [value]
-                vmax=0.05
+                vmax=0.5
                 vmin=0.0
             if opts.gains == True:
                 print "option doesn't exist yet"
@@ -103,6 +103,7 @@ if opts.gains == True or opts.chisqant == True:
     plt.plot(A,B,'ko')
     for index,(i,j) in enumerate(zip(A,B)):
         ax.annotate([ants[k] for k in numpy.argsort(means)[::-1]][index], xy=(i,j),size=10)
+        ax.axhline(cut, color='purple', label='Avg+Std')
     plt.title('Median Chisq (high to low)')
     plt.show()
     print '1 sigma cut on median chisq: ',[ants[i] for i in numpy.where(means > numpy.mean(means) + 1.0*numpy.std(means))[0]]

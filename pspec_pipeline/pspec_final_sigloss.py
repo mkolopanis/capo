@@ -28,7 +28,7 @@ pCn_err = file['pCn_err']
 pIn = n.abs(file['pIn'])
 pIn_err = file['pIn_err']
 #  absolute values only used for signal loss estimation
-#  both positive/negative values are saved in npz file lalr
+#  both positive/negative values are saved in npz file later
 
 for inject in glob.glob('inject_*'):
     print 'Reading', inject
@@ -46,7 +46,7 @@ for inject in glob.glob('inject_*'):
         p.subplot(3, 7, ind)
         try:
             Pin_points[kpl[ind]].append(Pin[ind])
-            Pout_points[kpl[ind]].append(Pout[ind])
+            Pout_points[kpl[ind]].append(Pout[ind]) 
             Pout_noise_points[kpl[ind]].append(Pout_noise[ind])
         except:
             Pin_points[kpl[ind]] = [Pin[ind]]
@@ -104,14 +104,15 @@ for ind in range(len(kpl)):  # interpolation for signal loss factors for each k
 
 # Signal loss factor vs. k
 
-# p.figure(2)
-# for ind in range(len(kpl)):
-#     p.plot(kpl[ind],sigfactors[ind],'k.',label='Data' if ind==0 else "")
-#     p.plot(kpl[ind],sigfactors_noise[ind],'b.',
-#            label='Noise' if ind==0 else "")
-#     p.xlabel('kpl')
-#     p.ylabel('Signal Loss Factor')
-# p.legend()
+
+p.figure(2)
+for ind in range(len(kpl)):
+    p.plot(kpl[ind],sigfactors[ind],'k.',label='Data' if ind==0 else "")
+    p.plot(kpl[ind],sigfactors_noise[ind],'b.',label='Noise' if ind==0 else "")
+    p.xlabel('kpl')
+    p.ylabel('Signal Loss Factor')
+p.legend()
+
 
 split_index = n.argmin(n.abs(kpl))
 sigfactors_pos = sigfactors[split_index:]
