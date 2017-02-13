@@ -15,7 +15,7 @@ o.add_option('-f','--freq',dest='freq',default='0.15_0.16',type=str,
     help='frequency range in GHz over which to integrate beam model')
 o.add_option('--pol',default='x',
     help='Polarization default=x')
-o.add_option('--nside',default=512,
+o.add_option('--nside',default=512,type=int,
     help='nside at which to perform integral')
 opts, args = o.parse_args(sys.argv[1:])
 
@@ -30,18 +30,20 @@ npix = hp.nside2npix(opts.nside)
 pix = np.arange(npix)
 theta,phi = hp.pix2ang(opts.nside,pix)
 #only keep points above the horizon
-phi[theta<90] = phi[theta<90]
-theta[theta<90] = theta[theta<90]
+phi = phi[theta<np.pi/2]
+theta = theta[theta<np.pi/2]
 intpix = hp.ang2pix(opts.nside,theta,phi)
 x,y,z = hp.pix2vec(opts.nside,intpix)
+print z.max(),z.min()
+
 pixarea = hp.nside2pixarea(opts.nside) #pixel area in radians
 
 
 #nomenclature after Parsons 2016 (1503.05564v2)
 print "integrating over bandwidth"
-
 V = aa[0].bm_response((x,y,z),pol=opts.pol)  #V is defined as the voltage beam, there are two terms of it in the visibility equation
 Omega_V = np.sum(V) * pixarea * df/B
+
 print "Omega voltage = ",np.round(Omega_V,2)
 A = aa[0].bm_response((x,y,z),pol=opts.pol)**2  #A is defined as the power beam, there is one term of it in the visibility equation
 Omega_p = np.sum(A)*pixarea * df / B
