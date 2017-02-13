@@ -104,7 +104,7 @@ for ind in range(len(kpl)):  # interpolation for signal loss factors for each k
 
 # Signal loss factor vs. k
 
-"""
+
 p.figure(2)
 for ind in range(len(kpl)):
     p.plot(kpl[ind],sigfactors[ind],'k.',label='Data' if ind==0 else "")
@@ -112,7 +112,7 @@ for ind in range(len(kpl)):
     p.xlabel('kpl')
     p.ylabel('Signal Loss Factor')
 p.legend()
-"""
+
 
 split_index = n.argmin(n.abs(kpl))
 sigfactors_pos = sigfactors[split_index:]
