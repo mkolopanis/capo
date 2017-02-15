@@ -46,6 +46,8 @@ for key in pspecs.keys():
 
 pspecs['pCr-pCv'] = pspecs['pCr'] - pspecs['pCv']  # subtracted
 pspecs['pCs-pCn'] = pspecs['pCs'] - pspecs['pCn']
+pspecs['pIr-pIv'] = pspecs['pIr'] - pspecs['pIv']
+pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 
 # compute Pk vs kpl vs bootstraps
 pk_pspecs, vals = average_bootstraps(pspecs, Nt_eff=Neff_lst,
