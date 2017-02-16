@@ -13,31 +13,25 @@ from capo.eor_results import read_bootstraps_dcj, average_bootstraps
 from capo.pspec import dk_du
 from capo import cosmo_units
 import numpy as np
-from IPython import embed
 
 parser = argparse.ArgumentParser(
-            description=('Calculate power spectra for a run '
-                         'from pspec_oqe_2d.py'))
+    description=('Calculate power spectra for a run '
+                 'from pspec_oqe_2d.py'))
 parser.add_argument('files', metavar='<FILE>', type=str, nargs='+',
                     help='List of files to average')
-# parser.add_argument('--bl_length', type=float,  required=True,
-#                    help='length of baseline in meters')
-parser.add_argument('--sub_pCv', action='store_true',
-                    help='Remove pCv back from pC before averaging')
-parser.add_argument('--outfile', type=str, default='./',
+parser.add_argument('--output', type=str, default='./',
                     help='Specifically specify out directory.')
 parser.add_argument('--nboots', type=int, default=100,
                     help='Number of Bootstraps (averages) default=100')
-# parser.add_argument('--mode', dest='mode', choices=['prob','excess'],
-#                     default='prob',
-#                     help='limit estimation method')
-args = parser.parse_args(sys.argv[1:])
+args = parser.parse_args()
 
+np.random.seed(0)
 pspecs = read_bootstraps_dcj(args.files)
 Nlstbins = np.shape(pspecs['pCr'])[-1]
 # get the number of lst integrations in the dataset
-t_eff = pspecs['frf_inttime']/pspecs['inttime']
-Neff_lst = np.ceil(Nlstbins/t_eff)
+t_eff = pspecs['frf_inttime'] / pspecs['inttime']
+Neff_lst = np.ceil(Nlstbins / t_eff)
+
 # compute the effective number of LST bins
 # print Neff_lst
 # lets round up because this 'N' is only approximate
@@ -49,39 +43,36 @@ for key in pspecs.keys():
     except:
         import ipdb
         ipdb.set_trace()
-if args.sub_pCv:
-    pspecs['pCr'] -= pspecs['pCv']
+
+pspecs['pCr-pCv'] = pspecs['pCr'] - pspecs['pCv']  # subtracted
+pspecs['pCs-pCn'] = pspecs['pCs'] - pspecs['pCn']
+pspecs['pIr-pIv'] = pspecs['pIr'] - pspecs['pIv']
+pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 
 # compute Pk vs kpl vs bootstraps
-pk_pspecs = average_bootstraps(pspecs, Nt_eff=Neff_lst,
-                               Nboots=args.nboots, avg_func=np.mean)
+pk_pspecs, vals = average_bootstraps(pspecs, Nt_eff=Neff_lst,
+                                     Nboots=args.nboots, avg_func=np.median)
+
+print 'Saving pspec_2d_to_1d.npz'  # save all values used in bootstrapping
+np.savez(args.output + 'pspec_2d_to_1d.npz', **vals)
 
 # Compute |k|
 bl_length = np.linalg.norm(pspecs['uvw'])
-wavelength = cosmo_units.c/(pspecs['freq']*1e9)
-ubl = bl_length/wavelength
-kperp = dk_du(pspecs['freq'])*ubl
-print bl_length
+wavelength = cosmo_units.c / (pspecs['freq'] * 1e9)
+ubl = bl_length / wavelength
+kperp = dk_du(pspecs['freq']) * ubl
 print "freq = ", pspecs['freq']
 print "kperp = ", kperp
 pk_pspecs['k'] = np.sqrt(kperp**2 + pk_pspecs['kpl_fold']**2)
-# apply corrections to all the various channels
-pspec_channels = ['pCr', 'pIr', 'pCv', 'pIv']
-corrections = [1/np.sqrt(2),  # the median overestimates by sqrt(2)
-               1.39]        # beam^2
-# for chan in pspec_channels:
-#     for c in [chan,chan+'_fold']: #no need to correct error bars
-#         for correction in corrections:
-#             pk_pspecs[c] *= correction
-# make a pspec file
+pk_pspecs['kperp'] = np.ma.masked_invalid(kperp)
 for key in pk_pspecs.keys():
     if pk_pspecs[key].dtype not in [np.float]:
         continue
     try:
-        pk_pspecs[key].fill_value = 0
-        pk_pspecs[key] = pk_pspecs[key].filled()
+        pk_pspecs[key].fill_value = 0  # fills invalid values with 0's
+        pk_pspecs[key] = pk_pspecs[key].filled()  # returns corrected array
     except:
         import ipdb
         ipdb.set_trace()
-print args.outfile + 'pspec_pk_k3pk.npz'
-np.savez(args.outfile + 'pspec_pk_k3pk.npz', **pk_pspecs)
+print 'Saving', args.output + 'pspec_pk_k3pk.npz'
+np.savez(args.output + 'pspec_pk_k3pk.npz', **pk_pspecs)
