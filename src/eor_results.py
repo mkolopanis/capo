@@ -655,7 +655,8 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
 
         else:
             outdata[inname] = indata[inname]
-    return outdata, vals.update(vals_fold)
+    vals.update(vals_fold)
+    return outdata, vals
 
 
 def scramble_avg_bootstrap_array(X, Nt_eff=10, Nboots=100, func=n.median):
