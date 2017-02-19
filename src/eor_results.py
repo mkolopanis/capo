@@ -586,7 +586,7 @@ def read_bootstraps_dcj(filenames, verbose=False):
             except(KeyError):
                 accumulated_power_spectra[thing] = [F[thing]]
     power_spectrum_channels = ['pC', 'pI', 'err', 'pCv', 'var', 'pIv',
-                               'pCe', 'pIe', 'pIr', 'pCr', 'pCr-pCv', 'pIr-pIv', 
+                               'pCe', 'pIe', 'pIr', 'pCr', 'pCr-pCv', 'pIr-pIv',
                                'pCn', 'pIn', 'pCs', 'pIs', 'pCs-pCn', 'pIs-pIn']
     # stack up the various power spectrum channels
     for key in accumulated_power_spectra:
@@ -657,9 +657,9 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
 
 
 def scramble_avg_bootstrap_array(X, Nt_eff=10, Nboots=100, func=n.median):
-    """Perform scrambling of times and bls.
+    """Perform scramble accumulation of times and bootstraps.
 
-    choose randomly a time (axis=-1) from a random bootstrap (axis=-2)
+    choose randomly a time (axis=-1) from a random bootstrap (axis=0)
     apply func to the result (default is numpy.median)
     do for NBOOT iterations
     assumes input array dimensions (nbootstraps,nks,ntimes)
@@ -667,8 +667,8 @@ def scramble_avg_bootstrap_array(X, Nt_eff=10, Nboots=100, func=n.median):
     bboots = []
     for i in xrange(Nboots):
         times_i = n.random.choice(X.shape[-1], Nt_eff, replace=True)
-        bls_i = n.random.choice(X.shape[0], Nt_eff, replace=True)
-        bboots.append(X[bls_i, :, times_i].squeeze().T)
+        bs_i = n.random.choice(X.shape[0], Nt_eff, replace=True)
+        bboots.append(X[bs_i, :, times_i].squeeze().T)
     bboots = n.ma.masked_invalid(n.array(bboots))
     return func(bboots, axis=-1)
 
