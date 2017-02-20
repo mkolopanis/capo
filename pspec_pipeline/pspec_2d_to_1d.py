@@ -46,11 +46,13 @@ for key in pspecs.keys():
 
 pspecs['pCr-pCv'] = pspecs['pCr'] - pspecs['pCv']  # subtracted
 pspecs['pCs-pCn'] = pspecs['pCs'] - pspecs['pCn']
+pspecs['pIr-pIv'] = pspecs['pIr'] - pspecs['pIv']
+pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 
 # compute Pk vs kpl vs bootstraps
-pk_pspecs, vals = average_bootstraps(pspecs, Nt_eff=Neff_lst,
+pk_pspecs, vals, vals_fold = average_bootstraps(pspecs, Nt_eff=Neff_lst,
                                      Nboots=args.nboots, avg_func=np.median)
-
+vals.update(vals_fold)
 print 'Saving pspec_2d_to_1d.npz'  # save all values used in bootstrapping
 np.savez(args.output + 'pspec_2d_to_1d.npz', **vals)
 

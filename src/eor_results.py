@@ -586,8 +586,8 @@ def read_bootstraps_dcj(filenames, verbose=False):
             except(KeyError):
                 accumulated_power_spectra[thing] = [F[thing]]
     power_spectrum_channels = ['pC', 'pI', 'err', 'pCv', 'var', 'pIv',
-                               'pCe', 'pIe', 'pIr', 'pCr', 'pCr-pCv',
-                               'pCn', 'pIn', 'pCs', 'pIs', 'pCs-pCn']
+                               'pCe', 'pIe', 'pIr', 'pCr', 'pCr-pCv', 'pIr-pIv', 
+                               'pCn', 'pIn', 'pCs', 'pIs', 'pCs-pCn', 'pIs-pIn']
     # stack up the various power spectrum channels
     for key in accumulated_power_spectra:
         if key in power_spectrum_channels:
@@ -624,9 +624,12 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
                       'pCs': 'pCs',
                       'pIs': 'pIs',
                       'pCs-pCn': 'pCs-pCn',
-                      'pCr-pCv': 'pCr-pCv'}
+                      'pCr-pCv': 'pCr-pCv',
+                      'pIs-pIn': 'pIs-pIn',
+                      'pIr-pIv': 'pIr-pIv'}
     outdata = {}
-    vals = {} # for all values
+    vals = {} # for all values  
+    vals_fold = {}
     for inname in indata:
         if inname in pspec_channels.keys():
             outname = pspec_channels[inname]
@@ -635,7 +638,7 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
             # only draw as many times as we have independent lsts (Nt_eff)
             Z = scramble_avg_bootstrap_array(indata[inname], Nt_eff=Nt_eff,
                                              func=avg_func, Nboots=Nboots)
-            vals[outname] = Z.data
+            vals[outname] = Z.data #bboots.data
             # power spectrum is the mean and std dev over scramble dimension
             outdata[outname] = avg_func(Z, axis=0)
             outdata[outname + '_err'] = n.std(Z, axis=0)
@@ -645,12 +648,14 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
             kpl_fold, X = split_stack_kpl(indata[inname], indata['kpl'])
             Z = scramble_avg_bootstrap_array(X, Nt_eff=Nt_eff, func=avg_func,
                                              Nboots=Nboots)
+            vals_fold[outname] = Z.data
             outdata[outname] = avg_func(Z, axis=0)
             outdata[outname + '_err'] = n.std(Z, axis=0)
             outdata['kpl_fold'] = kpl_fold
 
         else:
             outdata[inname] = indata[inname]
+    vals.update(vals_fold)
     return outdata, vals
 
 
