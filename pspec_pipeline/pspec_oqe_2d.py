@@ -36,7 +36,7 @@ o.add_option('--output', type='string', default='',
 o.add_option('--weight', type='string', default='L^-1',
              help=('Choice for MC normalization '
                    'Options available L^-1 F^-1/2 I F^-1'))
-o.add_option('--Trcvr', type='float', default=180,
+o.add_option('--Trcvr', type='float', default=200,
              help='Receiver Temperature in Kelvin (defualt 180)')
 o.add_option('--rmbls', dest='rmbls', type='string',
              help=('List of baselines (ex:1_4,2_33) '
