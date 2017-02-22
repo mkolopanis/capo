@@ -35,7 +35,7 @@ for inject in glob.glob('inject_*'):
     file = n.load(inject + '/pspec_pk_k3pk.npz')
     kpl = file['kpl']
     Pout = n.abs(file['pCr-pCv'])
-    Pout_err = file['pCr-pCv_err']
+    Pout_err = n.abs(file['pCr-pCv_err'])
     Pout_noise = n.abs(file['pCs-pCn'])
     Pout_noise_err = file['pCs-pCn_err']
     Pin = n.abs(file['pIe'])
@@ -113,7 +113,6 @@ for ind in range(len(kpl)):
     p.ylabel('Signal Loss Factor')
 p.legend()
 
-
 split_index = n.argmin(n.abs(kpl))
 sigfactors_pos = sigfactors[split_index:]
 sigfactors_neg = sigfactors[split_index::-1]
@@ -182,8 +181,8 @@ neg_ind_fold = n.where(file['pCv_fold'] < 0)
 neg_ind_noise = n.where(file['pCn'] < 0)
 neg_ind_noise_fold = n.where(file['pCn_fold'] < 0)
 
-print '   Saving pspec_final.npz'  # XXX 2-sigma probability is hard-coded
-n.savez('pspec_final.npz', kpl=kpl, k=file['k'], freq=file['freq'],
+print '   Saving pspec_final_median.npz'  # XXX 2-sigma probability is hard-coded
+n.savez('pspec_final_median.npz', kpl=kpl, k=file['k'], freq=file['freq'],
         pC=pCv, pC_up=2 * pCv_err,
         pC_fold=pCv_fold, pC_fold_up=2 * pCv_fold_err,
         pI=pIv, pI_up=2 * pIv_err,
