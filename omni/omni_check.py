@@ -96,6 +96,8 @@ if opts.gains == True or opts.chisqant == True:
     f.subplots_adjust(hspace=0.7)
     print 'Bad Antennas (starting with highest chisq):',[ants[i] for i in numpy.argsort(means)[::-1]]
     plt.show()  
+    baddies = [ants[i] for i in numpy.where(means > numpy.mean(means)+1.0*numpy.std(means))[0]]
+    cut = numpy.mean(means)+1.0*numpy.std(means)
     fig = plt.figure()
     ax = fig.add_subplot(111)
     A = numpy.linspace(0,len(means)-1,len(means))
@@ -106,4 +108,4 @@ if opts.gains == True or opts.chisqant == True:
         ax.axhline(cut, color='purple', label='Avg+Std')
     plt.title('Median Chisq (high to low)')
     plt.show()
-    print '1 sigma cut on median chisq: ',[ants[i] for i in numpy.where(means > numpy.mean(means) + 1.0*numpy.std(means))[0]]
+    print '1 sigma cut on median chisq: ',baddies
