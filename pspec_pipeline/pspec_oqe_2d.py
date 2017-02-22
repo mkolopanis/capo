@@ -36,6 +36,8 @@ o.add_option('--output', type='string', default='',
 o.add_option('--weight', type='string', default='L^-1',
              help=('Choice for MC normalization '
                    'Options available L^-1 F^-1/2 I F^-1'))
+o.add_option('--Trcvr', type='float', default=180,
+             help='Receiver Temperature in Kelvin (defualt 180)')
 o.add_option('--rmbls', dest='rmbls', type='string',
              help=('List of baselines (ex:1_4,2_33) '
                    'to remove from the power spectrum analysis.'))
@@ -63,6 +65,37 @@ except:
 
 
 # FUNCTIONS #
+def complex_noise(size, noiselev):
+    """Generate complex noise of given size and noiselevel."""
+    if noiselev <= 0 or n.isinf(noiselev):
+        return n.zeros(size)
+    noise_real = n.random.normal(size=size, scale=noiselev)/n.sqrt(2)
+    noise_imag = n.random.normal(size=size, scale=noiselev)/n.sqrt(2)
+    noise = noise_real + 1j*noise_imag
+    return noise
+
+
+def generate_noise(d, cnt, inttime, df, freqs, jy2T=None):
+    """Create noise with T_rms matching data from T_rcvr and uv['cnt']."""
+    if jy2T is None:
+        jy2T = capo.pspec.jy2T(freqs)
+    Tsys = 180. * n.power(freqs/0.18, -2.55) + opts.Trcvr  # system temp in K
+    Tsys *= 1e3  # system temp in mK
+    Trms = Tsys/n.sqrt(df * 1e9 * inttime * cnt)  # convert sdf to Hz
+    Vrms = Trms/jy2T  # jy2T is in units of mK/Jy
+    # The following transposes are to create noise correlated in time not
+    # frequency. Maybe there is a better way to do it?
+    noise = n.array([[complex_noise(v.shape, v) for v in v1]
+                    for v1 in Vrms.T]).T
+    noise.shape = d.shape
+    return noise
+
+
+def filter_noise(noise, flags, ij=None, POL=None, bins=None, firs=None):
+    """Apply frf to noise."""
+    _d, _w, _, _ = fringe.apply_frf(aa, noise, flags, ij[0], ij[1],
+                                    pol=POL, bins=bins, firs=firs)
+    return _d
 
 
 def frf(shape):  # Create and fringe rate filter noise
@@ -87,7 +120,7 @@ def make_PS(keys, ds, grouping=True):
     """
     if grouping:
         newkeys, dsC = ds.group_data(keys, gps)
-        newkeys, dsI = ds.group_data(keys, gps, use_cov=False)  
+        newkeys, dsI = ds.group_data(keys, gps, use_cov=False)
     else:  # no groups (slower)
         newkeys = [random.choice(keys) for key in keys]
         # sample w/replacement for bootstrapping
@@ -239,33 +272,43 @@ print 'B:', B
 print 'scalar:', scalar
 sys.stdout.flush()
 
+# create noise from data files
+# noise_dict, noise_flg_dict = make_noise_from_files(dsets)
+
 # Acquire data
 data_dict_v = {}
+data_dict_n = {}
 flg_dict = {}
 conj_dict = {}
 antstr = 'cross'
 _, blconj, _ = zsa.grid2ij(aa.ant_layout)
 days = dsets.keys()
-lsts, data, flgs = {}, {}, {}
+stats, lsts, data, flgs = {}, {}, {}, {}
 for k in days:
-    lsts[k], data[k], flgs[k] = capo.miriad.read_files(dsets[k],
-                                                       antstr=antstr,
-                                                       polstr=POL,
-                                                       verbose=True)
-    lsts[k] = n.array(lsts[k]['lsts'])
+    stats[k], data[k], flgs[k] = capo.miriad.read_files(dsets[k],
+                                                        antstr=antstr,
+                                                        polstr=POL,
+                                                        verbose=True)
+    lsts[k] = n.array(stats[k]['lsts'])
     if rmbls:
-        print "Removing baselines:",
-    for bl in rmbls:
-        data[k].pop(a.miriad.bl2ij(bl), None)
-        flgs[k].pop(a.miriad.bl2ij(bl), None)
-        print bl,
-    print ''
+        print "    Removing baselines:",
+        for bl in rmbls:
+            data[k].pop(a.miriad.bl2ij(bl), None)
+            flgs[k].pop(a.miriad.bl2ij(bl), None)
+            print bl,
+    print '\n'
+    print '    Generating Noise'
     for bl in data[k]:
+        n_ = generate_noise(data[k][bl][POL], stats[k]['cnt'], inttime,
+                            sdf, freqs, capo.pspec.jy2T(freqs))
+        # n_ = filter_noise(n_, flgs[k][bl][POL], ij, POL, bins, firs=fir)
         d = n.array(data[k][bl][POL])[:, chans] * jy2T
+        n_ = n_[:, chans] * jy2T
         # extract frequency range
         flg = n.array(flgs[k][bl][POL])[:, chans]
         key = (k, bl, POL)
-        data_dict_v[key] = d 
+        data_dict_v[key] = d
+        data_dict_n[key] = n_
         flg_dict[key] = n.logical_not(flg)
         conj_dict[key[1]] = conj[bl]
 keys = data_dict_v.keys()
@@ -279,6 +322,7 @@ print 'Baselines:', len(bls_master)
 inds = oqe.lst_align(lsts)
 data_dict_v, flg_dict, lsts = oqe.lst_align_data(inds, dsets=data_dict_v,
                                                  wgts=flg_dict, lsts=lsts)
+data_dict_n = oqe.lst_align_data(inds, dsets=data_dict_n)[0]
 # the lsts given is a dictionary with 'even','odd', etc.
 # but the lsts returned is one array
 
@@ -300,19 +344,21 @@ timebins, firs = fringe.frp_to_firs(frp, bins, aa.get_freqs(),
 fir = {(ij[0], ij[1], POL): firs}
 
 # Make noise dataset
-data_dict_n = {}
-print '\n  Creating noise'
+# data_dict_n = {}
+# print '\n  Creating noise'
 if opts.doublefrf:
     print '  Fringe-rate-filtering noise twice'
 for key in data_dict_v:
-    data_dict_n[key] = frf((len(chans), nlst))*100  # different on each baseline
+    # Generate different noise on each baseline
+    # data_dict_n[key] = frf((len(chans), nlst))*100
+    data_dict_n[key] = filter_noise(data_dict_n[key], flg_dict[key], ij,
+                                    POL, bins, firs=fir)
 
 # Set data
 dsv = oqe.DataSet()  # just data
 dsv.set_data(dsets=data_dict_v, conj=conj_dict, wgts=flg_dict)
 dsn = oqe.DataSet()  # just noise
 dsn.set_data(dsets=data_dict_n, conj=conj_dict, wgts=flg_dict)
-
 # Get some statistics
 if LST_STATS:
     # collect some metadata from the lst binning process
