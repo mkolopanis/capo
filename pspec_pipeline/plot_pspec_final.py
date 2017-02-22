@@ -22,6 +22,8 @@ parser.add_argument('files', metavar='<FILE>', type=str, nargs='+',
                     help='List of pspec files to plot')
 parser.add_argument('--plot', action='store_true',
                     help='output plot before saving')
+parser.add_argument('--analytical', action='store_true',
+                    help='Plot analytical noise approximation')
 parser.add_argument('--noisefiles', type=str, nargs='*',
                     help='supply 21cmSense files to plot sensitivity')
 parser.add_argument('--outfile', type=str, default='pspec_k3pk',
@@ -110,27 +112,27 @@ for filename in args.files:
     marker_count[gs_ind] += 1
     ax1[gs_ind].plot(pspec_dict['k'],
                      pspec_dict['pI_fold'] + pspec_dict['pI_fold_up'], '--',
-                     label='pI')
+                     label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)))
     ax1[gs_ind].errorbar(pspec_dict['k'], pspec_dict['pC_fold'],
                          pspec_dict['pC_fold_up'], label='pC {0:02d}%'
                          .format(int(pspec_dict['prob']*100)), linestyle='',
                          marker=marker, color='black')
     ax2[gs_ind].plot(pspec_dict['kpl'],
-                     pspec_dict['pI'] + pspec_dict['pI_up'], '--', label='pI')
+                     pspec_dict['pI'] + pspec_dict['pI_up'], '--', label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)))
     ax2[gs_ind].errorbar(pspec_dict['kpl'], pspec_dict['pC'],
                          pspec_dict['pC_up'], label='pC {0:02d}%'
                          .format(int(pspec_dict['prob']*100)), linestyle='',
                          marker=marker, color='black')
     ax3[gs_ind].plot(pspec_dict['k'],
                      pspec_dict['pIn_fold'] + pspec_dict['pIn_fold_up'], '--',
-                     label='pIn')
+                     label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)))
     ax3[gs_ind].errorbar(pspec_dict['k'], pspec_dict['pCn_fold'],
                          pspec_dict['pCn_fold_up'], label='pCn {0:02d}%'
                          .format(int(pspec_dict['prob']*100)), linestyle='',
                          marker=marker, color='black')
     ax4[gs_ind].plot(pspec_dict['kpl'],
                      pspec_dict['pIn'] + pspec_dict['pIn_up'], '--',
-                     label='pIn')
+                     label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)))
     ax4[gs_ind].errorbar(pspec_dict['kpl'], pspec_dict['pCn'],
                          pspec_dict['pCn_up'], label='pCn {0:02d}%'
                          .format(int(pspec_dict['prob']*100)), linestyle='',
@@ -160,6 +162,33 @@ for filename in args.files:
     except:
         pass
 
+    if args.analytical:
+        tsys = 500e3 #mK
+        inttime = 3914 #1957 #PSA128 optimal FRF: get it from frfilter_numbers.py
+        nbls=64 #S1E1
+        ndays = 20 #31 #effectively this many days
+        nseps = 1 #number of seps used
+        folding = 2
+        nlsts = 9 #number of LST hours in time-range
+        nmodes = (nseps*folding*nlsts*60*60/inttime)**.5
+        pol = 2
+        real = 2 
+        freq = .159 #GHz
+        z = capo.pspec.f2z(freq)
+        X2Y = capo.pspec.X2Y(z)/1e9 #h^-3 Mpc^3 / str/ Hz
+        sdf = .1/203
+        freqs = np.linspace(.1,.2,203)[110:130] #put in channel range
+        B = sdf*freqs.size
+        bm = np.polyval(capo.pspec.DEFAULT_BEAM_POLY, freq) * 2.35 #correction for beam^2
+        scalar = X2Y * bm #* B
+        fr_correct = 1.77 #get it from frfilter_numbers.py
+        #error bars minimum width. Consider them flat for P(k). Factor of 2 at the end is due to folding of kpl (root(2)) and root(2) in radiometer equation.
+        pk_noise = scalar*fr_correct*( (tsys)**2 / (2*inttime*pol*real*nbls*ndays*nmodes) )
+        # Plot analytical noise curve on plots
+        ax1[gs_ind].plot(pspec_dict['k'],pk_noise*pspec_dict['k']**3/(2*np.pi**2),'g-',label='Analytical')
+        ax2[gs_ind].axhline(pk_noise,color='g',marker='_',label='Analytical')
+        ax3[gs_ind].plot(pspec_dict['k'],pk_noise*pspec_dict['k']**3/(2*np.pi**2),'g-',label='Analytical')
+        ax4[gs_ind].axhline(pk_noise,color='g',marker='_',label='Analytical')
 
 # set up some parameters to make the figures pretty
 for gs_ind in xrange(Nzs):
