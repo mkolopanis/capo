@@ -67,8 +67,8 @@ except:
 # FUNCTIONS #
 def complex_noise(size, noiselev):
     """Generate complex noise of given size and noiselevel."""
-    if noiselev <= 0 or n.isinf(noiselev):
-        return n.zeros(size)
+    # if noiselev <= 0 or n.isinf(noiselev):
+    #     return n.zeros(size)
     noise_real = n.random.normal(size=size, scale=noiselev)/n.sqrt(2)
     noise_imag = n.random.normal(size=size, scale=noiselev)/n.sqrt(2)
     noise = noise_real + 1j*noise_imag
@@ -85,10 +85,17 @@ def generate_noise(d, cnt, inttime, df, freqs, jy2T=None):
     Vrms = Trms/jy2T  # jy2T is in units of mK/Jy
     # The following transposes are to create noise correlated in time not
     # frequency. Maybe there is a better way to do it?
-    noise = n.array([[complex_noise(v.shape, v) for v in v1]
-                    for v1 in Vrms.T]).T
+    # The masking and filling is to be able to parallelize the noise draws
+    # Setting the mask back later and filling zeros out where Vrms ~ inf or < 0
+    Vrms = n.ma.masked_invalid(Vrms)
+    Vrms.mask = n.ma.mask_or(Vrms.mask, Vrms.filled() < 0)
+    n.ma.set_fill_value(Vrms, 1e-20)
+    noise = n.array([complex_noise(v1.shape, v1.filled()) for v1 in Vrms.T]).T
+    noise = n.ma.masked_array(noise)
+    noise.mask = Vrms.mask
+    n.ma.set_fill_value(noise, 0 + 0j)
     noise.shape = d.shape
-    return noise
+    return noise.filled()
 
 
 def filter_noise(noise, flags, ij=None, POL=None, bins=None, firs=None):
@@ -296,8 +303,8 @@ for k in days:
             data[k].pop(a.miriad.bl2ij(bl), None)
             flgs[k].pop(a.miriad.bl2ij(bl), None)
             print bl,
-    print '\n'
-    print '    Generating Noise'
+        print '\n'
+    print '    Generating Noise for day: ' + str(k)
     for bl in data[k]:
         n_ = generate_noise(data[k][bl][POL], stats[k]['cnt'], inttime,
                             sdf, freqs, capo.pspec.jy2T(freqs))
