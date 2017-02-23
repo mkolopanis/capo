@@ -279,9 +279,6 @@ print 'B:', B
 print 'scalar:', scalar
 sys.stdout.flush()
 
-# create noise from data files
-# noise_dict, noise_flg_dict = make_noise_from_files(dsets)
-
 # Acquire data
 data_dict_v = {}
 data_dict_n = {}
@@ -290,6 +287,24 @@ conj_dict = {}
 antstr = 'cross'
 _, blconj, _ = zsa.grid2ij(aa.ant_layout)
 days = dsets.keys()
+
+# Prep FRF stuff
+s,d,f = capo.miriad.read_files([dsets[days[0]][0]], antstr=antstr, polstr=POL) # read first file
+ij = d.keys()[0] # use first baseline
+if blconj[a.miriad.ij2bl(ij[0], ij[1])]:
+    # makes sure FRP will be the same whether bl is a conjugated one or not
+    if ij[0] < ij[1]:
+        temp = (ij[1], ij[0])
+        ij = temp
+sep_type = bl2sep[a.miriad.ij2bl(ij[0], ij[1])]
+# convert uvw in light-nanoseconds to m, (cosmo_units.c in m/s)
+uvw = aa.get_baseline(ij[0], ij[1], src='z') * cosmo_units.c * 1e-9
+bins = fringe.gen_frbins(inttime)
+frp, bins = fringe.aa_to_fr_profile(aa, ij, len(afreqs) / 2, bins=bins)
+timebins, firs = fringe.frp_to_firs(frp, bins, aa.get_freqs(),
+                                    fq0=aa.get_freqs()[len(afreqs) / 2])
+fir = {(ij[0], ij[1], POL): firs}
+
 stats, lsts, data, flgs = {}, {}, {}, {}
 for k in days:
     stats[k], data[k], flgs[k] = capo.miriad.read_files(dsets[k],
@@ -304,7 +319,7 @@ for k in days:
             flgs[k].pop(a.miriad.bl2ij(bl), None)
             print bl,
         print '\n'
-    print '    Generating Noise for day: ' + str(k)
+    print '    Generating noise for day: ' + str(k)
     for bl in data[k]:
         n_ = generate_noise(data[k][bl][POL], stats[k]['cnt'], inttime,
                             sdf, freqs, capo.pspec.jy2T(freqs))
@@ -330,29 +345,10 @@ inds = oqe.lst_align(lsts)
 data_dict_v, flg_dict, lsts = oqe.lst_align_data(inds, dsets=data_dict_v,
                                                  wgts=flg_dict, lsts=lsts)
 data_dict_n = oqe.lst_align_data(inds, dsets=data_dict_n)[0]
+nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
 # but the lsts returned is one array
 
-# Prep FRF Stuff
-nlst = data_dict_v[keys[0]].shape[0]
-ij = bls_master[0]  # ij = (1,4)
-if blconj[a.miriad.ij2bl(ij[0], ij[1])]:
-    # makes sure FRP will be the same whether bl is a conjugated one or not
-    if ij[0] < ij[1]:
-        temp = (ij[1], ij[0])
-        ij = temp
-sep_type = bl2sep[a.miriad.ij2bl(ij[0], ij[1])]
-# convert uvw in light-nanoseconds to m, (cosmo_units.c in m/s)
-uvw = aa.get_baseline(ij[0], ij[1], src='z') * cosmo_units.c * 1e-9
-bins = fringe.gen_frbins(inttime)
-frp, bins = fringe.aa_to_fr_profile(aa, ij, len(afreqs) / 2, bins=bins)
-timebins, firs = fringe.frp_to_firs(frp, bins, aa.get_freqs(),
-                                    fq0=aa.get_freqs()[len(afreqs) / 2])
-fir = {(ij[0], ij[1], POL): firs}
-
-# Make noise dataset
-# data_dict_n = {}
-# print '\n  Creating noise'
 if opts.doublefrf:
     print '  Fringe-rate-filtering noise twice'
 for key in data_dict_v:
