@@ -34,8 +34,10 @@ def read_files(filenames, antstr, polstr, decimate=1, decphs=0, verbose=False, r
             if not ts.has_key(t):
                 info['times'].append(t)
                 info['lsts'].append(uv['lst'])
-                info['cnt'].append(uv['cnt'])
-                info['var'].append(uv['var'])
+                try: 
+                    info['cnt'].append(uv['cnt'])
+                    info['var'].append(uv['var'])
+                except: pass
                 ts[t] = None
             bl = (i,j)
             if not dat.has_key(bl): dat[bl],flg[bl] = {},{}
@@ -56,6 +58,8 @@ def read_files(filenames, antstr, polstr, decimate=1, decphs=0, verbose=False, r
                 flg[bl][pol] = n.array(flg[bl][pol])
         info['lsts'] = n.array(info['lsts'])
         info['times'] = n.array(info['times'])
-        info['cnt'] = n.array(info['cnt'])
-        info['var'] = n.array(info['var'])
+        try: 
+            info['cnt'] = n.array(info['cnt'])
+            info['var'] = n.array(info['var'])
+        except: pass
     return info, dat, flg
