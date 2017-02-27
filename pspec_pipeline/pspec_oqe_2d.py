@@ -29,8 +29,8 @@ o.add_option('--sep', default='sep0,1', action='store',
              help='Which separation directory to use for signal loss data.')
 o.add_option('-i', '--inject', type='float', default=0.,
              help='EOR injection level.')
-o.add_option('--doublefrf', action='store_true',
-             help='Double FRF injected eor and noise.')
+o.add_option('--frf', action='store_true',
+             help='The data to be analyzed has been fringe-rate-filtered. Consequently, the injected EoR will be FRF twice and noise will be FRF once.')
 o.add_option('--output', type='string', default='',
              help='Output directory for pspec_boot files (default "")')
 o.add_option('--weight', type='string', default='L^-1',
@@ -75,14 +75,14 @@ def complex_noise(size, noiselev):
     return noise
 
 
-def generate_noise(d, cnt, inttime, df, freqs, jy2T=None):
+def make_noise(d, cnt, inttime, df): #, freqs, jy2T=None):
     """Create noise with T_rms matching data from T_rcvr and uv['cnt']."""
-    if jy2T is None:
-        jy2T = capo.pspec.jy2T(freqs)
-    Tsys = 180. * n.power(freqs/0.18, -2.55) + opts.Trcvr  # system temp in K
+    #if jy2T is None:
+    #    jy2T = capo.pspec.jy2T(freqs)
+    Tsys = 180. * n.power(afreqs/0.18, -2.55) + opts.Trcvr  # system temp in K
     Tsys *= 1e3  # system temp in mK
     Trms = Tsys/n.sqrt(df * 1e9 * inttime * cnt)  # convert sdf to Hz
-    Vrms = Trms/jy2T  # jy2T is in units of mK/Jy
+    Vrms = Trms#/jy2T  # jy2T is in units of mK/Jy
     # The following transposes are to create noise correlated in time not
     # frequency. Maybe there is a better way to do it?
     # The masking and filling is to be able to parallelize the noise draws
@@ -95,27 +95,29 @@ def generate_noise(d, cnt, inttime, df, freqs, jy2T=None):
     noise.mask = Vrms.mask
     n.ma.set_fill_value(noise, 0 + 0j)
     noise.shape = d.shape
-    return noise.filled()
+    noise = noise.filled()
+    wij = n.ones(noise.shape, dtype=bool) # XXX flags are all true (times,freqs)
+    if opts.frf: # FRF noise    
+        # XXX TO DO: Create twice as long noise and take middle half after FRF
+        noise = fringe_rate_filter(aa, noise, wij, ij[0], ij[1], POL, bins, fir)
+    return noise
 
 
-def filter_noise(noise, flags, ij=None, POL=None, bins=None, firs=None):
-    """Apply frf to noise."""
-    _d, _w, _, _ = fringe.apply_frf(aa, noise, flags, ij[0], ij[1],
-                                    pol=POL, bins=bins, firs=firs)
+def fringe_rate_filter(aa, dij, wij, i, j, pol, bins, firs):
+    """ Apply frf."""
+    _d, _w, _, _ = fringe.apply_frf(aa, dij, wij, i, j, pol=pol, bins=bins, firs=firs)
     return _d
 
 
-def frf(shape):  # Create and fringe rate filter noise
+def make_eor(shape):  # Create and fringe rate filter noise
     """Generate White Noise and Apply FRF."""
     shape = shape[1] * 2, shape[0]  # (2*times,freqs)
     dij = oqe.noise(size=shape)
     wij = n.ones(shape, dtype=bool)  # XXX flags are all true (times,freqs)
     # dij and wij are (times,freqs)
-    _d, _w, _, _ = fringe.apply_frf(aa, dij, wij, ij[0], ij[1],
-                                    pol=POL, bins=bins, firs=fir)
-    if opts.doublefrf:
-        _d, _w, _, _ = fringe.apply_frf(aa, _d, wij, ij[0], ij[1],
-                                        pol=POL, bins=bins, firs=fir)
+    _d = fringe_rate_filter(aa, dij, wij, ij[0], ij[1], POL, bins, fir)
+    if opts.frf: # double FRF of eor
+        _d = fringe_rate_filter(aa, _d, wij, ij[0], ij[1], POL, bins, fir)
     _d = _d[shape[0] / 4:shape[0] / 2 + shape[0] / 4, :]
     return _d
 
@@ -279,17 +281,31 @@ print 'B:', B
 print 'scalar:', scalar
 sys.stdout.flush()
 
-# create noise from data files
-# noise_dict, noise_flg_dict = make_noise_from_files(dsets)
+# Prep FRF Stuff
+antstr = 'cross'
+_, blconj, _ = zsa.grid2ij(aa.ant_layout)
+days = dsets.keys()
+s,d,f = capo.miriad.read_files([dsets[days[0]][0]], antstr=antstr, polstr=POL) # read first file
+ij = d.keys()[0] # use first baseline
+if blconj[a.miriad.ij2bl(ij[0], ij[1])]:
+    # makes sure FRP will be the same whether bl is a conjugated one or not
+    if ij[0] < ij[1]:
+        temp = (ij[1], ij[0])
+        ij = temp
+sep_type = bl2sep[a.miriad.ij2bl(ij[0], ij[1])]
+# convert uvw in light-nanoseconds to m, (cosmo_units.c in m/s)
+uvw = aa.get_baseline(ij[0], ij[1], src='z') * cosmo_units.c * 1e-9
+bins = fringe.gen_frbins(inttime)
+frp, bins = fringe.aa_to_fr_profile(aa, ij, len(afreqs) / 2, bins=bins)
+timebins, firs = fringe.frp_to_firs(frp, bins, aa.get_freqs(),
+                                    fq0=aa.get_freqs()[len(afreqs) / 2])
+fir = {(ij[0], ij[1], POL): firs}
 
 # Acquire data
 data_dict_v = {}
 data_dict_n = {}
 flg_dict = {}
 conj_dict = {}
-antstr = 'cross'
-_, blconj, _ = zsa.grid2ij(aa.ant_layout)
-days = dsets.keys()
 stats, lsts, data, flgs = {}, {}, {}, {}
 for k in days:
     stats[k], data[k], flgs[k] = capo.miriad.read_files(dsets[k],
@@ -304,15 +320,11 @@ for k in days:
             flgs[k].pop(a.miriad.bl2ij(bl), None)
             print bl,
         print '\n'
-    print '    Generating Noise for day: ' + str(k)
+    print 'Generating noise for day: ' + str(k)
     for bl in data[k]:
-        n_ = generate_noise(data[k][bl][POL], stats[k]['cnt'], inttime,
-                            sdf, freqs, capo.pspec.jy2T(freqs))
-        # n_ = filter_noise(n_, flgs[k][bl][POL], ij, POL, bins, firs=fir)
-        d = n.array(data[k][bl][POL])[:, chans] * jy2T
-        n_ = n_[:, chans] * jy2T
-        # extract frequency range
-        flg = n.array(flgs[k][bl][POL])[:, chans]
+        d = n.array(data[k][bl][POL])[:, chans] * jy2T # extract freq range
+        n_ = make_noise(d, stats[k]['cnt'][:, chans], inttime, sdf)
+        flg = n.array(flgs[k][bl][POL])[:, chans] # extract freq range
         key = (k, bl, POL)
         data_dict_v[key] = d
         data_dict_n[key] = n_
@@ -330,36 +342,10 @@ inds = oqe.lst_align(lsts)
 data_dict_v, flg_dict, lsts = oqe.lst_align_data(inds, dsets=data_dict_v,
                                                  wgts=flg_dict, lsts=lsts)
 data_dict_n = oqe.lst_align_data(inds, dsets=data_dict_n)[0]
+nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
 # but the lsts returned is one array
 
-# Prep FRF Stuff
-nlst = data_dict_v[keys[0]].shape[0]
-ij = bls_master[0]  # ij = (1,4)
-if blconj[a.miriad.ij2bl(ij[0], ij[1])]:
-    # makes sure FRP will be the same whether bl is a conjugated one or not
-    if ij[0] < ij[1]:
-        temp = (ij[1], ij[0])
-        ij = temp
-sep_type = bl2sep[a.miriad.ij2bl(ij[0], ij[1])]
-# convert uvw in light-nanoseconds to m, (cosmo_units.c in m/s)
-uvw = aa.get_baseline(ij[0], ij[1], src='z') * cosmo_units.c * 1e-9
-bins = fringe.gen_frbins(inttime)
-frp, bins = fringe.aa_to_fr_profile(aa, ij, len(afreqs) / 2, bins=bins)
-timebins, firs = fringe.frp_to_firs(frp, bins, aa.get_freqs(),
-                                    fq0=aa.get_freqs()[len(afreqs) / 2])
-fir = {(ij[0], ij[1], POL): firs}
-
-# Make noise dataset
-# data_dict_n = {}
-# print '\n  Creating noise'
-if opts.doublefrf:
-    print '  Fringe-rate-filtering noise twice'
-for key in data_dict_v:
-    # Generate different noise on each baseline
-    # data_dict_n[key] = frf((len(chans), nlst))*100
-    data_dict_n[key] = filter_noise(data_dict_n[key], flg_dict[key], ij,
-                                    POL, bins, firs=fir)
 
 # Set data
 dsv = oqe.DataSet()  # just data
@@ -420,9 +406,7 @@ for boot in xrange(opts.nboot):
     # and pCe & pIe (eor) #
     if INJECT_SIG > 0.:  # Create a fake EoR signal to inject
         print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
-        if opts.doublefrf:
-            print '  Fringe-rate-filtering EoR twice'
-        eor = (frf((nchan, nlst)) * INJECT_SIG)  # same on all baselines
+        eor = (make_eor((nchan, nlst)) * INJECT_SIG)  # same on all baselines
         data_dict_r = {}
         data_dict_e = {}
         data_dict_s = {}
