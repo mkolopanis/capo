@@ -53,8 +53,8 @@ echo Making Directory ${DIRNAME}
 
 for sep in $SEP; do
     mkdir ${DIRNAME}/sep${sep}
-    EVEN_FILES=${DATA}'/even/sep'${sep}'/*.uvGAL'
-    ODD_FILES=${DATA}'/odd/sep'${sep}'/*.uvGAL'
+    EVEN_FILES=${DATA}'/even/sep'${sep}'/*.uvGA'
+    ODD_FILES=${DATA}'/odd/sep'${sep}'/*.uvGA'
     EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
     ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
     # Stage 1: pspec_oqe_2d.py over range of injection levels
