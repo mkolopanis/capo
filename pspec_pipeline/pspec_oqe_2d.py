@@ -44,7 +44,8 @@ o.add_option('--rmbls', dest='rmbls', type='string',
 opts, args = o.parse_args(sys.argv[1:])
 
 # Basic parameters
-random.seed(0)
+random.seed(0) # for oqe.py (eor generator)
+n.random.seed(0) # for noise generator
 POL = opts.pol
 LST_STATS = False
 DELAY = False
@@ -65,6 +66,7 @@ except:
 
 
 # FUNCTIONS #
+
 def complex_noise(size, noiselev):
     """Generate complex noise of given size and noiselevel."""
     # if noiselev <= 0 or n.isinf(noiselev):
@@ -215,6 +217,8 @@ def get_Q(mode, n_k):
         Q = n.zeros_like(C)
         Q[mode, mode] = 1
         return Q
+
+# --------------------------------------------------------------------
 
 
 # Read even&odd data
