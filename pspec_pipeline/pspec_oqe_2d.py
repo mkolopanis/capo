@@ -89,6 +89,8 @@ def make_noise(d, cnt, inttime, df): #, freqs, jy2T=None):
     # frequency. Maybe there is a better way to do it?
     # The masking and filling is to be able to parallelize the noise draws
     # Setting the mask back later and filling zeros out where Vrms ~ inf or < 0
+    size = Vrms.shape[0]
+    Vrms = n.repeat(Vrms, 3, axis=0)
     Vrms = n.ma.masked_invalid(Vrms)
     Vrms.mask = n.ma.mask_or(Vrms.mask, Vrms.filled() < 0)
     n.ma.set_fill_value(Vrms, 1e-20)
@@ -96,14 +98,14 @@ def make_noise(d, cnt, inttime, df): #, freqs, jy2T=None):
     noise = n.ma.masked_array(noise)
     noise.mask = Vrms.mask
     n.ma.set_fill_value(noise, 0 + 0j)
-    noise.shape = d.shape
     noise = noise.filled()
     wij = n.ones(noise.shape, dtype=bool) # XXX flags are all true (times,freqs)
-    if opts.frf: # FRF noise    
+    if opts.frf: # FRF noise
         # XXX TO DO: Create twice as long noise and take middle half after FRF
         noise = fringe_rate_filter(aa, noise, wij, ij[0], ij[1], POL, bins, fir)
+    noise = noise[int(size):2*int(size),:]
+    noise.shape = d.shape
     return noise
-
 
 def fringe_rate_filter(aa, dij, wij, i, j, pol, bins, firs):
     """ Apply frf."""
