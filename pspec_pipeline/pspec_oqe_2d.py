@@ -347,10 +347,16 @@ print 'Baselines:', len(bls_master)
 inds = oqe.lst_align(lsts)
 data_dict_v, flg_dict, lsts = oqe.lst_align_data(inds, dsets=data_dict_v,
                                                  wgts=flg_dict, lsts=lsts)
-data_dict_n = oqe.lst_align_data(inds, dsets=data_dict_n)[0]
+# data_dict_n = oqe.lst_align_data(inds, dsets=data_dict_n)[0]
 nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
 # but the lsts returned is one array
+
+# the noise simulation does not need to be lst aligned, just trimmed down
+# to the correct number of lsts
+# Noise is lst aligned already when it is generated
+for key in data_dict_n.keys():
+    data_dict_n[key] = data_dict_n[key][:nlst, :]
 
 
 # Set data
