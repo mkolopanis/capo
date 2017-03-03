@@ -53,12 +53,13 @@ for inject in glob.glob('inject_*'):
             Pout_points[kpl[ind]] = [Pout[ind]]
             Pout_noise_points[kpl[ind]] = [Pout_noise[ind]]
         p.loglog(Pin[ind], Pout[ind], 'k.')  # points
+        p.loglog(Pin[ind], Pout_noise[ind], 'r.')  # points
         # p.loglog(Pin[ind],Pout_noise[ind],'b.') # noise points
         p.loglog([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
         p.axhline(y=pCv[ind] + 2 * pCv_err[ind], color='grey', linewidth=1)
         # 2-sigma upper limit pCv horizontal line (plots for every injection,
         # but should be exactly the same for every injection)
-        # p.axhline(y=pCn[ind]+2*pCn_err[ind], color='cyan', linewidth=1)
+        p.axhline(y=pCn[ind]+2*pCn_err[ind], color='cyan', linewidth=1)
         # 2-sigma upper limit pCn horizontal line (plots for every injection,
         # but should be exactly the same for every injection)
         p.grid(True)
