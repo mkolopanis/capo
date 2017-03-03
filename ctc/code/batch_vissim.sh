@@ -3,8 +3,9 @@
 #$ -cwd 
 #$ -l h_vmem=16G
 #$ -l paper
-#$ -o /data2/home/cacheng/capo/ctc/code/gridoutput
-#$ -e /data2/home/cacheng/capo/ctc/code/gridoutput
+#$ -o grid_output
+#$ -e grid_output
+#$ -N VIS_SIM
 
 myargs=`pull_args.py $*`
 
@@ -13,12 +14,9 @@ echo my times: ${myargs}
 name=`echo ${myargs} | cut -d " " -f 1`
 echo first arg: ${name}
 
-echo vis_simulation_v4.py --sdf 0.00049261 --sfreq 0.14679803 --nchan 20 --inttime 42.9 --map pspec --mappath /home/cacheng/capo/ctc/images/pspecs/pspec20lmax300/ --filename /home/cacheng/capo/ctc/tables/20files_samemaps/pspec_${name}.uv -C psa898_v003 -a 0_16 ${myargs}
+vis_simulation_v4.py --sdf 0.00049261 --sfreq 0.1 --nchan 203 --inttime 31.65 --map gsm --mappath /home/cacheng/capo/ctc/images/gsm/gsm203/ --filename gsm_${name}.uv -C psa6622_v003 -a 1_4,1_47,1_68,1_19,1_75,1_48,1_18 ${myargs}
 
-#vis_simulation_v4.py --sdf 0.00049261 --sfreq 0.14679803 --nchan 20 --inttime 42.9 --map pspec --mappath /home/cacheng/capo/ctc/images/pspecs/pspec20lmax300/ --filename /home/cacheng/capo/ctc/tables/20files_samemaps/pspec_${name}.uv -C psa898_v003 -a 0_16 ${myargs}
-
-vis_simulation_v4.py --sdf 0.001 --sfreq 0.1 --nchan 10 --inttime 20000 --map pspec --mappath /data2/home/cacheng/capo/ctc/images/pspecs/pspec100lmax100/ --filename test_${name}.uv -C psa898_v003 -a 0_16 ${myargs}
-
+echo vis_simulation_v4.py --sdf 0.00049261 --sfreq 0.1 --nchan 203 --inttime 31.65 --map gsm --mappath /home/cacheng/capo/ctc/images/gsm/gsm203/ --filename gsm_${name}.uv -C psa6622_v003 -a 1_4,1_47,1_68,1_19,1_75,1_48,1_18 ${myargs}
 
 
 

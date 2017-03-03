@@ -409,7 +409,7 @@ for boot in xrange(opts.nboot):
 
     # Make groups
     gps = dsv.gen_gps(bls_master, ngps=NGPS)
-
+    
     # Only data
     pCv, pIv = make_PS(keys, dsv, grouping=True)
 
@@ -448,7 +448,7 @@ for boot in xrange(opts.nboot):
     pCr, pIr = make_PS(keys, dsr, grouping=True)
     pCe, pIe = make_PS(keys, dse, grouping=True)
     pCs, pIs = make_PS(keys, dss, grouping=True)
-
+    
     print '     Data:         pCv =', n.median(pCv.real),
     print 'pIv =', n.median(pIv.real)
     print '     EoR:          pCe =', n.median(pCe.real),

@@ -14,17 +14,16 @@ o.add_option('--SENSE', default=None,
 opts,args = o.parse_args(sys.argv[1:])
 
 def noise_level(freq=None):
-    tsys = 500e3 #mK
+    tsys = 505e3 #mK
     #inttime = 32 #sec
-    inttime = 1957 #PSA128 optimal FRF: get it from frfilter_numbers.py
+    inttime = 3414 #1957 #PSA128 optimal FRF: get it from frfilter_numbers.py
     #inttime = 3365 #PSA64 optimal FRF
     #nbls=59 #number of baselines used (if using multiple seps, average the numbers?)
-    nbls=64 #S1E1
-    ndays = 20 #31 #effectively this many days
-    #ndays = 100
+    nbls=51 #64 #S1E1
+    ndays = 65 #20 #31 #effectively this many days
     nseps = 1 #number of seps used
     folding = 2
-    nlsts = 9 #number of LST hours in time-range
+    nlsts = 8.5 #9 #number of LST hours in time-range
     nmodes = (nseps*folding*nlsts*60*60/inttime)**.5
     pol = 2
     real = 2 #??? what is this again?
@@ -37,7 +36,7 @@ def noise_level(freq=None):
     B = sdf*freqs.size
     bm = n.polyval(C.pspec.DEFAULT_BEAM_POLY, freq) * 2.35 #correction for beam^2
     scalar = X2Y * bm #* B
-    fr_correct = 1.77 #get it from frfilter_numbers.py
+    fr_correct = 1 #1.77 #get it from frfilter_numbers.py
     print 'scalar:', scalar
     print 'BM:', bm
     print 'Tsys:', tsys

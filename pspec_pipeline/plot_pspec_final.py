@@ -163,27 +163,40 @@ for filename in args.files:
         pass
 
     if args.analytical:
+        """ 
+        #PSA64
+        inttime = 3857
+        nbls = 51
+        ndays = 65
+        nlsts = 8.5
+        f1,f2 = 95,115
+        fr_correct = 1.77
+        """
+        #PSA128
+        inttime = 3914
+        nbls = 64 #S1E1
+        ndays = 20 #S1E1
+        nlsts = 9 #S1E1
+        f1,f2 = 79,99
+        fr_correct = 1.77
+         
         tsys = 500e3 #mK
-        inttime = 3914 #1957 #PSA128 optimal FRF: get it from frfilter_numbers.py
-        nbls=64 #S1E1
-        ndays = 20 #31 #effectively this many days
         nseps = 1 #number of seps used
         folding = 2
-        nlsts = 9 #number of LST hours in time-range
         nmodes = (nseps*folding*nlsts*60*60/inttime)**.5
         pol = 2
         real = 2 
-        freq = .159 #GHz
         z = capo.pspec.f2z(freq)
         X2Y = capo.pspec.X2Y(z)/1e9 #h^-3 Mpc^3 / str/ Hz
         sdf = .1/203
-        freqs = np.linspace(.1,.2,203)[110:130] #put in channel range
+        freqs = np.linspace(.1,.2,203)[f1:f2]
+        freq = freqs[10] #center freq
         B = sdf*freqs.size
         bm = np.polyval(capo.pspec.DEFAULT_BEAM_POLY, freq) * 2.35 #correction for beam^2
         scalar = X2Y * bm #* B
-        fr_correct = 1.77 #get it from frfilter_numbers.py
         #error bars minimum width. Consider them flat for P(k). Factor of 2 at the end is due to folding of kpl (root(2)) and root(2) in radiometer equation.
-        pk_noise = scalar*fr_correct*( (tsys)**2 / (2*inttime*pol*real*nbls*ndays*nmodes) )
+        #pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (2*inttime*pol*real*nbls*ndays*nmodes) ) #this 2-sigma curve should encompass 95% of the points
+        pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (inttime*pol*real*nbls*ndays*nmodes) ) #this 2-sigma curve should encompass 95% of the points
         # Plot analytical noise curve on plots
         ax1[gs_ind].plot(pspec_dict['k'],pk_noise*pspec_dict['k']**3/(2*np.pi**2),'g-',label='Analytical')
         ax2[gs_ind].axhline(pk_noise,color='g',marker='_',label='Analytical')
