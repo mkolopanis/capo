@@ -256,13 +256,11 @@ uv = a.miriad.UV(dsets.values()[0][0])
 freqs = a.cal.get_freqs(uv['sdf'], uv['sfreq'], uv['nchan'])
 sdf = uv['sdf']
 chans = a.scripting.parse_chans(opts.chan, uv['nchan'])
-#inttime = uv['inttime']
-inttime = uv['inttime'] * 4 # this is the hack back in for unfiltered data
+inttime = uv['inttime']
 # try to take the frf_inttime from the file
 # for old filtered files, need to use parameter still
 try: frf_inttime = uv['FRF_NEBW']
-#except: frf_inttime = inttime
-except: frf_inttime = 3800
+except: frf_inttime = inttime
 print 'inttime:', inttime
 print 'frf_inttime:', frf_inttime
 afreqs = freqs.take(chans)
