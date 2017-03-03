@@ -89,6 +89,8 @@ def make_noise(d, cnt, inttime, df): #, freqs, jy2T=None):
     # frequency. Maybe there is a better way to do it?
     # The masking and filling is to be able to parallelize the noise draws
     # Setting the mask back later and filling zeros out where Vrms ~ inf or < 0
+    size = Vrms.shape[0]
+    Vrms = n.repeat(Vrms, 3, axis=0)
     Vrms = n.ma.masked_invalid(Vrms)
     Vrms.mask = n.ma.mask_or(Vrms.mask, Vrms.filled() < 0)
     n.ma.set_fill_value(Vrms, 1e-20)
@@ -96,14 +98,14 @@ def make_noise(d, cnt, inttime, df): #, freqs, jy2T=None):
     noise = n.ma.masked_array(noise)
     noise.mask = Vrms.mask
     n.ma.set_fill_value(noise, 0 + 0j)
-    noise.shape = d.shape
     noise = noise.filled()
     wij = n.ones(noise.shape, dtype=bool) # XXX flags are all true (times,freqs)
-    if opts.frf: # FRF noise    
+    if opts.frf: # FRF noise
         # XXX TO DO: Create twice as long noise and take middle half after FRF
         noise = fringe_rate_filter(aa, noise, wij, ij[0], ij[1], POL, bins, fir)
+    noise = noise[int(size):2*int(size),:]
+    noise.shape = d.shape
     return noise
-
 
 def fringe_rate_filter(aa, dij, wij, i, j, pol, bins, firs):
     """ Apply frf."""
@@ -345,10 +347,16 @@ print 'Baselines:', len(bls_master)
 inds = oqe.lst_align(lsts)
 data_dict_v, flg_dict, lsts = oqe.lst_align_data(inds, dsets=data_dict_v,
                                                  wgts=flg_dict, lsts=lsts)
-data_dict_n = oqe.lst_align_data(inds, dsets=data_dict_n)[0]
+# data_dict_n = oqe.lst_align_data(inds, dsets=data_dict_n)[0]
 nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
 # but the lsts returned is one array
+
+# the noise simulation does not need to be lst aligned, just trimmed down
+# to the correct number of lsts
+# Noise is lst aligned already when it is generated
+for key in data_dict_n.keys():
+    data_dict_n[key] = data_dict_n[key][:nlst, :]
 
 
 # Set data
