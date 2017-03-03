@@ -669,6 +669,7 @@ def scramble_avg_bootstrap_array(X, Nt_eff=10, Nboots=100, func=n.median):
     """
     bboots = []
     for i in xrange(Nboots):
+        n.random.seed(i) # seeded by boot index
         times_i = n.random.choice(X.shape[-1], Nt_eff, replace=True)
         bls_i = n.random.choice(X.shape[0], Nt_eff, replace=True)
         bboots.append(X[bls_i, :, times_i].squeeze().T)
