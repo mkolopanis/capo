@@ -29,20 +29,23 @@ o.add_option('--sep', default='sep0,1', action='store',
              help='Which separation directory to use for signal loss data.')
 o.add_option('-i', '--inject', type='float', default=0.,
              help='EOR injection level.')
-o.add_option('--doublefrf', action='store_true',
-             help='Double FRF injected eor and noise.')
+o.add_option('--frf', action='store_true',
+             help='The data to be analyzed has been fringe-rate-filtered. Consequently, the injected EoR will be FRF twice and noise will be FRF once.')
 o.add_option('--output', type='string', default='',
              help='Output directory for pspec_boot files (default "")')
 o.add_option('--weight', type='string', default='L^-1',
              help=('Choice for MC normalization '
                    'Options available L^-1 F^-1/2 I F^-1'))
+o.add_option('--Trcvr', type='float', default=200,
+             help='Receiver Temperature in Kelvin (defualt 200)')
 o.add_option('--rmbls', dest='rmbls', type='string',
              help=('List of baselines (ex:1_4,2_33) '
                    'to remove from the power spectrum analysis.'))
 opts, args = o.parse_args(sys.argv[1:])
 
 # Basic parameters
-random.seed(0)
+random.seed(0) # for oqe.py (eor generator)
+n.random.seed(0) # for noise generator
 POL = opts.pol
 LST_STATS = False
 DELAY = False
@@ -64,18 +67,61 @@ except:
 
 # FUNCTIONS #
 
+def complex_noise(size, noiselev):
+    """Generate complex noise of given size and noiselevel."""
+    # if noiselev <= 0 or n.isinf(noiselev):
+    #     return n.zeros(size)
+    noise_real = n.random.normal(size=size, scale=noiselev)/n.sqrt(2)
+    noise_imag = n.random.normal(size=size, scale=noiselev)/n.sqrt(2)
+    noise = noise_real + 1j*noise_imag
+    return noise
 
-def frf(shape):  # Create and fringe rate filter noise
+
+def make_noise(d, cnt, inttime, df): #, freqs, jy2T=None):
+    """Create noise with T_rms matching data from T_rcvr and uv['cnt']."""
+    #if jy2T is None:
+    #    jy2T = capo.pspec.jy2T(freqs)
+    Tsys = 180. * n.power(afreqs/0.18, -2.55) + opts.Trcvr  # system temp in K
+    Tsys *= 1e3  # system temp in mK
+    Trms = Tsys/n.sqrt(df * 1e9 * inttime * cnt)  # convert sdf to Hz
+    Vrms = Trms#/jy2T  # jy2T is in units of mK/Jy
+    # The following transposes are to create noise correlated in time not
+    # frequency. Maybe there is a better way to do it?
+    # The masking and filling is to be able to parallelize the noise draws
+    # Setting the mask back later and filling zeros out where Vrms ~ inf or < 0
+    size = Vrms.shape[0]
+    #if opts.frf: # triple size
+    #    Vrms = n.repeat(Vrms, 3, axis=0)
+    Vrms = n.ma.masked_invalid(Vrms)
+    Vrms.mask = n.ma.mask_or(Vrms.mask, Vrms.filled() < 0)
+    n.ma.set_fill_value(Vrms, 1e-20)
+    noise = n.array([complex_noise(v1.shape, v1.filled()) for v1 in Vrms.T]).T
+    noise = n.ma.masked_array(noise)
+    noise.mask = Vrms.mask
+    n.ma.set_fill_value(noise, 0 + 0j)
+    noise = noise.filled()
+    #wij = n.ones(noise.shape, dtype=bool) # XXX flags are all true (times,freqs)
+    #if opts.frf: # FRF noise
+    #    noise = fringe_rate_filter(aa, noise, wij, ij[0], ij[1], POL, bins, fir)
+    #noise = noise[int(size):2*int(size),:]
+    #noise.shape = d.shape
+    return noise
+
+def fringe_rate_filter(aa, dij, wij, i, j, pol, bins, firs):
+    """ Apply frf."""
+    _d, _w, _, _ = fringe.apply_frf(aa, dij, wij, i, j, pol=pol, bins=bins, firs=firs)
+    return _d
+
+
+def make_eor(shape):  # Create and fringe rate filter noise
     """Generate White Noise and Apply FRF."""
     shape = shape[1] * 2, shape[0]  # (2*times,freqs)
     dij = oqe.noise(size=shape)
     wij = n.ones(shape, dtype=bool)  # XXX flags are all true (times,freqs)
     # dij and wij are (times,freqs)
-    _d, _w, _, _ = fringe.apply_frf(aa, dij, wij, ij[0], ij[1],
-                                    pol=POL, bins=bins, firs=fir)
-    if opts.doublefrf:
-        _d, _w, _, _ = fringe.apply_frf(aa, _d, wij, ij[0], ij[1],
-                                        pol=POL, bins=bins, firs=fir)
+    _d = fringe_rate_filter(aa, dij, wij, ij[0], ij[1], POL, bins, fir)
+    if opts.frf: # double FRF of eor
+        _d = fringe_rate_filter(aa, _d, wij, ij[0], ij[1], POL, bins, fir)
     _d = _d[shape[0] / 4:shape[0] / 2 + shape[0] / 4, :]
     return _d
 
@@ -87,7 +133,7 @@ def make_PS(keys, ds, grouping=True):
     """
     if grouping:
         newkeys, dsC = ds.group_data(keys, gps)
-        newkeys, dsI = ds.group_data(keys, gps, use_cov=False)  
+        newkeys, dsI = ds.group_data(keys, gps, use_cov=False)
     else:  # no groups (slower)
         newkeys = [random.choice(keys) for key in keys]
         # sample w/replacement for bootstrapping
@@ -174,6 +220,8 @@ def get_Q(mode, n_k):
         Q[mode, mode] = 1
         return Q
 
+# --------------------------------------------------------------------
+
 
 # Read even&odd data
 if 'even' in args[0] or 'odd' in args[0]:
@@ -239,52 +287,12 @@ print 'B:', B
 print 'scalar:', scalar
 sys.stdout.flush()
 
-# Acquire data
-data_dict_v = {}
-flg_dict = {}
-conj_dict = {}
+# Prep FRF Stuff
 antstr = 'cross'
 _, blconj, _ = zsa.grid2ij(aa.ant_layout)
 days = dsets.keys()
-lsts, data, flgs = {}, {}, {}
-for k in days:
-    lsts[k], data[k], flgs[k] = capo.miriad.read_files(dsets[k],
-                                                       antstr=antstr,
-                                                       polstr=POL,
-                                                       verbose=True)
-    lsts[k] = n.array(lsts[k]['lsts'])
-    if rmbls:
-        print "Removing baselines:",
-    for bl in rmbls:
-        data[k].pop(a.miriad.bl2ij(bl), None)
-        flgs[k].pop(a.miriad.bl2ij(bl), None)
-        print bl,
-    print ''
-    for bl in data[k]:
-        d = n.array(data[k][bl][POL])[:, chans] * jy2T
-        # extract frequency range
-        flg = n.array(flgs[k][bl][POL])[:, chans]
-        key = (k, bl, POL)
-        data_dict_v[key] = d 
-        flg_dict[key] = n.logical_not(flg)
-        conj_dict[key[1]] = conj[bl]
-keys = data_dict_v.keys()
-bls_master = []
-for key in keys:  # populate list of baselines
-    if key[0] == keys[0][0]:
-        bls_master.append(key[1])
-print 'Baselines:', len(bls_master)
-
-# Align dataset
-inds = oqe.lst_align(lsts)
-data_dict_v, flg_dict, lsts = oqe.lst_align_data(inds, dsets=data_dict_v,
-                                                 wgts=flg_dict, lsts=lsts)
-# the lsts given is a dictionary with 'even','odd', etc.
-# but the lsts returned is one array
-
-# Prep FRF Stuff
-nlst = data_dict_v[keys[0]].shape[0]
-ij = bls_master[0]  # ij = (1,4)
+s,d,f = capo.miriad.read_files([dsets[days[0]][0]], antstr=antstr, polstr=POL) # read first file
+ij = d.keys()[0] # use first baseline
 if blconj[a.miriad.ij2bl(ij[0], ij[1])]:
     # makes sure FRP will be the same whether bl is a conjugated one or not
     if ij[0] < ij[1]:
@@ -299,20 +307,65 @@ timebins, firs = fringe.frp_to_firs(frp, bins, aa.get_freqs(),
                                     fq0=aa.get_freqs()[len(afreqs) / 2])
 fir = {(ij[0], ij[1], POL): firs}
 
-# Make noise dataset
+# Acquire data
+data_dict_v = {}
 data_dict_n = {}
-print '\n  Creating noise'
-if opts.doublefrf:
-    print '  Fringe-rate-filtering noise twice'
-for key in data_dict_v:
-    data_dict_n[key] = frf((len(chans), nlst))*100  # different on each baseline
+flg_dict = {}
+conj_dict = {}
+stats, lsts, data, flgs = {}, {}, {}, {}
+for k in days:
+    stats[k], data[k], flgs[k] = capo.miriad.read_files(dsets[k],
+                                                        antstr=antstr,
+                                                        polstr=POL,
+                                                        verbose=True)
+    lsts[k] = n.array(stats[k]['lsts'])
+    if rmbls:
+        print "    Removing baselines:",
+        for bl in rmbls:
+            data[k].pop(a.miriad.bl2ij(bl), None)
+            flgs[k].pop(a.miriad.bl2ij(bl), None)
+            print bl,
+        print '\n'
+    print 'Generating noise for day: ' + str(k)
+    for bl in data[k]:
+        d = n.array(data[k][bl][POL])[:, chans] * jy2T # extract freq range
+        n_ = make_noise(d, stats[k]['cnt'][:, chans], inttime, sdf)
+        flg = n.array(flgs[k][bl][POL])[:, chans] # extract freq range
+        key = (k, bl, POL)
+        data_dict_v[key] = d
+        data_dict_n[key] = n_
+        flg_dict[key] = n.logical_not(flg)
+        conj_dict[key[1]] = conj[bl]
+keys = data_dict_v.keys()
+bls_master = []
+for key in keys:  # populate list of baselines
+    if key[0] == keys[0][0]:
+        bls_master.append(key[1])
+print 'Baselines:', len(bls_master)
+
+# Align dataset
+inds = oqe.lst_align(lsts)
+data_dict_v, flg_dict, lsts = oqe.lst_align_data(inds, dsets=data_dict_v,
+                                                 wgts=flg_dict, lsts=lsts)
+data_dict_n = oqe.lst_align_data(inds, dsets=data_dict_n)[0]
+nlst = data_dict_v[keys[0]].shape[0]
+# the lsts given is a dictionary with 'even','odd', etc.
+# but the lsts returned is one array
+
+# Fringe-rate filter noise
+if opts.frf:
+    for key in data_dict_n:
+        size = d.shape[0]
+        nij = n.repeat(data_dict_n[key], 3, axis=0)
+        wij = n.ones(nij.shape, dtype=bool)
+        nij_frf = fringe_rate_filter(aa, nij, wij, ij[0], ij[1], POL, bins, fir)    
+        data_dict_n[key] = nij_frf[size:2*size,:]
 
 # Set data
 dsv = oqe.DataSet()  # just data
 dsv.set_data(dsets=data_dict_v, conj=conj_dict, wgts=flg_dict)
 dsn = oqe.DataSet()  # just noise
 dsn.set_data(dsets=data_dict_n, conj=conj_dict, wgts=flg_dict)
-
 # Get some statistics
 if LST_STATS:
     # collect some metadata from the lst binning process
@@ -356,7 +409,7 @@ for boot in xrange(opts.nboot):
 
     # Make groups
     gps = dsv.gen_gps(bls_master, ngps=NGPS)
-
+    
     # Only data
     pCv, pIv = make_PS(keys, dsv, grouping=True)
 
@@ -367,9 +420,7 @@ for boot in xrange(opts.nboot):
     # and pCe & pIe (eor) #
     if INJECT_SIG > 0.:  # Create a fake EoR signal to inject
         print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
-        if opts.doublefrf:
-            print '  Fringe-rate-filtering EoR twice'
-        eor = (frf((nchan, nlst)) * INJECT_SIG)  # same on all baselines
+        eor = (make_eor((nchan, nlst)) * INJECT_SIG)  # same on all baselines
         data_dict_r = {}
         data_dict_e = {}
         data_dict_s = {}
@@ -397,7 +448,7 @@ for boot in xrange(opts.nboot):
     pCr, pIr = make_PS(keys, dsr, grouping=True)
     pCe, pIe = make_PS(keys, dse, grouping=True)
     pCs, pIs = make_PS(keys, dss, grouping=True)
-
+    
     print '     Data:         pCv =', n.median(pCv.real),
     print 'pIv =', n.median(pIv.real)
     print '     EoR:          pCe =', n.median(pCe.real),

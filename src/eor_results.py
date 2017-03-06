@@ -628,7 +628,8 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
                       'pIs-pIn': 'pIs-pIn',
                       'pIr-pIv': 'pIr-pIv'}
     outdata = {}
-    vals = {} # for all values
+    vals = {} # for all values  
+    vals_fold = {}
     for inname in indata:
         if inname in pspec_channels.keys():
             outname = pspec_channels[inname]
@@ -647,12 +648,14 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
             kpl_fold, X = split_stack_kpl(indata[inname], indata['kpl'])
             Z = scramble_avg_bootstrap_array(X, Nt_eff=Nt_eff, func=avg_func,
                                              Nboots=Nboots)
+            vals_fold[outname] = Z.data
             outdata[outname] = avg_func(Z, axis=0)
             outdata[outname + '_err'] = n.std(Z, axis=0)
             outdata['kpl_fold'] = kpl_fold
 
         else:
             outdata[inname] = indata[inname]
+    vals.update(vals_fold)
     return outdata, vals
 
 
@@ -666,6 +669,7 @@ def scramble_avg_bootstrap_array(X, Nt_eff=10, Nboots=100, func=n.median):
     """
     bboots = []
     for i in xrange(Nboots):
+        n.random.seed(i) # seeded by boot index
         times_i = n.random.choice(X.shape[-1], Nt_eff, replace=True)
         bs_i = n.random.choice(X.shape[0], Nt_eff, replace=True)
         bboots.append(X[bs_i, :, times_i].squeeze().T)

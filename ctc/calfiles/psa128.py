@@ -74,8 +74,8 @@ antlayout = n.array(
 [ 88,43,89,2,90,33,91,6,92,52,93,7,94,12,95,38 ],
 [ 96,53,97,21,98,15,99,16,100,62,101,44,102,0,103,26 ],
 [ 104,31,105,45,106,8,107,11,108,36,109,60,110,39,111,46 ]]).flatten()
-#badants = [2,10,15,22,31,33,42,43,47,58,64,72,91,97,105,107,34,84,100,56,7] #S1E1 omni_v3_xtalk
-badants = [34,84,100,56,7] #S1E2 omni_v3_xtalk
+badants = [2,10,15,22,31,33,42,43,47,58,64,72,91,97,105,107,34,84,100,56,7] #S1E1 omni_v3_xtalk
+#badants = [34,84,100,56,7] #S1E2 omni_v3_xtalk
 badinds = []
 for ba in badants:
     badinds.append(n.where(antlayout == ba)[0][0]) #where bad antennas are located in the array

@@ -375,12 +375,11 @@ for boot in xrange(opts.nboot):
     
     print '   pCv=', n.median(pCv.real), 'pIv=', n.median(pIv)
     print '   pIe=', n.median(pI.real), 'pCr=', n.median(pC.real), 'pIe/pCr=', n.median(pI.real)/n.median(pC.real)
-    
     if PLOT:
         p.plot(kpl, n.average(pC.real, axis=1), 'b.-')
         p.plot(kpl, n.average(pI.real, axis=1), 'k.-')
         p.show()
-
+    
     #Save Output
     if len(opts.output) > 0: outpath = opts.output+'/pspec_bootsigloss%04d.npz' % boot
     else: outpath = 'pspec_bootsigloss%04d.npz' % boot
@@ -388,6 +387,5 @@ for boot in xrange(opts.nboot):
     n.savez(outpath, kpl=kpl, scalar=scalar, times=n.array(lsts), 
         pk_vs_t=pC, pCv=pCv, pIv=pIv, err_vs_t=1./cnt, temp_noise_var=var, 
         nocov_vs_t=pI, freq=fq, cmd=' '.join(sys.argv))
-
 
 
