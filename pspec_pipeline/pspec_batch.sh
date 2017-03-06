@@ -20,8 +20,16 @@ NBOOT=20
 POL='I'
 weight='L^-1'
 WINDOW='none'
-DOUBLEFRF='--doublefrf'
+FRF='--frf'
 
+### PSA64 Options ###
+
+#EVEN_FILES='/home/cacheng/capo/ctc/matt_data/lstbin_psa64_data_optimal/even/*uvGAL'
+#ODD_FILES='/home/cacheng/capo/ctc/matt_data/lstbin_psa64_data_optimal/odd/*uvGAL'
+#CALFILE='psa6240_v003'
+#CHAN='95_115'
+#SEP='0,1'
+#RA='.1_8.6'
 #-----------------------------------------------------------------
 
 # Make Power Spectrum Directory
@@ -30,9 +38,9 @@ echo Making Directory ${DIRNAME}
 
 # Stage 1: pspec_oqe_2d.py over range of injection levels
 for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-2,3,10)))"` ; do
-    mkdir ${DIRNAME}/inject_sep${SEP}_${inject}
-    echo SIGNAL_LEVEL=${inject}
-    ~/capo/pspec_pipeline/pspec_oqe_2d.py --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -b ${NBOOT} -i ${inject} --weight=${weight} ${DOUBLEFRF} --output ${DIRNAME}/inject_sep${SEP}_${inject} ${EVEN_FILES} ${ODD_FILES}
+#    mkdir ${DIRNAME}/inject_sep${SEP}_${inject}
+#    echo SIGNAL_LEVEL=${inject}
+#    ~/capo/pspec_pipeline/pspec_oqe_2d.py --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -b ${NBOOT} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/inject_sep${SEP}_${inject} ${EVEN_FILES} ${ODD_FILES}
 
     # Stage 2: pspec_2d_to_1d.py
     ~/capo/pspec_pipeline/pspec_2d_to_1d.py --output ${DIRNAME}/inject_sep${SEP}_${inject}/ ${DIRNAME}/inject_sep${SEP}_${inject}/*boot*

@@ -32,11 +32,12 @@ kpl = file['kpl']
 # loop over injects and read pspec_2d_to_1d outputs
 for count in range(2):
     if count == 1: print 'NOISE CASE'
-    else: print 'DATA CASE'    
-    fig1 = p.figure(1, figsize=(15, 7))
-    fig2 = p.figure(2, figsize=(15, 7))
-    fig3 = p.figure(3, figsize=(15, 7))
-    fig4 = p.figure(4, figsize=(15, 7))
+    else: print 'DATA CASE'   
+    if opts.plot: 
+        fig1 = p.figure(1, figsize=(15, 7))
+        fig2 = p.figure(2, figsize=(15, 7))
+        fig3 = p.figure(3, figsize=(15, 7))
+        fig4 = p.figure(4, figsize=(15, 7))
     pklo, pkhi = 1e1, 1e12
     Pouts = {}
     Pouts_I = {}
@@ -59,7 +60,7 @@ for count in range(2):
             pI = n.abs(file_2d['pIv'])
         Pin = n.abs(file_2d['pIe'])
         for ind in range(len(kpl)):  # plot for each k
-            try: 
+            try:
                 Pouts[kpl[ind]].append(Pout[:,ind])
                 Pouts_I[kpl[ind]].append(Pout_I[:,ind])
                 pCs[kpl[ind]] = [pC[:,ind]] # no appending because it's the same every injection
@@ -73,78 +74,82 @@ for count in range(2):
                 pIs[kpl[ind]] = [pI[:,ind]]
                 alphas[kpl[ind]] = [n.abs(Pin[:,ind]/Pout[:,ind])]
                 alphas_I[kpl[ind]] = [n.abs(Pin[:,ind]/Pout_I[:,ind])]
-            
-            p.figure(1) # Pin vs. Pout
-            p.subplot(3, 7, ind)
-            p.loglog(Pin[:,ind], Pout[:,ind], 'k.')  # points
-            # p.loglog(Pin[ind],Pout_noise[ind],'b.') # noise points
-            p.loglog([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
-            p.grid(True)
-            p.xlim(pklo, pkhi)
-            p.ylim(pklo, pkhi)
-            p.tick_params(axis='both', which='both', labelsize=6)
-            p.title('kpl = '+str("%.4f" % kpl[ind]), fontsize=8)
-            
-            p.figure(2) # alpha vs. Pout
-            p.subplot(3, 7, ind)
-            p.loglog(Pin[:,ind]/Pout[:,ind],Pout[:,ind],'k.') # points
-            p.grid(True)
-            p.xlim(1e-3,1e7)
-            p.ylim(pklo, pkhi)
-            p.tick_params(axis='both', which='both', labelsize=6)
-            p.title('kpl = '+str("%.4f" % kpl[ind]), fontsize=8)
-            
-            p.figure(3) # Pin vs. Pout for I case
-            p.subplot(3, 7, ind)
-            p.loglog(Pin[:,ind], Pout_I[:,ind], 'k.')  # points
-            p.loglog([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
-            p.grid(True)
-            p.xlim(pklo, pkhi)
-            p.ylim(pklo, pkhi)
-            p.tick_params(axis='both', which='both', labelsize=6)
-            p.title('kpl = '+str("%.4f" % kpl[ind]), fontsize=8)
+        
+            if opts.plot:
+        
+                p.figure(1) # Pin vs. Pout
+                p.subplot(3, 7, ind)
+                p.loglog(Pin[:,ind], Pout[:,ind], 'k.')  # points
+                # p.loglog(Pin[ind],Pout_noise[ind],'b.') # noise points
+                p.loglog([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
+                p.grid(True)
+                p.xlim(pklo, pkhi)
+                p.ylim(pklo, pkhi)
+                p.tick_params(axis='both', which='both', labelsize=6)
+                p.title('kpl = '+str("%.4f" % kpl[ind]), fontsize=8)
+                 
+                p.figure(2) # alpha vs. Pout
+                p.subplot(3, 7, ind)
+                p.loglog(Pin[:,ind]/Pout[:,ind],Pout[:,ind],'k.') # points
+                p.grid(True)
+                p.xlim(1e-3,1e7)
+                p.ylim(pklo, pkhi)
+                p.tick_params(axis='both', which='both', labelsize=6)
+                p.title('kpl = '+str("%.4f" % kpl[ind]), fontsize=8)
+                
+                p.figure(3) # Pin vs. Pout for I case
+                p.subplot(3, 7, ind)
+                p.loglog(Pin[:,ind], Pout_I[:,ind], 'k.')  # points
+                p.loglog([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
+                p.grid(True)
+                p.xlim(pklo, pkhi)
+                p.ylim(pklo, pkhi)
+                p.tick_params(axis='both', which='both', labelsize=6)
+                p.title('kpl = '+str("%.4f" % kpl[ind]), fontsize=8)
 
-            p.figure(4) # alpha vs. Pout for I case
-            p.subplot(3, 7, ind)
-            p.loglog(Pin[:,ind]/Pout_I[:,ind],Pout_I[:,ind],'k.') # points
-            p.grid(True)
-            p.xlim(1e-3,1e7)
-            p.ylim(pklo, pkhi)
-            p.tick_params(axis='both', which='both', labelsize=6)
-            p.title('kpl = '+str("%.4f" % kpl[ind]), fontsize=8)
+                p.figure(4) # alpha vs. Pout for I case
+                p.subplot(3, 7, ind)
+                p.loglog(Pin[:,ind]/Pout_I[:,ind],Pout_I[:,ind],'k.') # points
+                p.grid(True)
+                p.xlim(1e-3,1e7)
+                p.ylim(pklo, pkhi)
+                p.tick_params(axis='both', which='both', labelsize=6)
+                p.title('kpl = '+str("%.4f" % kpl[ind]), fontsize=8)
 
-    # plot Pin vs. Pout
-    p.figure(1)
-    p.tight_layout()
-    fig1.text(0.5, 0.0, r'$P_{\rm in}(k)\ [{\rm mK}^2\ (h^{-1}\ {\rm Mpc})^3]$',
-             ha='center')
-    fig1.text(0.0, 0.5, r'$P_{\rm out}(k)\ [{\rm mK}^2\ (h^{-1}\ {\rm Mpc})^3]$',
-             va='center', rotation='vertical')
+    if opts.plot:
 
-    # plot signal loss factor (alpha) vs. Pout
-    p.figure(2)
-    p.tight_layout()
-    fig2.text(0.0, 0.5, r'$P_{\rm out}(k)\ [{\rm mK}^2\ (h^{-1}\ {\rm Mpc})^3]$',
-             va='center', rotation='vertical')
-    fig2.text(0.5, 0.0, r'$Signal Loss Factors$', ha='center')
+        # plot Pin vs. Pout
+        p.figure(1)
+        p.tight_layout()
+        fig1.text(0.5, 0.0, r'$P_{\rm in}(k)\ [{\rm mK}^2\ (h^{-1}\ {\rm Mpc})^3]$',
+                 ha='center')
+        fig1.text(0.0, 0.5, r'$P_{\rm out}(k)\ [{\rm mK}^2\ (h^{-1}\ {\rm Mpc})^3]$',
+                 va='center', rotation='vertical')
 
-    # plot Pin vs. Pout for I case
-    p.figure(3)
-    p.tight_layout()
-    fig3.text(0.5, 0.0, r'$P_{\rm in}(k)\ [{\rm mK}^2\ (h^{-1}\ {\rm Mpc})^3]$',
-             ha='center')
-    fig3.text(0.0, 0.5, r'$P_{\rm out,I}(k)\ [{\rm mK}^2\ (h^{-1}\ {\rm Mpc})^3]$',
-             va='center', rotation='vertical')
+        # plot signal loss factor (alpha) vs. Pout
+        p.figure(2)
+        p.tight_layout()
+        fig2.text(0.0, 0.5, r'$P_{\rm out}(k)\ [{\rm mK}^2\ (h^{-1}\ {\rm Mpc})^3]$',
+                 va='center', rotation='vertical')
+        fig2.text(0.5, 0.0, r'$Signal Loss Factors$', ha='center')
 
-    # plot signal loss factor (alpha) vs. Pout
-    p.figure(4)
-    p.tight_layout()
-    fig4.text(0.0, 0.5, r'$P_{\rm out,I}(k)\ [{\rm mK}^2\ (h^{-1}\ {\rm Mpc})^3]$',
-             va='center', rotation='vertical')
-    fig4.text(0.5, 0.0, r'$Signal Loss Factors$', ha='center')
+        # plot Pin vs. Pout for I case
+        p.figure(3)
+        p.tight_layout()
+        fig3.text(0.5, 0.0, r'$P_{\rm in}(k)\ [{\rm mK}^2\ (h^{-1}\ {\rm Mpc})^3]$',
+                 ha='center')
+        fig3.text(0.0, 0.5, r'$P_{\rm out,I}(k)\ [{\rm mK}^2\ (h^{-1}\ {\rm Mpc})^3]$',
+                 va='center', rotation='vertical')
+
+        # plot signal loss factor (alpha) vs. Pout
+        p.figure(4)
+        p.tight_layout()
+        fig4.text(0.0, 0.5, r'$P_{\rm out,I}(k)\ [{\rm mK}^2\ (h^{-1}\ {\rm Mpc})^3]$',
+                 va='center', rotation='vertical')
+        fig4.text(0.5, 0.0, r'$Signal Loss Factors$', ha='center')
 
     if opts.plot: p.show()
-    
+
     for key in alphas:
         alphas[key] = n.array(alphas[key]).flatten()
         alphas_I[key] = n.array(alphas_I[key]).flatten()
@@ -154,16 +159,18 @@ for count in range(2):
         pIs[key] = n.array(pIs[key]).flatten()
 
     # bin Pout, Pout_I, pCv, pIv
+    #nbins = Pouts[key].shape[0] / Pout.shape[0] # number of injections
     nbins = 100
+    nbins_I = 100
     sigloss_final = {}
     sigloss_final_I = {}
-    for ind in range(len(kpl)):
+    for ind in range(len(kpl)): 
         low = n.log10(Pouts[kpl[ind]].min()) # XXX haven't taken into account alphas < 1, which are artificial
         high = n.log10(Pouts[kpl[ind]].max())
         low_I = n.log10(Pouts_I[kpl[ind]].min()) # lowest Pout
         high_I = n.log10(Pouts_I[kpl[ind]].max()) # highest Pout
         bins = n.logspace(low,high,nbins) # bins for Pout
-        bins_I = n.logspace(low_I,high_I,nbins)
+        bins_I = n.logspace(low_I,high_I,nbins_I)
         bin_ind = n.digitize(Pouts[kpl[ind]],bins) # bin indices for all Pout values (ranges from 0 to nbins+1)
         bin_ind_I = n.digitize(Pouts_I[kpl[ind]],bins_I)
         bin_ind_pC = n.digitize(pCs[kpl[ind]],bins) # bin indices for all pC values
@@ -206,17 +213,22 @@ for count in range(2):
         """
         final_alphas = []
         final_alphas_I = []
+        p_sum = []
+        p_sum_I = []
         for i in range(len(bins)): # match alpha bins with prob bins
             factors = alphas[kpl[ind]][n.where(bin_ind == i)]
             factors_I = alphas_I[kpl[ind]][n.where(bin_ind_I == i)]
             probs = len(pCs[kpl[ind]][n.where(bin_ind_pC == i)])/float(len(pCs[kpl[ind]]))
             probs_I = len(pIs[kpl[ind]][n.where(bin_ind_pI == i)])/float(len(pIs[kpl[ind]]))
+            if len(factors) > 0: p_sum.append(probs)
+            if len(factors_I) > 0: p_sum_I.append(probs_I)
             final_alphas = n.concatenate((final_alphas,factors*probs/len(factors))) 
             final_alphas_I = n.concatenate((final_alphas_I,factors_I*probs_I/len(factors_I)))
-        sigloss_final[kpl[ind]] = n.sum(final_alphas)
-        sigloss_final_I[kpl[ind]] = n.sum(final_alphas_I)
-        p.plot(kpl[ind],sigloss_final[kpl[ind]],'k.',label='pC' if ind == 0 else "")
-        p.plot(kpl[ind],sigloss_final_I[kpl[ind]],'b.',label='pI' if ind == 0 else "")
+        sigloss_final[kpl[ind]] = n.sum(final_alphas)/n.sum(p_sum)
+        sigloss_final_I[kpl[ind]] = n.sum(final_alphas_I)/n.sum(p_sum_I)
+        if opts.plot:
+            p.plot(kpl[ind],sigloss_final[kpl[ind]],'k.',label='pC' if ind == 0 else "")
+            p.plot(kpl[ind],sigloss_final_I[kpl[ind]],'b.',label='pI' if ind == 0 else "")
     if opts.plot: p.xlabel('k');p.ylabel('Signal Loss Factors');p.legend();p.show()
     if count == 1:
         sigfactors_noise = sigloss_final.values()

@@ -90,7 +90,8 @@ def make_noise(d, cnt, inttime, df): #, freqs, jy2T=None):
     # The masking and filling is to be able to parallelize the noise draws
     # Setting the mask back later and filling zeros out where Vrms ~ inf or < 0
     size = Vrms.shape[0]
-    Vrms = n.repeat(Vrms, 3, axis=0)
+    #if opts.frf: # triple size
+    #    Vrms = n.repeat(Vrms, 3, axis=0)
     Vrms = n.ma.masked_invalid(Vrms)
     Vrms.mask = n.ma.mask_or(Vrms.mask, Vrms.filled() < 0)
     n.ma.set_fill_value(Vrms, 1e-20)
@@ -99,11 +100,11 @@ def make_noise(d, cnt, inttime, df): #, freqs, jy2T=None):
     noise.mask = Vrms.mask
     n.ma.set_fill_value(noise, 0 + 0j)
     noise = noise.filled()
-    wij = n.ones(noise.shape, dtype=bool) # XXX flags are all true (times,freqs)
-    if opts.frf: # FRF noise
-        noise = fringe_rate_filter(aa, noise, wij, ij[0], ij[1], POL, bins, fir)
-    noise = noise[int(size):2*int(size),:]
-    noise.shape = d.shape
+    #wij = n.ones(noise.shape, dtype=bool) # XXX flags are all true (times,freqs)
+    #if opts.frf: # FRF noise
+    #    noise = fringe_rate_filter(aa, noise, wij, ij[0], ij[1], POL, bins, fir)
+    #noise = noise[int(size):2*int(size),:]
+    #noise.shape = d.shape
     return noise
 
 def fringe_rate_filter(aa, dij, wij, i, j, pol, bins, firs):
@@ -351,6 +352,15 @@ nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
 # but the lsts returned is one array
 
+# Fringe-rate filter noise
+if opts.frf:
+    for key in data_dict_n:
+        size = d.shape[0]
+        nij = n.repeat(data_dict_n[key], 3, axis=0)
+        wij = n.ones(nij.shape, dtype=bool)
+        nij_frf = fringe_rate_filter(aa, nij, wij, ij[0], ij[1], POL, bins, fir)    
+        data_dict_n[key] = nij_frf[size:2*size,:]
+
 # Set data
 dsv = oqe.DataSet()  # just data
 dsv.set_data(dsets=data_dict_v, conj=conj_dict, wgts=flg_dict)
@@ -399,7 +409,7 @@ for boot in xrange(opts.nboot):
 
     # Make groups
     gps = dsv.gen_gps(bls_master, ngps=NGPS)
-
+    
     # Only data
     pCv, pIv = make_PS(keys, dsv, grouping=True)
 
@@ -438,7 +448,7 @@ for boot in xrange(opts.nboot):
     pCr, pIr = make_PS(keys, dsr, grouping=True)
     pCe, pIe = make_PS(keys, dse, grouping=True)
     pCs, pIs = make_PS(keys, dss, grouping=True)
-
+    
     print '     Data:         pCv =', n.median(pCv.real),
     print 'pIv =', n.median(pIv.real)
     print '     EoR:          pCe =', n.median(pCe.real),

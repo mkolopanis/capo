@@ -12,11 +12,18 @@ ARGS=`pull_args.py $*`
 echo ${ARGS}
 
 for f in ${ARGS}; do
-    if (( ${f:33:7} > 2456678 )); then
-        echo working on ${f}, which is in E2...
+    ~/capo/omni/omni_run.py -p yy -C psa6622_v003 --omnipath /data4/paper/2014EoR/Analysis/ProcessedData/epoch4/omni_v3_xtalk/ --fc2 /data4/paper/2014EoR/Analysis/ProcessedData/epoch4/omni_v3_xtalk/*yy.uvcRREc.median.fc.npz --ba 7,16,27,50,54,56,103 ${f} #S2E4yy
+    #~/capo/omni/omni_run.py -p xx -C psa6622_v003 --omnipath /data4/paper/2014EoR/Analysis/ProcessedData/epoch4/omni_v3_xtalk/ --fc2 /data4/paper/2014EoR/Analysis/ProcessedData/epoch4/omni_v3_xtalk/*xx.uvcRREc.median.fc.npz --ba 8,16,17,24,28,29,34,38,68,85 ${f} #S2E4xx
+    #~/capo/omni/omni_run.py -p yy -C psa6622_v003 --omnipath /data4/paper/2014EoR/Analysis/ProcessedData/epoch3/omni_v3_xtalk/ --fc2 /data4/paper/2014EoR/Analysis/ProcessedData/epoch3/omni_v3_xtalk/*yy.uvcRREc.median.fc.npz --ba 7,16,34,56 ${f} #S2E3yy
+    #~/capo/omni/omni_run.py -p xx -C psa6622_v003 --omnipath /data4/paper/2014EoR/Analysis/ProcessedData/epoch3/omni_v3_xtalk/ --fc2 /data4/paper/2014EoR/Analysis/ProcessedData/epoch3/omni_v3_xtalk/*xx.uvcRREc.median.fc.npz --ba 8,24,34,38,85,107 ${f} #S2E3xx
+    #~/capo/omni/omni_run.py -p xx -C psa6622_v003 --omnipath /data4/paper/2014EoR/Analysis/ProcessedData/epoch2/omni_v3_xtalk/ --fc2 /data4/paper/2014EoR/Analysis/ProcessedData/epoch2/omni_v3_xtalk/*xx.uvcRREc.median.fc.npz --ba 8,16,24,34,38,53,63,74,85 ${f} #S2E2xx
+    #~/capo/omni/omni_run.py -p yy -C psa6622_v003 --omnipath /data4/paper/2014EoR/Analysis/ProcessedData/epoch2/omni_v3_xtalk/ --fc2 /data4/paper/2014EoR/Analysis/ProcessedData/epoch2/omni_v3_xtalk/*yy.uvcRREc.median.fc.npz --ba 7,34,56,81 ${f} #S2E2yy
+    
+    #if (( ${f:33:7} > 2456678 )); then
+    #    echo working on ${f}, which is in E2...
         #~/capo/omni/omni_run.py  -p yy -C psa6622_v003 --omnipath /data4/paper/2013EoR/Analysis/ProcessedData/epoch2/omni_v3_xtalk/ --fc2 /data4/paper/2013EoR/Analysis/ProcessedData/epoch2/omni_v3_xtalk/*yy.uvcRREc.median.fc.npz --ba 100,7,56,84 ${f} #S1E2yy 
-        ~/capo/omni/omni_run.py  -p xx -C psa6622_v003 --omnipath /data4/paper/2013EoR/Analysis/ProcessedData/epoch2/omni_v3_xtalk_removedegenOFF/ --fc2 /data4/paper/2013EoR/Analysis/ProcessedData/epoch2/omni_v3_xtalk_removedegenOFF/*xx.uvcRREc.median.fc.npz --ba 34,84,100 ${f} #S1E2xx 
-    fi 
+        #~/capo/omni/omni_run.py  -p xx -C psa6622_v003 --omnipath /data4/paper/2013EoR/Analysis/ProcessedData/epoch2/omni_v3_xtalk_removedegenOFF/ --fc2 /data4/paper/2013EoR/Analysis/ProcessedData/epoch2/omni_v3_xtalk_removedegenOFF/*xx.uvcRREc.median.fc.npz --ba 34,84,100 ${f} #S1E2xx 
+    #fi 
     #if (( ${f:33:7} < 2456679 )); then
     #    echo working on ${f}, which is in E1...
     #    ~/capo/omni/omni_run.py  -p yy  -C psa6622_v003 --omnipath /data4/paper/2013EoR/Analysis/ProcessedData/epoch1/omni_v3_xtalk/ --fc2 /data4/paper/2013EoR/Analysis/ProcessedData/epoch1/omni_v3_xtalk/*yy.uvcRREc.median.fc.npz --ba 2,10,15,22,31,33,42,43,47,58,64,72,91,97,105,107,100,7,56,84 ${f} #S1E1yy
