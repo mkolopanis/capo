@@ -372,7 +372,7 @@ if opts.frf:
 dsv = oqe.DataSet()  # just data
 dsv.set_data(dsets=data_dict_v, conj=conj_dict, wgts=flg_dict)
 dsn = oqe.DataSet()  # just noise
-dsn.set_data(dsets=data_dict_n, wgts=flg_dict) # no conj dict because it was already conjugated correctly 
+dsn.set_data(dsets=data_dict_n, conj=conj_dict, wgts=flg_dict)
 
 #n_to_save = {}
 #for kk in data_dict_n:
@@ -440,10 +440,9 @@ for boot in xrange(opts.nboot):
         data_dict_s = {}
         for key in data_dict_v:
             if conj_dict[key[1]] is True:
-                eorinject = eor_conj #n.conj(eor.copy())
-                # conjugate eor for certain baselines
+                eorinject = eor_conj 
             else:
-                eorinject = eor #eor.copy()
+                eorinject = eor
             # Track eor in separate dict
             data_dict_e[key] = eorinject
             # add injected signal to data
@@ -455,9 +454,9 @@ for boot in xrange(opts.nboot):
     dsr = oqe.DataSet()  # data + eor
     dsr.set_data(dsets=data_dict_r, conj=conj_dict, wgts=flg_dict)
     dse = oqe.DataSet()  # just eor
-    dse.set_data(dsets=data_dict_e, wgts=flg_dict)
+    dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
     dss = oqe.DataSet()  # noise + eor
-    dss.set_data(dsets=data_dict_s, wgts=flg_dict)
+    dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)
     
     pCr, pIr = make_PS(keys, dsr, grouping=True)
     pCe, pIe = make_PS(keys, dse, grouping=True)
