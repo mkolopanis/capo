@@ -365,10 +365,10 @@ for key in data_dict_v:
 # Fringe-rate filter noise
 if opts.frf:
     for key in data_dict_n:
-        size = d.shape[0]
+        size = data_dict_n[key].shape[0]
         nij = n.repeat(data_dict_n[key], 3, axis=0)
         wij = n.ones(nij.shape, dtype=bool)
-        nij_frf = fringe_rate_filter(aa, nij, wij, ij[0], ij[1], POL, bins, fir)    
+        nij_frf = fringe_rate_filter(aa, nij, wij, ij[0], ij[1], POL, bins, fir)
         data_dict_n[key] = nij_frf[size:2*size,:]
 
 # Set data
@@ -426,7 +426,7 @@ for boot in xrange(opts.nboot):
 
     # Make groups
     gps = dsv.gen_gps(bls_master, ngps=NGPS)
-    
+
     # Only data
     pCv, pIv = make_PS(keys, dsv, grouping=True)
     # Only noise
@@ -443,7 +443,7 @@ for boot in xrange(opts.nboot):
         data_dict_s = {}
         for key in data_dict_v:
             if conj_dict[key[1]] is True:
-                eorinject = eor_conj 
+                eorinject = eor_conj
             else:
                 eorinject = eor
             # Track eor in separate dict
@@ -460,11 +460,11 @@ for boot in xrange(opts.nboot):
     dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
     dss = oqe.DataSet()  # noise + eor
     dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)
-    
+
     pCr, pIr = make_PS(keys, dsr, grouping=True)
     pCe, pIe = make_PS(keys, dse, grouping=True)
     pCs, pIs = make_PS(keys, dss, grouping=True)
-    
+
     print '     Data:         pCv =', n.median(pCv.real),
     print 'pIv =', n.median(pIv.real)
     print '     EoR:          pCe =', n.median(pCe.real),
