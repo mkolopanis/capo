@@ -47,6 +47,8 @@ opts, args = o.parse_args(sys.argv[1:])
 random.seed(0) # for oqe.py (eor generator)
 n.random.seed(0) # for noise generator
 POL = opts.pol
+if POL == 'xx' or POL == 'yy': NPOL = 1
+else: NPOL = 2
 LST_STATS = False
 DELAY = False
 NGPS = 5  # number of groups to break the random sampled bls into
@@ -83,7 +85,8 @@ def make_noise(d, cnt, inttime, df): #, freqs, jy2T=None):
     #    jy2T = capo.pspec.jy2T(freqs)
     Tsys = 180. * n.power(afreqs/0.18, -2.55) + opts.Trcvr  # system temp in K
     Tsys *= 1e3  # system temp in mK
-    Trms = Tsys/n.sqrt(df * 1e9 * inttime * cnt)  # convert sdf to Hz
+    Trms = Tsys/n.sqrt(df * 1e9 * inttime * cnt*len(days) * NPOL)  # convert sdf to Hz
+                        # Bchan, inttime, counts (times 2 if even&odd), Npol
     Vrms = Trms#/jy2T  # jy2T is in units of mK/Jy
     # The following transposes are to create noise correlated in time not
     # frequency. Maybe there is a better way to do it?
@@ -120,10 +123,13 @@ def make_eor(shape):  # Create and fringe rate filter noise
     wij = n.ones(shape, dtype=bool)  # XXX flags are all true (times,freqs)
     # dij and wij are (times,freqs)
     _d = fringe_rate_filter(aa, dij, wij, ij[0], ij[1], POL, bins, fir)
+    _d_conj = fringe_rate_filter(aa, n.conj(dij), wij, ij[0], ij[1], POL, bins, fir)
     if opts.frf: # double FRF of eor
         _d = fringe_rate_filter(aa, _d, wij, ij[0], ij[1], POL, bins, fir)
+        _d_conj = fringe_rate_filter(aa, _d_conj, wij, ij[0], ij[1], POL, bins, fir)
     _d = _d[shape[0] / 4:shape[0] / 2 + shape[0] / 4, :]
-    return _d
+    _d_conj = _d_conj[shape[0] / 4:shape[0] / 2 + shape[0] / 4, :]
+    return _d, _d_conj
 
 
 def make_PS(keys, ds, grouping=True):
@@ -143,7 +149,7 @@ def make_PS(keys, ds, grouping=True):
     qI = n.zeros((nchan, nlst), dtype=n.complex)
     qC = n.zeros((nchan, nlst), dtype=n.complex)
     for k, key1 in enumerate(newkeys):
-        # print '   ',k+1,'/',len(keys)
+        #print '   ',k+1,'/',len(newkeys)
         for key2 in newkeys[k:]:
             if key1[0] == key2[0] or key1[1] == key2[1]:
                 continue  # don't do even w/even or bl w/same bl
@@ -352,6 +358,10 @@ nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
 # but the lsts returned is one array
 
+for key in data_dict_v:
+    if conj_dict[key[1]] is True: # conjugate certain baselines for noise (doesn't really matter since it's noise, but it's for completeness)
+        data_dict_n[key] = n.conj(data_dict_n[key])
+
 # Fringe-rate filter noise
 if opts.frf:
     for key in data_dict_n:
@@ -366,6 +376,13 @@ dsv = oqe.DataSet()  # just data
 dsv.set_data(dsets=data_dict_v, conj=conj_dict, wgts=flg_dict)
 dsn = oqe.DataSet()  # just noise
 dsn.set_data(dsets=data_dict_n, conj=conj_dict, wgts=flg_dict)
+
+#n_to_save = {}
+#for kk in data_dict_n:
+#    n_to_save[str(kk)] = data_dict_n[kk]
+#print 'Saving Noise_Dataset.npz'
+#n.savez('Noise_Dataset.npz', **n_to_save)
+
 # Get some statistics
 if LST_STATS:
     # collect some metadata from the lst binning process
@@ -412,7 +429,6 @@ for boot in xrange(opts.nboot):
     
     # Only data
     pCv, pIv = make_PS(keys, dsv, grouping=True)
-
     # Only noise
     pCn, pIn = make_PS(keys, dsn, grouping=True)
 
@@ -420,16 +436,16 @@ for boot in xrange(opts.nboot):
     # and pCe & pIe (eor) #
     if INJECT_SIG > 0.:  # Create a fake EoR signal to inject
         print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
-        eor = (make_eor((nchan, nlst)) * INJECT_SIG)  # same on all baselines
+        eor,eor_conj = make_eor((nchan, nlst))  # same on all baselines
+        eor,eor_conj = eor*INJECT_SIG, eor_conj*INJECT_SIG
         data_dict_r = {}
         data_dict_e = {}
         data_dict_s = {}
         for key in data_dict_v:
             if conj_dict[key[1]] is True:
-                eorinject = n.conj(eor.copy())
-                # conjugate eor for certain baselines
+                eorinject = eor_conj 
             else:
-                eorinject = eor.copy()
+                eorinject = eor
             # Track eor in separate dict
             data_dict_e[key] = eorinject
             # add injected signal to data
@@ -444,7 +460,7 @@ for boot in xrange(opts.nboot):
     dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
     dss = oqe.DataSet()  # noise + eor
     dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)
-
+    
     pCr, pIr = make_PS(keys, dsr, grouping=True)
     pCe, pIe = make_PS(keys, dse, grouping=True)
     pCs, pIs = make_PS(keys, dss, grouping=True)
