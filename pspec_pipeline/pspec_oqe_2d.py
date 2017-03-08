@@ -83,7 +83,8 @@ def make_noise(d, cnt, inttime, df): #, freqs, jy2T=None):
     #    jy2T = capo.pspec.jy2T(freqs)
     Tsys = 180. * n.power(afreqs/0.18, -2.55) + opts.Trcvr  # system temp in K
     Tsys *= 1e3  # system temp in mK
-    Trms = Tsys/n.sqrt(df * 1e9 * inttime * cnt)  # convert sdf to Hz
+    Trms = Tsys/n.sqrt(df * 1e9 * inttime * cnt*len(days) * 2)  # convert sdf to Hz
+                        # Bchan, inttime, counts (times 2 if even&odd), Npol
     Vrms = Trms#/jy2T  # jy2T is in units of mK/Jy
     # The following transposes are to create noise correlated in time not
     # frequency. Maybe there is a better way to do it?
