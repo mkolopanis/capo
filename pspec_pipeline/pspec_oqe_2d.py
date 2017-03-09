@@ -110,9 +110,9 @@ def make_noise(d, cnt, inttime, df): #, freqs, jy2T=None):
     #noise.shape = d.shape
     return noise
 
-def fringe_rate_filter(aa, dij, wij, i, j, pol, bins, firs):
+def fringe_rate_filter(aa, dij, wij, i, j, pol, bins, fir):
     """ Apply frf."""
-    _d, _w, _, _ = fringe.apply_frf(aa, dij, wij, i, j, pol=pol, bins=bins, firs=firs)
+    _d, _w, _, _ = fringe.apply_frf(aa, dij, wij, i, j, pol=pol, bins=bins, fir=fir)
     return _d
 
 
@@ -122,11 +122,12 @@ def make_eor(shape):  # Create and fringe rate filter noise
     dij = oqe.noise(size=shape)
     wij = n.ones(shape, dtype=bool)  # XXX flags are all true (times,freqs)
     # dij and wij are (times,freqs)
+    # create two datasets of eor (for conj baselines and non-conj baselines)
     _d = fringe_rate_filter(aa, dij, wij, ij[0], ij[1], POL, bins, fir)
-    _d_conj = fringe_rate_filter(aa, n.conj(dij), wij, ij[0], ij[1], POL, bins, fir)
+    _d_conj = fringe_rate_filter(aa, n.conj(dij), wij, ij[0], ij[1], POL, bins, fir_conj)
     if opts.frf: # double FRF of eor
         _d = fringe_rate_filter(aa, _d, wij, ij[0], ij[1], POL, bins, fir)
-        _d_conj = fringe_rate_filter(aa, _d_conj, wij, ij[0], ij[1], POL, bins, fir)
+        _d_conj = fringe_rate_filter(aa, _d_conj, wij, ij[0], ij[1], POL, bins, fir_conj)
     _d = _d[shape[0] / 4:shape[0] / 2 + shape[0] / 4, :]
     _d_conj = _d_conj[shape[0] / 4:shape[0] / 2 + shape[0] / 4, :]
     return _d, _d_conj
@@ -312,6 +313,9 @@ frp, bins = fringe.aa_to_fr_profile(aa, ij, len(afreqs) / 2, bins=bins)
 timebins, firs = fringe.frp_to_firs(frp, bins, aa.get_freqs(),
                                     fq0=aa.get_freqs()[len(afreqs) / 2])
 fir = {(ij[0], ij[1], POL): firs}
+fir_conj = {} # fir for conjugated baselines
+for key in fir:
+    fir_conj[key] = n.conj(fir[key])
 
 # Acquire data
 data_dict_v = {}
@@ -358,18 +362,23 @@ nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
 # but the lsts returned is one array
 
-for key in data_dict_v:
-    if conj_dict[key[1]] is True: # conjugate certain baselines for noise (doesn't really matter since it's noise, but it's for completeness)
-        data_dict_n[key] = n.conj(data_dict_n[key])
-
 # Fringe-rate filter noise
 if opts.frf:
+    print 'Fringe-rate-filtering noise'
     for key in data_dict_n:
         size = data_dict_n[key].shape[0]
         nij = n.repeat(data_dict_n[key], 3, axis=0)
         wij = n.ones(nij.shape, dtype=bool)
-        nij_frf = fringe_rate_filter(aa, nij, wij, ij[0], ij[1], POL, bins, fir)
+        if conj_dict[key[1]] is True: # apply frf using the conj of data and the conj fir
+            nij_frf = fringe_rate_filter(aa, n.conj(nij), wij, ij[0], ij[1], POL, bins, fir_conj)
+        else:
+            nij_frf = fringe_rate_filter(aa, nij, wij, ij[0], ij[1], POL, bins, fir)
         data_dict_n[key] = nij_frf[size:2*size,:]
+
+# Conjugate noise if needed
+for key in data_dict_n:
+    if conj_dict[key[1]] is True:
+        data_dict_n[key] = n.conj(data_dict_n[key]) 
 
 # Set data
 dsv = oqe.DataSet()  # just data
@@ -460,7 +469,7 @@ for boot in xrange(opts.nboot):
     dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
     dss = oqe.DataSet()  # noise + eor
     dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)
-
+    
     pCr, pIr = make_PS(keys, dsr, grouping=True)
     pCe, pIe = make_PS(keys, dse, grouping=True)
     pCs, pIs = make_PS(keys, dss, grouping=True)
