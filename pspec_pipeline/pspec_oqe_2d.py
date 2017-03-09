@@ -118,20 +118,8 @@ def fringe_rate_filter(aa, dij, wij, i, j, pol, bins, fir):
 
 def make_eor(shape):  # Create and fringe rate filter noise
     """Generate White Noise and Apply FRF."""
-    shape = shape[1] * 2, shape[0]  # (2*times,freqs)
     dij = oqe.noise(size=shape)
-    wij = n.ones(shape, dtype=bool)  # XXX flags are all true (times,freqs)
-    # dij and wij are (times,freqs)
-    # create two datasets of eor (for conj baselines and non-conj baselines)
-    _d = fringe_rate_filter(aa, dij, wij, ij[0], ij[1], POL, bins, fir)
-    _d_conj = fringe_rate_filter(aa, n.conj(dij), wij, ij[0], ij[1], POL, bins, fir_conj)
-    if opts.frf: # double FRF of eor
-        _d = fringe_rate_filter(aa, _d, wij, ij[0], ij[1], POL, bins, fir)
-        _d_conj = fringe_rate_filter(aa, _d_conj, wij, ij[0], ij[1], POL, bins, fir_conj)
-    _d = _d[shape[0] / 4:shape[0] / 2 + shape[0] / 4, :]
-    _d_conj = _d_conj[shape[0] / 4:shape[0] / 2 + shape[0] / 4, :]
-    return _d, _d_conj
-
+    return dij
 
 def make_PS(keys, ds, grouping=True):
     """Use OQE formalism to generate power spectrum.
@@ -445,17 +433,26 @@ for boot in xrange(opts.nboot):
     # and pCe & pIe (eor) #
     if INJECT_SIG > 0.:  # Create a fake EoR signal to inject
         print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
-        eor,eor_conj = make_eor((nchan, nlst))  # same on all baselines
-        eor,eor_conj = eor*INJECT_SIG, eor_conj*INJECT_SIG
+        eij = make_eor((nlst, nchan))
+        eij = n.repeat(eij, 3, axis=0)
+        wij = n.ones(eij.shape, dtype=bool)
+        eij_frf = fringe_rate_filter(aa, eij, wij, ij[0], ij[1], POL, bins, fir)
+        eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1], POL, bins, fir_conj) 
+        if opts.frf: # double frf eor
+            eij_frf = fringe_rate_filter(aa, eij_frf, wij, ij[0], ij[1], POL, bins, fir)
+            eij_conj_frf = fringe_rate_filter(aa, eij_conj_frf, wij, ij[0], ij[1], POL, bins, fir_conj)
+
+        eor = eij_frf[size:2*size,:]*INJECT_SIG
+        eor_conj = eij_conj_frf[size:2*size,:]*INJECT_SIG
         data_dict_r = {}
         data_dict_e = {}
         data_dict_s = {}
         for key in data_dict_v:
             if conj_dict[key[1]] is True:
-                eorinject = eor_conj
+                eorinject = n.conj(eor_conj)
             else:
                 eorinject = eor
-            # Track eor in separate dict
+            # track eor in separate dict
             data_dict_e[key] = eorinject
             # add injected signal to data
             data_dict_r[key] = data_dict_v[key].copy() + eorinject
