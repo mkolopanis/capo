@@ -374,11 +374,17 @@ dsv.set_data(dsets=data_dict_v, conj=conj_dict, wgts=flg_dict)
 dsn = oqe.DataSet()  # just noise
 dsn.set_data(dsets=data_dict_n, conj=conj_dict, wgts=flg_dict)
 
-#n_to_save = {}
-#for kk in data_dict_n:
-#    n_to_save[str(kk)] = data_dict_n[kk]
-#print 'Saving Noise_Dataset.npz'
-#n.savez('Noise_Dataset.npz', **n_to_save)
+"""
+n_to_save = {}
+v_to_save = {}
+for kk in data_dict_n:
+    n_to_save[str(kk)] = data_dict_n[kk]
+    v_to_save[str(kk)] = data_dict_v[kk]
+print 'Saving Noise_Dataset.npz and Data_Dataset.npz'
+n.savez('Noise_Dataset.npz', **n_to_save)
+n.savez('Data_Dataset.npz', **v_to_save)
+sys.exit()
+"""
 
 # Get some statistics
 if LST_STATS:
@@ -434,6 +440,7 @@ for boot in xrange(opts.nboot):
     if INJECT_SIG > 0.:  # Create a fake EoR signal to inject
         print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
         eij = make_eor((nlst, nchan))
+        size = nlst
         eij = n.repeat(eij, 3, axis=0)
         wij = n.ones(eij.shape, dtype=bool)
         eij_frf = fringe_rate_filter(aa, eij, wij, ij[0], ij[1], POL, bins, fir)
