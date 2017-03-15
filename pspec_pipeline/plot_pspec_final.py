@@ -144,19 +144,19 @@ for filename in args.files:
         neg_ind_noise_fold = pspec_dict['neg_ind_noise_fold']
         neg_ind_noise = pspec_dict['neg_ind_noise']
         ax1[gs_ind].errorbar(pspec_dict['k'][neg_ind_fold][0],
-                             pspec_dict['pC_fold'][neg_ind_fold][0],
+                             -pspec_dict['pC_fold'][neg_ind_fold][0],
                              pspec_dict['pC_fold_up'][neg_ind_fold][0],
                              linestyle='', marker=marker, color='0.5')
         ax2[gs_ind].errorbar(pspec_dict['kpl'][neg_ind][0],
-                             pspec_dict['pC'][neg_ind][0],
+                             -pspec_dict['pC'][neg_ind][0],
                              pspec_dict['pC_up'][neg_ind][0], linestyle='',
                              marker=marker, color='0.5')
         ax3[gs_ind].errorbar(pspec_dict['k'][neg_ind_noise_fold][0],
-                             pspec_dict['pCn_fold'][neg_ind_noise_fold][0],
+                             -pspec_dict['pCn_fold'][neg_ind_noise_fold][0],
                              pspec_dict['pCn_fold_up'][neg_ind_noise_fold][0],
                              linestyle='', marker=marker, color='0.5')
         ax4[gs_ind].errorbar(pspec_dict['kpl'][neg_ind_noise][0],
-                             pspec_dict['pCn'][neg_ind_noise][0],
+                             -pspec_dict['pCn'][neg_ind_noise][0],
                              pspec_dict['pCn_up'][neg_ind_noise][0],
                              linestyle='', marker=marker, color='0.5')
     except:
@@ -173,17 +173,18 @@ for filename in args.files:
         fr_correct = 1.77
         """
         #PSA128
-        inttime = 3914
+        inttime = 32 #3914
         nbls = 64 #S1E1
-        ndays = 20 #S1E1
+        cnt_eff = 10 #S1E1
         nlsts = 9 #S1E1
         f1,f2 = 79,99
-        fr_correct = 1.77
+        fr_correct = 1 #1.77
          
         tsys = 500e3 #mK
         nseps = 1 #number of seps used
-        folding = 2
-        nmodes = (nseps*folding*nlsts*60*60/inttime)**.5
+        folding = 2 # XXX 2 for delta^2
+        cnt = cnt_eff * (nlsts*60*60/inttime)**.5
+        nmodes = (nseps*folding)**.5
         pol = 2
         real = 2 
         z = capo.pspec.f2z(freq)
@@ -196,12 +197,12 @@ for filename in args.files:
         scalar = X2Y * bm #* B
         #error bars minimum width. Consider them flat for P(k). Factor of 2 at the end is due to folding of kpl (root(2)) and root(2) in radiometer equation.
         #pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (2*inttime*pol*real*nbls*ndays*nmodes) ) #this 2-sigma curve should encompass 95% of the points
-        pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (inttime*pol*real*nbls*ndays*nmodes) ) #this 2-sigma curve should encompass 95% of the points
+        pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (inttime*pol*real*nbls*cnt*nmodes) ) #this 2-sigma curve should encompass 95% of the points
         # Plot analytical noise curve on plots
-        ax1[gs_ind].plot(pspec_dict['k'],pk_noise*pspec_dict['k']**3/(2*np.pi**2),'g-',label='Analytical')
-        ax2[gs_ind].axhline(pk_noise,color='g',marker='_',label='Analytical')
-        ax3[gs_ind].plot(pspec_dict['k'],pk_noise*pspec_dict['k']**3/(2*np.pi**2),'g-',label='Analytical')
-        ax4[gs_ind].axhline(pk_noise,color='g',marker='_',label='Analytical')
+        ax1[gs_ind].plot(pspec_dict['k'],pk_noise*pspec_dict['k']**3/(2*np.pi**2),'g-',label='Analytical 2-sigma')
+        ax2[gs_ind].axhline(pk_noise,color='g',marker='_',label='Analytical 2-sigma')
+        ax3[gs_ind].plot(pspec_dict['k'],pk_noise*pspec_dict['k']**3/(2*np.pi**2),'g-',label='Analytical 2-sigma')
+        ax4[gs_ind].axhline(pk_noise,color='g',marker='_',label='Analytical 2-sigma')
 
 # set up some parameters to make the figures pretty
 for gs_ind in xrange(Nzs):
