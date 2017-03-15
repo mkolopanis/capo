@@ -157,24 +157,23 @@ p.show()
 # Save values
 
 other_factors = 1/n.log(2)  # median correction factor
-# XXX need to multiply other_factors with values below
 
-pIv = pIv
-pCv = pCv*sigfactors
-pIn = pIn
-pCn = pCn*sigfactors_noise
-pIv_err = pIv_err
-pCv_err = pCv_err*sigfactors
-pIn_err = pIn_err
-pCn_err = pCn_err*sigfactors_noise
-pIv_fold = n.abs(file['pIv_fold'])*fold_factor
-pCv_fold = n.abs(file['pCv_fold'])*sigfactors_fold*fold_factor
-pIn_fold = n.abs(file['pIn_fold'])*fold_factor
-pCn_fold = n.abs(file['pCn_fold'])*sigfactors_noise_fold*fold_factor
-pIv_fold_err = file['pIv_fold_err']*fold_factor
-pCv_fold_err = file['pCv_fold_err']*sigfactors_fold*fold_factor
-pIn_fold_err = file['pIn_fold_err']*fold_factor
-pCn_fold_err = file['pCn_fold_err']*sigfactors_noise_fold*fold_factor
+pIv = pIv*other_factors
+pCv = pCv*sigfactors*other_factors
+pIn = pIn*other_factors
+pCn = pCn*sigfactors_noise*other_factors
+pIv_err = pIv_err*other_factors
+pCv_err = pCv_err*sigfactors*other_factors
+pIn_err = pIn_err*other_factors
+pCn_err = pCn_err*sigfactors_noise*other_factors
+pIv_fold = n.abs(file['pIv_fold'])*fold_factor*other_factors
+pCv_fold = n.abs(file['pCv_fold'])*sigfactors_fold*fold_factor*other_factors
+pIn_fold = n.abs(file['pIn_fold'])*fold_factor*other_factors
+pCn_fold = n.abs(file['pCn_fold'])*sigfactors_noise_fold*fold_factor*other_factors
+pIv_fold_err = file['pIv_fold_err']*fold_factor*other_factors
+pCv_fold_err = file['pCv_fold_err']*sigfactors_fold*fold_factor*other_factors
+pIn_fold_err = file['pIn_fold_err']*fold_factor*other_factors
+pCn_fold_err = file['pCn_fold_err']*sigfactors_noise_fold*fold_factor*other_factors
 
 neg_ind = n.where(file['pCv'] < 0)
 neg_ind_fold = n.where(file['pCv_fold'] < 0)
