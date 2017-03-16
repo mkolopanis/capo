@@ -13,6 +13,8 @@ o = optparse.OptionParser()
 o.set_description(__doc__)
 o.add_option('--plot',action='store_true',
             help='Show plots.')
+o.add_option('--median',action='store_true',
+            help='Correct by median correction factor.')
 opts,args = o.parse_args(sys.argv[1:])
 
 # read one pspec_pk_k3pk.npz file for data points
@@ -217,10 +219,10 @@ for count in range(2):
             final_alphas_I = n.concatenate((final_alphas_I,factors_I*probs_I/len(factors_I)))
         sigloss_final[kpl[ind]] = n.sum(final_alphas)/n.sum(p_sum)
         sigloss_final_I[kpl[ind]] = n.sum(final_alphas_I)/n.sum(p_sum_I)
-        if opts.plot:
+        if True: #opts.plot:
             p.plot(kpl[ind],sigloss_final[kpl[ind]],'k.',label='pC' if ind == 0 else "")
             p.plot(kpl[ind],sigloss_final_I[kpl[ind]],'b.',label='pI' if ind == 0 else "")
-    if opts.plot: p.xlabel('k');p.ylabel('Signal Loss Factors');p.legend();p.show()
+    if True: p.xlabel('k');p.ylabel('Signal Loss Factors');p.legend();p.show()
  
     for ind in range(len(k)): # loop for Delta^2(k)
         low = n.log10(Pouts_fold[k[ind]].min()) # XXX haven't taken into account alphas < 1, which are artificial
@@ -258,7 +260,8 @@ for count in range(2):
 
 # save final values
 
-other_factors = 1/n.log(2)  # median correction factor
+if opts.median: other_factors = 1/n.log(2)  # median correction factor
+else: other_factors = 1
 fold_factor = file['k']**3/(2*n.pi**2)
 
 pIv = file['pIv']*sigfactors_I*other_factors
@@ -278,11 +281,6 @@ pCv_fold_err = file['pCv_fold_err']*sigfactors_fold*fold_factor*other_factors
 pIn_fold_err = file['pIn_fold_err']*sigfactors_noise_I_fold*fold_factor*other_factors
 pCn_fold_err = file['pCn_fold_err']*sigfactors_noise_fold*fold_factor*other_factors
 
-neg_ind = n.where(file['pCv'] < 0)
-neg_ind_fold = n.where(file['pCv_fold'] < 0)
-neg_ind_noise = n.where(file['pCn'] < 0)
-neg_ind_noise_fold = n.where(file['pCn_fold'] < 0)
-
 print '   Saving pspec_final.npz'  # XXX 2-sigma probability is hard-coded
 n.savez('pspec_final.npz', kpl=kpl, k=file['k'], freq=file['freq'],
         pC=pCv, pC_up=2 * pCv_err,
@@ -293,9 +291,7 @@ n.savez('pspec_final.npz', kpl=kpl, k=file['k'], freq=file['freq'],
         pCn_fold=pCn_fold, pCn_fold_up=2 * pCn_fold_err,
         pIn=pIn, pIn_up=2 * pIn_err,
         pIn_fold=pIn_fold, pIn_fold_up=2 * pIn_fold_err,
-        prob=0.9545, neg_ind=neg_ind, neg_ind_fold=neg_ind_fold,
-        neg_ind_noise=neg_ind_noise,
-        neg_ind_noise_fold=neg_ind_noise_fold,
+        prob=0.9545, 
         alphaCv=sigfactors, alphaIv=sigfactors_I,
         alphaCn=sigfactors_noise, alphaIn=sigfactors_noise_I,
         alphaCv_fold=sigfactors_fold, alphaIv_fold=sigfactors_I_fold,
