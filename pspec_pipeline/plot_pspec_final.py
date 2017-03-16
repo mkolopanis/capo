@@ -110,58 +110,67 @@ for filename in args.files:
     gs_ind = int(np.where(zs == redshift)[0].item())
     marker = markers[marker_count[gs_ind]]
     marker_count[gs_ind] += 1
+
+    pos_ind = np.where(pspec_dict['pC'] >= 0)[0]
+    pos_ind_noise = np.where(pspec_dict['pCn'] >= 0)[0]
+    pos_ind_fold = np.where(pspec_dict['pC_fold'] >= 0)[0]
+    pos_ind_noise_fold = np.where(pspec_dict['pCn_fold'] >= 0)[0]
+    neg_ind = np.where(pspec_dict['pC'] < 0)[0]
+    neg_ind_noise = np.where(pspec_dict['pCn'] < 0)[0]
+    neg_ind_fold = np.where(pspec_dict['pC_fold'] < 0)[0]
+    neg_ind_noise_fold = np.where(pspec_dict['pCn_fold'] < 0)[0]
+    
     ax1[gs_ind].plot(pspec_dict['k'],
                      pspec_dict['pI_fold'] + pspec_dict['pI_fold_up'], '--',
                      label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)))
-    ax1[gs_ind].errorbar(pspec_dict['k'], pspec_dict['pC_fold'],
-                         pspec_dict['pC_fold_up'], label='pC {0:02d}%'
-                         .format(int(pspec_dict['prob']*100)), linestyle='',
-                         marker=marker, color='black')
+    ax1[gs_ind].errorbar(pspec_dict['k'][pos_ind_fold], 
+                         pspec_dict['pC_fold'][pos_ind_fold],
+                         pspec_dict['pC_fold_up'][pos_ind_fold], 
+                         label='pC {0:02d}%'.format(int(pspec_dict['prob']*100)), 
+                         linestyle='', marker=marker, color='black')
+    ax1[gs_ind].errorbar(pspec_dict['k'][neg_ind_fold], 
+                         -pspec_dict['pC_fold'][neg_ind_fold],
+                         pspec_dict['pC_fold_up'][neg_ind_fold], 
+                         label='pC {0:02d}%'.format(int(pspec_dict['prob']*100)), 
+                         linestyle='',marker=marker, color='0.5')
     ax2[gs_ind].plot(pspec_dict['kpl'],
-                     pspec_dict['pI'] + pspec_dict['pI_up'], '--', label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)))
-    ax2[gs_ind].errorbar(pspec_dict['kpl'], pspec_dict['pC'],
-                         pspec_dict['pC_up'], label='pC {0:02d}%'
-                         .format(int(pspec_dict['prob']*100)), linestyle='',
-                         marker=marker, color='black')
+                     pspec_dict['pI'] + pspec_dict['pI_up'], '--', 
+                     label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)))
+    ax2[gs_ind].errorbar(pspec_dict['kpl'][pos_ind], pspec_dict['pC'][pos_ind],
+                         pspec_dict['pC_up'][pos_ind], 
+                         label='pC {0:02d}%'.format(int(pspec_dict['prob']*100)), 
+                         linestyle='', marker=marker, color='black')
+    ax2[gs_ind].errorbar(pspec_dict['kpl'][neg_ind], -pspec_dict['pC'][neg_ind],
+                         pspec_dict['pC_up'][neg_ind], 
+                         label='pC {0:02d}%'.format(int(pspec_dict['prob']*100)), 
+                         linestyle='', marker=marker, color='0.5')
     ax3[gs_ind].plot(pspec_dict['k'],
                      pspec_dict['pIn_fold'] + pspec_dict['pIn_fold_up'], '--',
                      label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)))
-    ax3[gs_ind].errorbar(pspec_dict['k'], pspec_dict['pCn_fold'],
-                         pspec_dict['pCn_fold_up'], label='pCn {0:02d}%'
-                         .format(int(pspec_dict['prob']*100)), linestyle='',
-                         marker=marker, color='black')
+    ax3[gs_ind].errorbar(pspec_dict['k'][pos_ind_noise_fold], 
+                         pspec_dict['pCn_fold'][pos_ind_noise_fold],
+                         pspec_dict['pCn_fold_up'][pos_ind_noise_fold], 
+                         label='pCn {0:02d}%'.format(int(pspec_dict['prob']*100)), 
+                         linestyle='', marker=marker, color='black')
+    ax3[gs_ind].errorbar(pspec_dict['k'][neg_ind_noise_fold], 
+                         -pspec_dict['pCn_fold'][neg_ind_noise_fold],
+                         pspec_dict['pCn_fold_up'][neg_ind_noise_fold], 
+                         label='pCn {0:02d}%'.format(int(pspec_dict['prob']*100)), 
+                         linestyle='', marker=marker, color='0.5')
     ax4[gs_ind].plot(pspec_dict['kpl'],
                      pspec_dict['pIn'] + pspec_dict['pIn_up'], '--',
                      label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)))
-    ax4[gs_ind].errorbar(pspec_dict['kpl'], pspec_dict['pCn'],
-                         pspec_dict['pCn_up'], label='pCn {0:02d}%'
-                         .format(int(pspec_dict['prob']*100)), linestyle='',
-                         marker=marker, color='black')
-
-    try:  # grey points for negative values
-        neg_ind_fold = pspec_dict['neg_ind_fold']
-        neg_ind = pspec_dict['neg_ind']
-        neg_ind_noise_fold = pspec_dict['neg_ind_noise_fold']
-        neg_ind_noise = pspec_dict['neg_ind_noise']
-        ax1[gs_ind].errorbar(pspec_dict['k'][neg_ind_fold][0],
-                             -pspec_dict['pC_fold'][neg_ind_fold][0],
-                             pspec_dict['pC_fold_up'][neg_ind_fold][0],
-                             linestyle='', marker=marker, color='0.5')
-        ax2[gs_ind].errorbar(pspec_dict['kpl'][neg_ind][0],
-                             -pspec_dict['pC'][neg_ind][0],
-                             pspec_dict['pC_up'][neg_ind][0], linestyle='',
-                             marker=marker, color='0.5')
-        ax3[gs_ind].errorbar(pspec_dict['k'][neg_ind_noise_fold][0],
-                             -pspec_dict['pCn_fold'][neg_ind_noise_fold][0],
-                             pspec_dict['pCn_fold_up'][neg_ind_noise_fold][0],
-                             linestyle='', marker=marker, color='0.5')
-        ax4[gs_ind].errorbar(pspec_dict['kpl'][neg_ind_noise][0],
-                             -pspec_dict['pCn'][neg_ind_noise][0],
-                             pspec_dict['pCn_up'][neg_ind_noise][0],
-                             linestyle='', marker=marker, color='0.5')
-    except:
-        pass
-
+    ax4[gs_ind].errorbar(pspec_dict['kpl'][pos_ind_noise], 
+                         pspec_dict['pCn'][pos_ind_noise],
+                         pspec_dict['pCn_up'][pos_ind_noise], 
+                         label='pCn {0:02d}%'.format(int(pspec_dict['prob']*100)), 
+                         linestyle='', marker=marker, color='black')
+    ax4[gs_ind].errorbar(pspec_dict['kpl'][neg_ind_noise], 
+                         -pspec_dict['pCn'][neg_ind_noise],
+                         pspec_dict['pCn_up'][neg_ind_noise], 
+                         label='pCn {0:02d}%'.format(int(pspec_dict['prob']*100)), 
+                         linestyle='', marker=marker, color='0.5')
+        
     if args.analytical:
         """ 
         #PSA64
