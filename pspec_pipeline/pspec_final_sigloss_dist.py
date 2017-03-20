@@ -258,8 +258,17 @@ for count in range(2):
         sigfactors = sigloss_final.values(); sigfactors_fold = sigloss_final_fold.values()
         sigfactors_I = sigloss_final_I.values(); sigfactors_I_fold = sigloss_final_I_fold.values()
 
-# save final values
+# correct factors if I factors are inflated (> 1.0)
+if True:
+    sigfactors_I /= n.array(sigfactors_I)
+    sigfactors_noise /= n.array(sigfactors_noise_I)
+    sigfactors_noise_I /= n.array(sigfactors_noise_I)
+    sigfactors_fold /= n.array(sigfactors_I_fold)
+    sigfactors_I_fold /= n.array(sigfactors_I_fold)
+    sigfactors_noise_fold /= n.array(sigfactors_noise_I_fold)
+    sigfactors_noise_I_fold /= n.array(sigfactors_noise_I_fold)
 
+# save final values
 if opts.median: other_factors = 1/n.log(2)  # median correction factor
 else: other_factors = 1
 fold_factor = file['k']**3/(2*n.pi**2)
