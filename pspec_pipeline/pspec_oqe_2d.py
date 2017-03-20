@@ -351,6 +351,8 @@ nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
 # but the lsts returned is one array
 cnt_full = stats['even']['cnt'][inds['even'], chans]
+# after aligning, lsts should be the same on both even and odd
+lsts = lsts['even']
 # this variable 'cnt' and 'var' are relics of pspec_cov_v???
 # not sure if it is still used anywhere
 # stats dictionary has cnts and var in it that could be used too
