@@ -41,6 +41,8 @@ o.add_option('--Trcvr', type='float', default=200,
 o.add_option('--rmbls', dest='rmbls', type='string',
              help=('List of baselines (ex:1_4,2_33) '
                    'to remove from the power spectrum analysis.'))
+o.add_option('--NGPS', type='int', default=5,
+             help='Number of Groups used in bootstrapping (default 5)')
 opts, args = o.parse_args(sys.argv[1:])
 
 # Basic parameters
@@ -50,7 +52,7 @@ POL = opts.pol
 if POL == 'xx' or POL == 'yy': NPOL = 1
 else: NPOL = 2
 DELAY = False
-NGPS = 5  # number of groups to break the random sampled bls into
+NGPS = opts.NGPS # number of groups to break the random sampled bls into
 PLOT = opts.plot
 INJECT_SIG = opts.inject
 
@@ -348,7 +350,15 @@ data_dict_n = oqe.lst_align_data(inds, dsets=data_dict_n)[0]
 nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
 # but the lsts returned is one array
-
+cnt_full = stats['even']['cnt'][inds['even'], chans]
+# this variable 'cnt' and 'var' are relics of pspec_cov_v???
+# not sure if it is still used anywhere
+# stats dictionary has cnts and var in it that could be used too
+cnt, var = n.ones_like(lsts), n.ones_like(lsts)
+# calculate the effective number of counts used in the data
+cnt_eff = 1./n.sqrt(n.ma.masked_invalid(1./cnt**2).mean())
+# calculate the effective numbe of baselines given grouping:
+nbls_eff = len(bls_master) / n.sqrt(2) * n.sqrt(1. - 1./NGPS)
 # Fringe-rate filter noise
 if opts.frf:
     print 'Fringe-rate-filtering noise'
@@ -493,4 +503,5 @@ for boot in xrange(opts.nboot):
             err=1. / cnt, var=var, sep=sep_type, uvw=uvw,
             frf_inttime=frf_inttime, inttime=inttime,
             inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
+            cnt_eff=cnt_eff, nbls_eff=nbls_eff,
             cmd=' '.join(sys.argv))
