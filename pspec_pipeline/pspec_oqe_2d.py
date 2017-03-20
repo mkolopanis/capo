@@ -49,7 +49,6 @@ n.random.seed(0) # for noise generator
 POL = opts.pol
 if POL == 'xx' or POL == 'yy': NPOL = 1
 else: NPOL = 2
-LST_STATS = False
 DELAY = False
 NGPS = 5  # number of groups to break the random sampled bls into
 PLOT = opts.plot
@@ -366,7 +365,7 @@ if opts.frf:
 # Conjugate noise if needed
 for key in data_dict_n:
     if conj_dict[key[1]] is True:
-        data_dict_n[key] = n.conj(data_dict_n[key]) 
+        data_dict_n[key] = n.conj(data_dict_n[key])
 
 # Set data
 dsv = oqe.DataSet()  # just data
@@ -385,24 +384,6 @@ n.savez('Noise_Dataset.npz', **n_to_save)
 n.savez('Data_Dataset.npz', **v_to_save)
 sys.exit()
 """
-
-# Get some statistics
-if LST_STATS:
-    # collect some metadata from the lst binning process
-    cnt, var = {}, {}
-    for filename in dsets.values()[0]:
-        print 'Reading', filename
-        uv = a.miriad.UV(filename)
-        a.scripting.uv_selector(uv, '64_49', POL)  # XXX
-        for (uvw, t, (i, j)), d, f in uv.all(raw=True):
-            bl = '%d,%d,%d' % (i, j, uv['pol'])
-            cnt[bl] = cnt.get(bl, []) + [uv['cnt']]
-            var[bl] = var.get(bl, []) + [uv['var']]
-    cnt = n.array(cnt.values()[0])  # all baselines should be the same
-    var = n.array(var.values()[0])  # all baselines should be the same
-else:
-    cnt, var = n.ones_like(lsts), n.ones_like(lsts)
-
 if PLOT and False:
     for key in keys:
         p.subplot(311)
@@ -444,7 +425,7 @@ for boot in xrange(opts.nboot):
         eij = n.repeat(eij, 3, axis=0)
         wij = n.ones(eij.shape, dtype=bool)
         eij_frf = fringe_rate_filter(aa, eij, wij, ij[0], ij[1], POL, bins, fir)
-        eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1], POL, bins, fir_conj) 
+        eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1], POL, bins, fir_conj)
         if opts.frf: # double frf eor
             eij_frf = fringe_rate_filter(aa, eij_frf, wij, ij[0], ij[1], POL, bins, fir)
             eij_conj_frf = fringe_rate_filter(aa, eij_conj_frf, wij, ij[0], ij[1], POL, bins, fir_conj)
@@ -473,7 +454,7 @@ for boot in xrange(opts.nboot):
     dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
     dss = oqe.DataSet()  # noise + eor
     dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)
-    
+
     pCr, pIr = make_PS(keys, dsr, grouping=True)
     pCe, pIe = make_PS(keys, dse, grouping=True)
     pCs, pIs = make_PS(keys, dss, grouping=True)
