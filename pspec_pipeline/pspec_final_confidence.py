@@ -141,7 +141,8 @@ print "found k bins:", Nk
 # this gets all the the other meta-data in the file and passes it through
 meta_data = {}
 generator = (x for x in F.keys()
-             if x not in np.concatenate([['kpl', 'k', 'freq', 'afreqs', 'k'],
+             if x not in np.concatenate([['kpl', 'k', 'freq',
+                                          'afreqs', 'k', 'cmd'],
                                          flat_power_spectra, flat_errors,
                                          folded_power_spectra, folded_errors]))
 for key in generator:
@@ -224,4 +225,5 @@ for per in prob_limits:
              pI_fold=pI_fold, pI_fold_up=pI_fold_up, pCn=pCn, pCn_up=pCn_up,
              pCn_fold=pCn_fold, pCn_fold_up=pCn_fold_up, pIn=pIn,
              pIn_up=pIn_up, pIn_fold=pIn_fold, pIn_fold_up=pIn_fold_up,
-             prob=per, **meta_data)
+             prob=per, cmd=F['cmd'].item() + ' \n ' + ' '.join(sys.argv),
+             **meta_data)
