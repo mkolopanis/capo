@@ -106,6 +106,13 @@ pspec_channels = ['pCv_fold', 'pCv_fold_err',  # weighted data pspec
                   'pCr', 'pCr_err',  # weighted data+inj pspec
                   'pIe', 'pIe_err']  # unweighted inj pspec pos and neg kpls
 pspecs = {}
+flat_power_spectra = [p + x for p in ['pC',  'pI']
+                      for x in ['e', 'r', 's', 'v', 'n']]
+flat_power_spectra.append('pCr-pCv')
+flat_power_spectra.append('pCs-pCn')
+folded_power_spectra = [x + '_fold' for x in flat_power_spectra]
+flat_errors = [x + '_err' for x in flat_power_spectra]
+folded_errors = [x + '_err' for x in folded_power_spectra]
 
 # sort the input files. makes things easier later
 injlevels = [injpath_to_injlevel(filename) for filename in args.pspec_files]
@@ -130,6 +137,18 @@ freq = F['freq']
 afreqs = F['afreqs']
 print "found injects:", Ninj
 print "found k bins:", Nk
+
+# this gets all the the other meta-data in the file and passes it through
+meta_data = {}
+generator = (x for x in F.keys()
+             if x not in np.concatenate([['kpl', 'k', 'freq', 'afreqs', 'k'],
+                                         flat_power_spectra, flat_errors,
+                                         folded_power_spectra, folded_errors]))
+for key in generator:
+    if key not in meta_data.keys():
+        meta_data[key] = [F[key]]
+    else:
+        meta_data[key].append(f[key])
 
 # limit option #1. the net probability that pC is above pcV
 probs_data = np.zeros((Ninj, Nk))
@@ -205,4 +224,4 @@ for per in prob_limits:
              pI_fold=pI_fold, pI_fold_up=pI_fold_up, pCn=pCn, pCn_up=pCn_up,
              pCn_fold=pCn_fold, pCn_fold_up=pCn_fold_up, pIn=pIn,
              pIn_up=pIn_up, pIn_fold=pIn_fold, pIn_fold_up=pIn_fold_up,
-             prob=per)
+             prob=per, **meta_data)
