@@ -43,7 +43,7 @@ for inject in glob.glob('inject_*'):
 
     for ind in range(len(kpl)):  # plot for each k
         p.figure(1)
-        p.subplot(3, 7, ind)
+        p.subplot(3, 7, ind+1)
         try:
             Pin_points[kpl[ind]].append(Pin[ind])
             Pout_points[kpl[ind]].append(Pout[ind])
@@ -93,7 +93,7 @@ for ind in range(len(kpl)):  # interpolation for signal loss factors for each k
     # build interpolator for noise
     order = n.argsort(Pout_noise_points[kpl[ind]])
     Pout_noise_points[kpl[ind]] = n.array(Pout_noise_points[kpl[ind]])[order]
-    Pin_points[kpl[ind]] = n.array(Pin_points[kpl[ind]])[order]
+    # Pin_points[kpl[ind]] = n.array(Pin_points[kpl[ind]])[order]
     sig_factor_interp_noise = interp1d(Pout_noise_points[kpl[ind]],
                                        n.array(Pin_points[kpl[ind]])
                                        / n.array(Pout_noise_points[kpl[ind]]),
@@ -190,15 +190,15 @@ flat_errors = [x + '_err' for x in flat_power_spectra]
 folded_errors = [x + '_err' for x in folded_power_spectra]
 
 meta_data = {}
-generator = (x for x in F.keys()
-             if x not in np.concatenate([['kpl', 'k', 'freq', 'k'],
-                                         flat_power_spectra, flat_errors,
-                                         folded_power_spectra, folded_errors]))
+generator = (x for x in file.keys()
+             if x not in n.concatenate([['kpl', 'k', 'freq', 'k', 'cmd'],
+                                        flat_power_spectra, flat_errors,
+                                        folded_power_spectra, folded_errors]))
 for key in generator:
     if key not in meta_data.keys():
-        meta_data[key] = [F[key]]
+        meta_data[key] = [file[key]]
     else:
-        meta_data[key].append(f[key])
+        meta_data[key].append(file[key])
 
 
 print '   Saving pspec_final_median.npz'  # XXX 2-sigma probability is hard-coded
@@ -214,4 +214,4 @@ n.savez('pspec_final_median.npz', kpl=kpl, k=file['k'], freq=file['freq'],
         prob=0.9545, neg_ind=neg_ind, neg_ind_fold=neg_ind_fold,
         neg_ind_noise=neg_ind_noise,
         neg_ind_noise_fold=neg_ind_noise_fold,
-        cmd=' '.join(sys.argv))
+        cmd=file['cmd'].item() + ' \n ' + ' '.join(sys.argv), **meta_data)
