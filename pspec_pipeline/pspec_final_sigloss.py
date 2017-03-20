@@ -46,7 +46,7 @@ for inject in glob.glob('inject_*'):
         p.subplot(3, 7, ind)
         try:
             Pin_points[kpl[ind]].append(Pin[ind])
-            Pout_points[kpl[ind]].append(Pout[ind]) 
+            Pout_points[kpl[ind]].append(Pout[ind])
             Pout_noise_points[kpl[ind]].append(Pout_noise[ind])
         except:
             Pin_points[kpl[ind]] = [Pin[ind]]
@@ -179,6 +179,27 @@ neg_ind = n.where(file['pCv'] < 0)
 neg_ind_fold = n.where(file['pCv_fold'] < 0)
 neg_ind_noise = n.where(file['pCn'] < 0)
 neg_ind_noise_fold = n.where(file['pCn_fold'] < 0)
+
+# Get all the meta-data from the npz file and pass it through
+flat_power_spectra = [p + x for p in ['pC',  'pI']
+                      for x in ['e', 'r', 's', 'v', 'n']]
+flat_power_spectra.append('pCr-pCv')
+flat_power_spectra.append('pCs-pCn')
+folded_power_spectra = [x + '_fold' for x in flat_power_spectra]
+flat_errors = [x + '_err' for x in flat_power_spectra]
+folded_errors = [x + '_err' for x in folded_power_spectra]
+
+meta_data = {}
+generator = (x for x in F.keys()
+             if x not in np.concatenate([['kpl', 'k', 'freq', 'k'],
+                                         flat_power_spectra, flat_errors,
+                                         folded_power_spectra, folded_errors]))
+for key in generator:
+    if key not in meta_data.keys():
+        meta_data[key] = [F[key]]
+    else:
+        meta_data[key].append(f[key])
+
 
 print '   Saving pspec_final_median.npz'  # XXX 2-sigma probability is hard-coded
 n.savez('pspec_final_median.npz', kpl=kpl, k=file['k'], freq=file['freq'],

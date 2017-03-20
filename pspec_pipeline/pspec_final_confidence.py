@@ -148,7 +148,7 @@ for key in generator:
     if key not in meta_data.keys():
         meta_data[key] = [F[key]]
     else:
-        meta_data[key].append(f[key])
+        meta_data[key].append(F[key])
 
 # limit option #1. the net probability that pC is above pcV
 probs_data = np.zeros((Ninj, Nk))
