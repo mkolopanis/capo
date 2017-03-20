@@ -98,7 +98,7 @@ aa = a.cal.get_aa(opts.cal, allfreqs)
 bls, conj = capo.red.group_redundant_bls(aa.ant_layout)
 jy2T = capo.pspec.jy2T(allfreqs)
 
-antstr = 'cross'
+antstr = opts.ant
 stats = {}
 lsts, cnt1, var1, data, flgs = {}, {}, {}, {}, {}
 days = dsets.keys()
@@ -115,8 +115,18 @@ for k in days:
             print bl,
         print '\n'
     lsts[k] = stats[k]['lsts']
-    cnt1[k] = stats[k]['cnt']
-    var1[k] = stats[k]['var']
+    if stats[k]['cnt'].size != data[k][data[k].keys()[0]][POL].size:
+        cnt1[k] = n.ones_like(data[k][data[k].keys()[0]][POL])
+        print "no cnts found: setting to 1s"
+    else:
+        cnt1[k] = stats[k]['cnt']
+    if stats[k]['var'].size != data[k][data[k].keys()[0]][POL].size:
+        var1[k] = n.zeros_like(data[k][data[k].keys()[0]][POL])
+        print "no vars found: setting to 0s"
+    else:
+        var1[k] = stats[k]['var']
+    print "cnt shape", cnt1[k].shape
+    print "var shape",var1[k].shape
     print data[k].keys()
 
 # if False:
@@ -165,6 +175,7 @@ if set(['even', 'odd']) == set(days):
         d = (n.copy(data['even'][bl][:, band_chans]
              - data['odd'][bl][:, band_chans]))
         c_e = n.copy(n.array(cnt1['even'])[:, band_chans])
+        print n.array(var1['even']).shape
         v_e = n.copy(n.array(var1['even'])[:, band_chans])
         c_o = n.copy(n.array(cnt1['odd'])[:, band_chans])
         v_o = n.copy(n.array(var1['odd'])[:, band_chans])
