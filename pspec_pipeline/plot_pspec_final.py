@@ -186,7 +186,7 @@ for filename in args.files:
         tsys = 500e3  #mK
         nseps = 1  #number of seps used
         folding = 2 # XXX 2 for delta^2
-        nmodes = (nseps*folding)**.5
+        nmodes = (nlsts*nseps*folding)**.5
         pol = 2
         real = np.sqrt(2)
         z = capo.pspec.f2z(freq)
