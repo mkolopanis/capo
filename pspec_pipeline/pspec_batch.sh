@@ -11,7 +11,7 @@ DIRNAME=$2
 RA='-.1_8.6'
 CALFILE='psa6240_v003'
 SEP='0,1 1,1 -1,1'
-CHAN='95_115'
+CHAN='30_50 95_115'
 NBOOT=60
 POL='I'
 weight='I'
@@ -33,7 +33,7 @@ for sep in $SEP; do
     for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-2,4,40)))"` ; do
         mkdir ${DIRNAME}/sep${sep}/inject_sep${sep}_${inject}
         echo SIGNAL_LEVEL=${inject}
-        ~/src/capo/pspec_pipeline/pspec_oqe_2d.py --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -b ${NBOOT} -i ${inject} ${frf} --weight=${weight} --output ${DIRNAME}/sep${sep}/inject_sep${sep}_${inject} ${EVEN_FILES} ${ODD_FILES}
+        ~/src/capo/pspec_pipeline/pspec_oqe_2d.py --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -b ${NBOOT} -i ${inject} ${FRF} --weight=${weight} --output ${DIRNAME}/sep${sep}/inject_sep${sep}_${inject} ${EVEN_FILES} ${ODD_FILES}
     
         # Stage 2: pspec_2d_to_1d.py
         ~/src/capo/pspec_pipeline/pspec_2d_to_1d.py --output ${DIRNAME}/sep${sep}/inject_sep${sep}_${inject}/ ${DIRNAME}/sep${sep}/inject_sep${sep}_${inject}/*boot*

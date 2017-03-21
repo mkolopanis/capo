@@ -122,7 +122,7 @@ for filename in args.files:
     neg_ind_noise_fold = np.where(pspec_dict['pCn_fold'] < 0)[0]
 
     ax1[gs_ind].plot(pspec_dict['k'],
-                     pspec_dict['pI_fold'] + pspec_dict['pI_fold_up'], '--',
+                     pspec_dict['pI_fold_up'], '--',
                      label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)))
     ax1[gs_ind].errorbar(pspec_dict['k'][pos_ind_fold],
                          pspec_dict['pC_fold'][pos_ind_fold],
@@ -144,7 +144,7 @@ for filename in args.files:
                          pspec_dict['pC_up'][neg_ind],
                          linestyle='', marker=marker, color='0.5')
     ax3[gs_ind].plot(pspec_dict['k'],
-                     pspec_dict['pIn_fold'] + pspec_dict['pIn_fold_up'], '--',
+                     pspec_dict['pIn_fold_up'], '--',
                      label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)))
     ax3[gs_ind].errorbar(pspec_dict['k'][pos_ind_noise_fold],
                          pspec_dict['pCn_fold'][pos_ind_noise_fold],
