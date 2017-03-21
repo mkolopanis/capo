@@ -350,18 +350,16 @@ data_dict_n = oqe.lst_align_data(inds, dsets=data_dict_n)[0]
 nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
 # but the lsts returned is one array
-cnt_full = stats['even']['cnt'][inds['even']]
+
+# Save some information
+cnt_full = stats[stats.keys()[0]]['cnt'][inds[stats.keys()[0]]]
 cnt_full = cnt_full[:, chans]
-# after aligning, lsts should be the same on both even and odd
-lsts = lsts['even']
-# this variable 'cnt' and 'var' are relics of pspec_cov_v???
-# not sure if it is still used anywhere
-# stats dictionary has cnts and var in it that could be used too
-cnt, var = n.ones_like(lsts), n.ones_like(lsts)
+lsts = lsts[lsts.keys()[0]]
 # calculate the effective number of counts used in the data
 cnt_eff = 1./n.sqrt(n.ma.masked_invalid(1./cnt_full**2).mean())
 # calculate the effective numbe of baselines given grouping:
 nbls_eff = len(bls_master) / n.sqrt(2) * n.sqrt(1. - 1./NGPS)
+
 # Fringe-rate filter noise
 if opts.frf:
     print 'Fringe-rate-filtering noise'
@@ -503,7 +501,7 @@ for boot in xrange(opts.nboot):
     n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
             pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe,
             pIe=pIe, pCn=pCn, pIn=pIn, pCs=pCs, pIs=pIs,
-            err=1. / cnt, var=var, sep=sep_type, uvw=uvw,
+            sep=sep_type, uvw=uvw,
             frf_inttime=frf_inttime, inttime=inttime,
             inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
             cnt_eff=cnt_eff, nbls_eff=nbls_eff,
