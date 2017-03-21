@@ -173,7 +173,10 @@ for filename in args.files:
         cnt = pspec_dict['cnt_eff']
         nlsts = len(pspec_dict['lsts']) * pspec_dict['inttime']
         nlsts /= pspec_dict['frf_inttime']
-        fr_correct = 1 #1.77
+        if pspec_dict['frf_inttime'] == pspec_dict['inttime']:
+            fr_correct = 1
+        else:
+            fr_correct = 1.77
         print 'Using these parameters for the Analytic Model:'
         print 'T_int:', inttime
         print 'Nbls:', nbls
@@ -196,7 +199,7 @@ for filename in args.files:
         scalar = X2Y * bm #* B
         #error bars minimum width. Consider them flat for P(k). Factor of 2 at the end is due to folding of kpl (root(2)) and root(2) in radiometer equation.
         #pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (2*inttime*pol*real*nbls*ndays*nmodes) ) #this 2-sigma curve should encompass 95% of the points
-        pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (inttime*pol*real*nbls*cnt*nmodes) ) #this 3-sigma curve should line up with pI
+        pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (inttime*pol*real*nbls*cnt*nmodes) ) # this 2-sigma curve should line up with pI
         # Plot analytical noise curve on plots
         ax1[gs_ind].plot(pspec_dict['k'],pk_noise*pspec_dict['k']**3/(2*np.pi**2),'g-',label='Analytical 2-sigma')
         ax2[gs_ind].axhline(pk_noise,color='g',marker='_',label='Analytical 2-sigma')
