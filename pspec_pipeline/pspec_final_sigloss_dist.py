@@ -289,7 +289,7 @@ pIv_fold_err = file['pIv_fold_err']*sigfactors_I_fold*fold_factor*other_factors
 pCv_fold_err = file['pCv_fold_err']*sigfactors_fold*fold_factor*other_factors
 pIn_fold_err = file['pIn_fold_err']*sigfactors_noise_I_fold*fold_factor*other_factors
 pCn_fold_err = file['pCn_fold_err']*sigfactors_noise_fold*fold_factor*other_factors
-
+"""
 # Get all the meta-data from the npz file and pass it through
 flat_power_spectra = [p + x for p in ['pC',  'pI']
                       for x in ['e', 'r', 's', 'v', 'n']]
@@ -306,6 +306,7 @@ generator = (x for x in file.keys()
                                         folded_power_spectra, folded_errors]))
 for key in generator:
     meta_data[key] = [file[key]]
+"""
 
 print '   Saving pspec_final.npz'  # XXX 2-sigma probability is hard-coded
 n.savez('pspec_final.npz', kpl=kpl, k=file['k'], freq=file['freq'],
@@ -323,4 +324,6 @@ n.savez('pspec_final.npz', kpl=kpl, k=file['k'], freq=file['freq'],
         alphaCv_fold=sigfactors_fold, alphaIv_fold=sigfactors_I_fold,
         alphaCn_fold=sigfactors_noise_fold,
         alphaIn_fold=sigfactors_noise_I_fold,
-        cmd=file['cmd'].item() + ' \n '+' '.join(sys.argv), **meta_data)
+        cnt_eff=file['cnt_eff'], nbls_eff=file['nbls_eff'], lsts=file['lsts'], 
+        frf_inttime=file['frf_inttime'], inttime=file['inttime'], afreqs=file['afreqs'],
+        cmd=file['cmd'].item() + ' \n '+' '.join(sys.argv))
