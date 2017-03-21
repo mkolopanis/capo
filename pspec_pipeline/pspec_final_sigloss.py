@@ -43,10 +43,10 @@ for inject in glob.glob('inject_*'):
 
     for ind in range(len(kpl)):  # plot for each k
         p.figure(1)
-        p.subplot(3, 7, ind)
+        p.subplot(3, 7, ind+1)
         try:
             Pin_points[kpl[ind]].append(Pin[ind])
-            Pout_points[kpl[ind]].append(Pout[ind]) 
+            Pout_points[kpl[ind]].append(Pout[ind])
             Pout_noise_points[kpl[ind]].append(Pout_noise[ind])
         except:
             Pin_points[kpl[ind]] = [Pin[ind]]
@@ -93,7 +93,7 @@ for ind in range(len(kpl)):  # interpolation for signal loss factors for each k
     # build interpolator for noise
     order = n.argsort(Pout_noise_points[kpl[ind]])
     Pout_noise_points[kpl[ind]] = n.array(Pout_noise_points[kpl[ind]])[order]
-    Pin_points[kpl[ind]] = n.array(Pin_points[kpl[ind]])[order]
+    # Pin_points[kpl[ind]] = n.array(Pin_points[kpl[ind]])[order]
     sig_factor_interp_noise = interp1d(Pout_noise_points[kpl[ind]],
                                        n.array(Pin_points[kpl[ind]])
                                        / n.array(Pout_noise_points[kpl[ind]]),
@@ -157,29 +157,46 @@ p.show()
 # Save values
 
 other_factors = 1/n.log(2)  # median correction factor
-# XXX need to multiply other_factors with values below
 
-pIv = pIv
-pCv = pCv*sigfactors
-pIn = pIn
-pCn = pCn*sigfactors_noise
-pIv_err = pIv_err
-pCv_err = pCv_err*sigfactors
-pIn_err = pIn_err
-pCn_err = pCn_err*sigfactors_noise
-pIv_fold = n.abs(file['pIv_fold'])*fold_factor
-pCv_fold = n.abs(file['pCv_fold'])*sigfactors_fold*fold_factor
-pIn_fold = n.abs(file['pIn_fold'])*fold_factor
-pCn_fold = n.abs(file['pCn_fold'])*sigfactors_noise_fold*fold_factor
-pIv_fold_err = file['pIv_fold_err']*fold_factor
-pCv_fold_err = file['pCv_fold_err']*sigfactors_fold*fold_factor
-pIn_fold_err = file['pIn_fold_err']*fold_factor
-pCn_fold_err = file['pCn_fold_err']*sigfactors_noise_fold*fold_factor
+pIv = pIv*other_factors
+pCv = pCv*sigfactors*other_factors
+pIn = pIn*other_factors
+pCn = pCn*sigfactors_noise*other_factors
+pIv_err = pIv_err*other_factors
+pCv_err = pCv_err*sigfactors*other_factors
+pIn_err = pIn_err*other_factors
+pCn_err = pCn_err*sigfactors_noise*other_factors
+pIv_fold = n.abs(file['pIv_fold'])*fold_factor*other_factors
+pCv_fold = n.abs(file['pCv_fold'])*sigfactors_fold*fold_factor*other_factors
+pIn_fold = n.abs(file['pIn_fold'])*fold_factor*other_factors
+pCn_fold = n.abs(file['pCn_fold'])*sigfactors_noise_fold*fold_factor*other_factors
+pIv_fold_err = file['pIv_fold_err']*fold_factor*other_factors
+pCv_fold_err = file['pCv_fold_err']*sigfactors_fold*fold_factor*other_factors
+pIn_fold_err = file['pIn_fold_err']*fold_factor*other_factors
+pCn_fold_err = file['pCn_fold_err']*sigfactors_noise_fold*fold_factor*other_factors
 
 neg_ind = n.where(file['pCv'] < 0)
 neg_ind_fold = n.where(file['pCv_fold'] < 0)
 neg_ind_noise = n.where(file['pCn'] < 0)
 neg_ind_noise_fold = n.where(file['pCn_fold'] < 0)
+
+# Get all the meta-data from the npz file and pass it through
+flat_power_spectra = [p + x for p in ['pC',  'pI']
+                      for x in ['e', 'r', 's', 'v', 'n']]
+flat_power_spectra.append('pCr-pCv')
+flat_power_spectra.append('pCs-pCn')
+folded_power_spectra = [x + '_fold' for x in flat_power_spectra]
+flat_errors = [x + '_err' for x in flat_power_spectra]
+folded_errors = [x + '_err' for x in folded_power_spectra]
+
+meta_data = {}
+generator = (x for x in file.keys()
+             if x not in n.concatenate([['kpl', 'k', 'freq', 'k', 'cmd'],
+                                        flat_power_spectra, flat_errors,
+                                        folded_power_spectra, folded_errors]))
+for key in generator:
+    meta_data[key] = file[key]
+
 
 print '   Saving pspec_final_median.npz'  # XXX 2-sigma probability is hard-coded
 n.savez('pspec_final_median.npz', kpl=kpl, k=file['k'], freq=file['freq'],
@@ -194,4 +211,4 @@ n.savez('pspec_final_median.npz', kpl=kpl, k=file['k'], freq=file['freq'],
         prob=0.9545, neg_ind=neg_ind, neg_ind_fold=neg_ind_fold,
         neg_ind_noise=neg_ind_noise,
         neg_ind_noise_fold=neg_ind_noise_fold,
-        cmd=' '.join(sys.argv))
+        cmd=file['cmd'].item() + ' \n ' + ' '.join(sys.argv), **meta_data)

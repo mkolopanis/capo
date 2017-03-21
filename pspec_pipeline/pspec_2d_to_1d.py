@@ -23,14 +23,19 @@ parser.add_argument('--output', type=str, default='./',
                     help='Specifically specify out directory.')
 parser.add_argument('--nboots', type=int, default=100,
                     help='Number of Bootstraps (averages) default=100')
+parser.add_argument('--Neff_lst', default=None,
+                    help='Number of effective LSTs. If none (default), it is calculated using Nlstbins and t_eff.')
 args = parser.parse_args()
 
 np.random.seed(0)
 pspecs = read_bootstraps_dcj(args.files)
-Nlstbins = np.shape(pspecs['pCr'])[-1]
-# get the number of lst integrations in the dataset
-t_eff = pspecs['frf_inttime'] / pspecs['inttime']
-Neff_lst = np.ceil(Nlstbins / t_eff)
+if args.Neff_lst == None:
+    Nlstbins = np.shape(pspecs['pCr'])[-1]
+    # get the number of lst integrations in the dataset
+    t_eff = pspecs['frf_inttime'] / pspecs['inttime']
+    Neff_lst = np.ceil(Nlstbins / t_eff)
+else:
+    Neff_lst = int(float(args.Neff_lst))
 
 # compute the effective number of LST bins
 # print Neff_lst
@@ -64,7 +69,10 @@ print "freq = ", pspecs['freq']
 print "kperp = ", kperp
 pk_pspecs['k'] = np.sqrt(kperp**2 + pk_pspecs['kpl_fold']**2)
 pk_pspecs['kperp'] = np.ma.masked_invalid(kperp)
+pk_pspecs['cmd'] = pk_pspecs['cmd'].item() + ' \n ' + ' '.join(sys.argv)
 for key in pk_pspecs.keys():
+    if key in ['cmd']:
+        continue
     if pk_pspecs[key].dtype not in [np.float]:
         continue
     try:

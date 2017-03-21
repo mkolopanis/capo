@@ -64,9 +64,10 @@ for filename in args.files:
     # if these aren't the same you should not be
     # averaging these quantities anyway
     # For all these extra key words, we will keep all of the info for now.
-    generator = (x for x in f.keys() if x not in np.concatenate([['kpl', 'k'],
-                 flat_power_spectra, flat_errors,
-                 folded_power_spectra, folded_errors]))
+    generator = (x for x in f.keys() if x not in
+                 np.concatenate([['kpl', 'k'],
+                                 flat_power_spectra, flat_errors,
+                                 folded_power_spectra, folded_errors]))
     for key in generator:
         if key not in out_dict.keys():
             out_dict[key] = [f[key]]
@@ -120,6 +121,11 @@ k = [_k for _k in k]
 
 out_dict['k'] = np.array(k)
 out_dict['kpl'] = np.array(kpl)
+
+if np.size(out_dict['cmd']) == 1:
+    out_dict['cmd'] = out_dict['cmd'].item() + ' \n ' + ' '.join(sys.argv)
+else:
+    out_dict['cmd'] = ' '.join(out_dict['cmd']) + ' \n ' + ' '.join(sys.argv)
 
 for key1, key2 in zip(flat_power_spectra, flat_errors):
     out_dict[key1] = np.array([summed_pspec[key1][_k]
