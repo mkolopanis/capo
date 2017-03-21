@@ -41,6 +41,8 @@ o.add_option('--Trcvr', type='float', default=200,
 o.add_option('--rmbls', dest='rmbls', type='string',
              help=('List of baselines (ex:1_4,2_33) '
                    'to remove from the power spectrum analysis.'))
+o.add_option('--NGPS', type='int', default=5,
+             help='Number of Groups used in bootstrapping (default 5)')
 opts, args = o.parse_args(sys.argv[1:])
 
 # Basic parameters
@@ -49,9 +51,8 @@ n.random.seed(0) # for noise generator
 POL = opts.pol
 if POL == 'xx' or POL == 'yy': NPOL = 1
 else: NPOL = 2
-LST_STATS = False
 DELAY = False
-NGPS = 5  # number of groups to break the random sampled bls into
+NGPS = opts.NGPS # number of groups to break the random sampled bls into
 PLOT = opts.plot
 INJECT_SIG = opts.inject
 
@@ -349,7 +350,18 @@ data_dict_n = oqe.lst_align_data(inds, dsets=data_dict_n)[0]
 nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
 # but the lsts returned is one array
-
+cnt_full = stats['even']['cnt'][inds['even']]
+cnt_full = cnt_full[:, chans]
+# after aligning, lsts should be the same on both even and odd
+lsts = lsts['even']
+# this variable 'cnt' and 'var' are relics of pspec_cov_v???
+# not sure if it is still used anywhere
+# stats dictionary has cnts and var in it that could be used too
+cnt, var = n.ones_like(lsts), n.ones_like(lsts)
+# calculate the effective number of counts used in the data
+cnt_eff = 1./n.sqrt(n.ma.masked_invalid(1./cnt_full**2).mean())
+# calculate the effective numbe of baselines given grouping:
+nbls_eff = len(bls_master) / n.sqrt(2) * n.sqrt(1. - 1./NGPS)
 # Fringe-rate filter noise
 if opts.frf:
     print 'Fringe-rate-filtering noise'
@@ -366,7 +378,7 @@ if opts.frf:
 # Conjugate noise if needed
 for key in data_dict_n:
     if conj_dict[key[1]] is True:
-        data_dict_n[key] = n.conj(data_dict_n[key]) 
+        data_dict_n[key] = n.conj(data_dict_n[key])
 
 # Set data
 dsv = oqe.DataSet()  # just data
@@ -385,24 +397,6 @@ n.savez('Noise_Dataset.npz', **n_to_save)
 n.savez('Data_Dataset.npz', **v_to_save)
 sys.exit()
 """
-
-# Get some statistics
-if LST_STATS:
-    # collect some metadata from the lst binning process
-    cnt, var = {}, {}
-    for filename in dsets.values()[0]:
-        print 'Reading', filename
-        uv = a.miriad.UV(filename)
-        a.scripting.uv_selector(uv, '64_49', POL)  # XXX
-        for (uvw, t, (i, j)), d, f in uv.all(raw=True):
-            bl = '%d,%d,%d' % (i, j, uv['pol'])
-            cnt[bl] = cnt.get(bl, []) + [uv['cnt']]
-            var[bl] = var.get(bl, []) + [uv['var']]
-    cnt = n.array(cnt.values()[0])  # all baselines should be the same
-    var = n.array(var.values()[0])  # all baselines should be the same
-else:
-    cnt, var = n.ones_like(lsts), n.ones_like(lsts)
-
 if PLOT and False:
     for key in keys:
         p.subplot(311)
@@ -444,7 +438,7 @@ for boot in xrange(opts.nboot):
         eij = n.repeat(eij, 3, axis=0)
         wij = n.ones(eij.shape, dtype=bool)
         eij_frf = fringe_rate_filter(aa, eij, wij, ij[0], ij[1], POL, bins, fir)
-        eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1], POL, bins, fir_conj) 
+        eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1], POL, bins, fir_conj)
         if opts.frf: # double frf eor
             eij_frf = fringe_rate_filter(aa, eij_frf, wij, ij[0], ij[1], POL, bins, fir)
             eij_conj_frf = fringe_rate_filter(aa, eij_conj_frf, wij, ij[0], ij[1], POL, bins, fir_conj)
@@ -473,7 +467,7 @@ for boot in xrange(opts.nboot):
     dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
     dss = oqe.DataSet()  # noise + eor
     dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)
-    
+
     pCr, pIr = make_PS(keys, dsr, grouping=True)
     pCe, pIe = make_PS(keys, dse, grouping=True)
     pCs, pIs = make_PS(keys, dss, grouping=True)
@@ -512,4 +506,5 @@ for boot in xrange(opts.nboot):
             err=1. / cnt, var=var, sep=sep_type, uvw=uvw,
             frf_inttime=frf_inttime, inttime=inttime,
             inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
+            cnt_eff=cnt_eff, nbls_eff=nbls_eff,
             cmd=' '.join(sys.argv))

@@ -64,7 +64,10 @@ print "freq = ", pspecs['freq']
 print "kperp = ", kperp
 pk_pspecs['k'] = np.sqrt(kperp**2 + pk_pspecs['kpl_fold']**2)
 pk_pspecs['kperp'] = np.ma.masked_invalid(kperp)
+pk_pspecs['cmd'] = pk_pspecs['cmd'].item() + ' \n ' + ' '.join(sys.argv)
 for key in pk_pspecs.keys():
+    if key in ['cmd']:
+        continue
     if pk_pspecs[key].dtype not in [np.float]:
         continue
     try:
