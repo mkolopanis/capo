@@ -195,10 +195,7 @@ generator = (x for x in file.keys()
                                         flat_power_spectra, flat_errors,
                                         folded_power_spectra, folded_errors]))
 for key in generator:
-    if key not in meta_data.keys():
-        meta_data[key] = [file[key]]
-    else:
-        meta_data[key].append(file[key])
+    meta_data[key] = file[key]
 
 
 print '   Saving pspec_final_median.npz'  # XXX 2-sigma probability is hard-coded

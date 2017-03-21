@@ -146,10 +146,7 @@ generator = (x for x in F.keys()
                                          flat_power_spectra, flat_errors,
                                          folded_power_spectra, folded_errors]))
 for key in generator:
-    if key not in meta_data.keys():
-        meta_data[key] = [F[key]]
-    else:
-        meta_data[key].append(F[key])
+    meta_data[key] = [F[key]]
 
 # limit option #1. the net probability that pC is above pcV
 probs_data = np.zeros((Ninj, Nk))

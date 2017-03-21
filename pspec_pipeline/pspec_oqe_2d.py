@@ -350,7 +350,8 @@ data_dict_n = oqe.lst_align_data(inds, dsets=data_dict_n)[0]
 nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
 # but the lsts returned is one array
-cnt_full = stats['even']['cnt'][inds['even'], chans]
+cnt_full = stats['even']['cnt'][inds['even']]
+cnt_full = cnt_full[:, chans]
 # after aligning, lsts should be the same on both even and odd
 lsts = lsts['even']
 # this variable 'cnt' and 'var' are relics of pspec_cov_v???
@@ -358,7 +359,7 @@ lsts = lsts['even']
 # stats dictionary has cnts and var in it that could be used too
 cnt, var = n.ones_like(lsts), n.ones_like(lsts)
 # calculate the effective number of counts used in the data
-cnt_eff = 1./n.sqrt(n.ma.masked_invalid(1./cnt**2).mean())
+cnt_eff = 1./n.sqrt(n.ma.masked_invalid(1./cnt_full**2).mean())
 # calculate the effective numbe of baselines given grouping:
 nbls_eff = len(bls_master) / n.sqrt(2) * n.sqrt(1. - 1./NGPS)
 # Fringe-rate filter noise
