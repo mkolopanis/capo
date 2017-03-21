@@ -297,6 +297,7 @@ for chan_range in args.chan:
     print '\tNlst bins:', Nlst
     print '\tNdays eff:', cnt_eff
     print '\tPk noise [mK^2]: {0:.3e}'.format(pk_noise)
+
     if args.analytic:
         plt.subplot(121)
         plt.axhline(2*pk_noise, linestyle='-', color='g')
