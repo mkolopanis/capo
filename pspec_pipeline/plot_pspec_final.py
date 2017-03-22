@@ -96,6 +96,7 @@ if args.noisefiles:
 
 k_max = 0
 k_par_max = 0
+print 'Using these parameters for the Analytic Model:'
 for filename in args.files:
     pspec_dict = np.load(filename)
 
@@ -177,11 +178,11 @@ for filename in args.files:
             fr_correct = 1
         else:
             fr_correct = 1.77
-        print 'Using these parameters for the Analytic Model:'
-        print 'T_int:', inttime
-        print 'Nbls:', nbls
-        print 'Ndays:', cnt
-        print 'Nlsts:', nlsts
+        print 'Redshift:', filename['z']
+        print '\tT_int:', inttime
+        print '\tNbls:', nbls
+        print '\tNdays:', cnt
+        print '\tNlsts:', nlsts
 
         tsys = 500e3  #mK
         nseps = 1  #number of seps used

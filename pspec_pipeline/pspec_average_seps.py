@@ -169,7 +169,7 @@ for key in gen:
         continue
     if isinstance(np.squeeze(out_dict[key])[0], str):
         continue
-    out_dict[key] = np.mean(out_dict[key])
+    out_dict[key] = np.mean(out_dict[key], axis=0).squeeze()
 
 print 'Saving output to: '+args.outfile
 np.savez(args.outfile, **out_dict)
