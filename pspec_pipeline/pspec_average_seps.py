@@ -125,7 +125,8 @@ out_dict['kpl'] = np.array(kpl)
 if np.size(out_dict['cmd']) == 1:
     out_dict['cmd'] = out_dict['cmd'].item() + ' \n ' + ' '.join(sys.argv)
 else:
-    out_dict['cmd'] = ' '.join(out_dict['cmd']) + ' \n ' + ' '.join(sys.argv)
+    full_cmd = np.concatenate([[_c] for _c in out_dict['cmd']])
+    out_dict['cmd'] = ' '.join(full_cmd) + ' \n ' + ' '.join(sys.argv)
 
 for key1, key2 in zip(flat_power_spectra, flat_errors):
     out_dict[key1] = np.array([summed_pspec[key1][_k]
