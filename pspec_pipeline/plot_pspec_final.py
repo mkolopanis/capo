@@ -178,7 +178,7 @@ for filename in args.files:
             fr_correct = 1
         else:
             fr_correct = 1.77
-        print 'Redshift:', filename['z']
+        print 'Redshift:', pspec_dict['z']
         print '\tT_int:', inttime
         print '\tNbls:', nbls
         print '\tNdays:', cnt
