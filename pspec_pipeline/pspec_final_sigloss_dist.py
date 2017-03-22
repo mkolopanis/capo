@@ -34,8 +34,8 @@ kpl = file['kpl']; k = file['k']
 # loop over injects and read pspec_2d_to_1d outputs
 for count in range(2):
     if count == 1: print 'NOISE CASE'
-    else: print 'DATA CASE'   
-    if opts.plot: 
+    else: print 'DATA CASE'
+    if opts.plot:
         fig1 = p.figure(1, figsize=(15, 7))
         fig2 = p.figure(2, figsize=(15, 7))
         fig3 = p.figure(3, figsize=(15, 7))
@@ -78,7 +78,7 @@ for count in range(2):
                 pIs_fold[k[ind]] = [pI_fold[:,ind]]
                 alphas_fold[k[ind]] = [n.abs(Pin_fold[:,ind]/Pout_fold[:,ind])]
                 alphas_I_fold[k[ind]] = [n.abs(Pin_fold[:,ind]/Pout_I_fold[:,ind])]
-        
+
         for ind in range(len(kpl)):  # loop through kpl  for P(k)
             try:
                 Pouts[kpl[ind]].append(Pout[:,ind])
@@ -94,9 +94,9 @@ for count in range(2):
                 pIs[kpl[ind]] = [pI[:,ind]]
                 alphas[kpl[ind]] = [n.abs(Pin[:,ind]/Pout[:,ind])]
                 alphas_I[kpl[ind]] = [n.abs(Pin[:,ind]/Pout_I[:,ind])]
-        
+
             if opts.plot:
-        
+
                 p.figure(1) # Pin vs. Pout
                 p.subplot(3, 7, ind)
                 p.loglog(Pin[:,ind], Pout[:,ind], 'k.')  # points
@@ -107,7 +107,7 @@ for count in range(2):
                 p.ylim(pklo, pkhi)
                 p.tick_params(axis='both', which='both', labelsize=6)
                 p.title('kpl = '+str("%.4f" % kpl[ind]), fontsize=8)
-                 
+
                 p.figure(2) # alpha vs. Pout
                 p.subplot(3, 7, ind)
                 p.loglog(Pin[:,ind]/Pout[:,ind],Pout[:,ind],'k.') # points
@@ -116,7 +116,7 @@ for count in range(2):
                 p.ylim(pklo, pkhi)
                 p.tick_params(axis='both', which='both', labelsize=6)
                 p.title('kpl = '+str("%.4f" % kpl[ind]), fontsize=8)
-                
+
                 p.figure(3) # Pin vs. Pout for I case
                 p.subplot(3, 7, ind)
                 p.loglog(Pin[:,ind], Pout_I[:,ind], 'k.')  # points
@@ -169,7 +169,7 @@ for count in range(2):
         fig4.text(0.5, 0.0, r'$Signal Loss Factors$', ha='center')
 
     if opts.plot: p.show()
-    
+
     for key in alphas:
         alphas[key] = n.array(alphas[key]).flatten()
         alphas_I[key] = n.array(alphas_I[key]).flatten()
@@ -192,7 +192,7 @@ for count in range(2):
     nbins_I = 100
     sigloss_final = {}; sigloss_final_fold = {}
     sigloss_final_I = {}; sigloss_final_I_fold = {}
-    
+
     for ind in range(len(kpl)): # loop for P(k)
         low = n.log10(Pouts[kpl[ind]].min()) # XXX haven't taken into account alphas < 1, which are artificial
         high = n.log10(Pouts[kpl[ind]].max())
@@ -215,7 +215,7 @@ for count in range(2):
             probs_I = len(pIs[kpl[ind]][n.where(bin_ind_pI == i)])/float(len(pIs[kpl[ind]]))
             if len(factors) > 0: p_sum.append(probs)
             if len(factors_I) > 0: p_sum_I.append(probs_I)
-            final_alphas = n.concatenate((final_alphas,factors*probs/len(factors))) 
+            final_alphas = n.concatenate((final_alphas,factors*probs/len(factors)))
             final_alphas_I = n.concatenate((final_alphas_I,factors_I*probs_I/len(factors_I)))
         sigloss_final[kpl[ind]] = n.sum(final_alphas)/n.sum(p_sum)
         sigloss_final_I[kpl[ind]] = n.sum(final_alphas_I)/n.sum(p_sum_I)
@@ -223,7 +223,7 @@ for count in range(2):
             p.plot(kpl[ind],sigloss_final[kpl[ind]],'k.',label='pC' if ind == 0 else "")
             p.plot(kpl[ind],sigloss_final_I[kpl[ind]],'b.',label='pI' if ind == 0 else "")
     if True: p.xlabel('k');p.ylabel('Signal Loss Factors');p.legend();p.show()
- 
+
     for ind in range(len(k)): # loop for Delta^2(k)
         low = n.log10(Pouts_fold[k[ind]].min()) # XXX haven't taken into account alphas < 1, which are artificial
         high = n.log10(Pouts_fold[k[ind]].max())
@@ -246,11 +246,11 @@ for count in range(2):
             probs_I = len(pIs_fold[k[ind]][n.where(bin_ind_pI == i)])/float(len(pIs_fold[k[ind]]))
             if len(factors) > 0: p_sum.append(probs)
             if len(factors_I) > 0: p_sum_I.append(probs_I)
-            final_alphas = n.concatenate((final_alphas,factors*probs/len(factors))) 
+            final_alphas = n.concatenate((final_alphas,factors*probs/len(factors)))
             final_alphas_I = n.concatenate((final_alphas_I,factors_I*probs_I/len(factors_I)))
         sigloss_final_fold[k[ind]] = n.sum(final_alphas)/n.sum(p_sum)
         sigloss_final_I_fold[k[ind]] = n.sum(final_alphas_I)/n.sum(p_sum_I)
-    
+
     if count == 1:
         sigfactors_noise = sigloss_final.values(); sigfactors_noise_fold = sigloss_final_fold.values()
         sigfactors_noise_I = sigloss_final_I.values(); sigfactors_noise_I_fold = sigloss_final_I_fold.values()
@@ -258,8 +258,17 @@ for count in range(2):
         sigfactors = sigloss_final.values(); sigfactors_fold = sigloss_final_fold.values()
         sigfactors_I = sigloss_final_I.values(); sigfactors_I_fold = sigloss_final_I_fold.values()
 
-# save final values
+# correct factors if I factors are inflated (> 1.0)
+if True:
+    sigfactors_I /= n.array(sigfactors_I)
+    sigfactors_noise /= n.array(sigfactors_noise_I)
+    sigfactors_noise_I /= n.array(sigfactors_noise_I)
+    sigfactors_fold /= n.array(sigfactors_I_fold)
+    sigfactors_I_fold /= n.array(sigfactors_I_fold)
+    sigfactors_noise_fold /= n.array(sigfactors_noise_I_fold)
+    sigfactors_noise_I_fold /= n.array(sigfactors_noise_I_fold)
 
+# save final values
 if opts.median: other_factors = 1/n.log(2)  # median correction factor
 else: other_factors = 1
 fold_factor = file['k']**3/(2*n.pi**2)
@@ -280,6 +289,24 @@ pIv_fold_err = file['pIv_fold_err']*sigfactors_I_fold*fold_factor*other_factors
 pCv_fold_err = file['pCv_fold_err']*sigfactors_fold*fold_factor*other_factors
 pIn_fold_err = file['pIn_fold_err']*sigfactors_noise_I_fold*fold_factor*other_factors
 pCn_fold_err = file['pCn_fold_err']*sigfactors_noise_fold*fold_factor*other_factors
+"""
+# Get all the meta-data from the npz file and pass it through
+flat_power_spectra = [p + x for p in ['pC',  'pI']
+                      for x in ['e', 'r', 's', 'v', 'n']]
+flat_power_spectra.append('pCr-pCv')
+flat_power_spectra.append('pCs-pCn')
+folded_power_spectra = [x + '_fold' for x in flat_power_spectra]
+flat_errors = [x + '_err' for x in flat_power_spectra]
+folded_errors = [x + '_err' for x in folded_power_spectra]
+
+meta_data = {}
+generator = (x for x in file.keys()
+             if x not in n.concatenate([['kpl', 'k', 'freq', 'k', 'cmd'],
+                                        flat_power_spectra, flat_errors,
+                                        folded_power_spectra, folded_errors]))
+for key in generator:
+    meta_data[key] = [file[key]]
+"""
 
 print '   Saving pspec_final.npz'  # XXX 2-sigma probability is hard-coded
 n.savez('pspec_final.npz', kpl=kpl, k=file['k'], freq=file['freq'],
@@ -291,9 +318,12 @@ n.savez('pspec_final.npz', kpl=kpl, k=file['k'], freq=file['freq'],
         pCn_fold=pCn_fold, pCn_fold_up=2 * pCn_fold_err,
         pIn=pIn, pIn_up=2 * pIn_err,
         pIn_fold=pIn_fold, pIn_fold_up=2 * pIn_fold_err,
-        prob=0.9545, 
+        prob=0.9545,
         alphaCv=sigfactors, alphaIv=sigfactors_I,
         alphaCn=sigfactors_noise, alphaIn=sigfactors_noise_I,
         alphaCv_fold=sigfactors_fold, alphaIv_fold=sigfactors_I_fold,
-        alphaCn_fold=sigfactors_noise_fold, alphaIn_fold=sigfactors_noise_I_fold,
-        cmd=' '.join(sys.argv))
+        alphaCn_fold=sigfactors_noise_fold,
+        alphaIn_fold=sigfactors_noise_I_fold,
+        cnt_eff=file['cnt_eff'], nbls_eff=file['nbls_eff'], lsts=file['lsts'], 
+        frf_inttime=file['frf_inttime'], inttime=file['inttime'], afreqs=file['afreqs'],
+        cmd=file['cmd'].item() + ' \n '+' '.join(sys.argv))
