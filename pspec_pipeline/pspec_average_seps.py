@@ -165,7 +165,7 @@ gen = (x for x in out_dict if x not in np.concatenate([single_keys,
                                                        ['cmd', 'afreqs', 'k',
                                                         'kpl', 'kpl_fold']]))
 for key in gen:
-    if np.size(out_dict['key']) == 1:
+    if np.size(out_dict[key]) == 1:
         continue
     if isinstance(np.squeeze(out_dict[key])[0], str):
         continue
