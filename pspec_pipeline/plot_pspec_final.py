@@ -3,7 +3,7 @@
 
 Takes outputs from pspec_final_???.py and creates 2 sigma errorbar plots.
 """
-
+old_analytical = False
 import numpy as np
 import sys
 import os
@@ -183,29 +183,58 @@ for filename in args.files:
         print '\tNbls:', nbls
         print '\tNdays:', cnt
         print '\tNlsts:', nlsts
+        if old_analytical:
+            tsys = 500e3  #mK
+            nseps = 1  #number of seps used
+            folding = 2 # XXX 2 for delta^2
+            nmodes = (nlsts*nseps*folding)**.5
+            pol = 2
+            real = np.sqrt(2)
+            sdf = .1/203
+            freqs = pspec_dict['afreqs']
+            freq = pspec_dict['freq']
+            z = capo.pspec.f2z(freq)
+            X2Y = capo.pspec.X2Y(z)/1e9 #h^-3 Mpc^3 / str/ Hz
+            B = sdf*freqs.size
+            bm = np.polyval(capo.pspec.DEFAULT_BEAM_POLY, freq) * 2.35 #correction for beam^2
+            scalar = X2Y * bm #* B
+            #error bars minimum width. Consider them flat for P(k). Factor of 2 at the end is due to folding of kpl (root(2)) and root(2) in radiometer equation.
+            #pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (2*inttime*pol*real*nbls*ndays*nmodes) ) #this 2-sigma curve should encompass 95% of the points
+            pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (inttime*pol*real*nbls*cnt*nmodes) ) # this 2-sigma curve should line up with pI
+            # Plot analytical noise curve on plots
+            ax1[gs_ind].plot(pspec_dict['k'],pk_noise*pspec_dict['k']**3/(2*np.pi**2),'g-',label='Analytical 2-sigma')
+            ax2[gs_ind].axhline(pk_noise,color='g',marker='_',label='Analytical 2-sigma')
+            ax3[gs_ind].plot(pspec_dict['k'],pk_noise*pspec_dict['k']**3/(2*np.pi**2),'g-',label='Analytical 2-sigma')
+            ax4[gs_ind].axhline(pk_noise,color='g',marker='_',label='Analytical 2-sigma')
+        else: #new capo.sensitivity
+            from capo import sensitivity
+            S = sensitivity.Sense()
+            f = freq
+            S.z = capo.pspec.f2z(f)
 
-        tsys = 500e3  #mK
-        nseps = 1  #number of seps used
-        folding = 2 # XXX 2 for delta^2
-        nmodes = (nlsts*nseps*folding)**.5
-        pol = 2
-        real = np.sqrt(2)
-        sdf = .1/203
-        freqs = pspec_dict['afreqs']
-        freq = pspec_dict['freq']
-        z = capo.pspec.f2z(freq)
-        X2Y = capo.pspec.X2Y(z)/1e9 #h^-3 Mpc^3 / str/ Hz
-        B = sdf*freqs.size
-        bm = np.polyval(capo.pspec.DEFAULT_BEAM_POLY, freq) * 2.35 #correction for beam^2
-        scalar = X2Y * bm #* B
-        #error bars minimum width. Consider them flat for P(k). Factor of 2 at the end is due to folding of kpl (root(2)) and root(2) in radiometer equation.
-        #pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (2*inttime*pol*real*nbls*ndays*nmodes) ) #this 2-sigma curve should encompass 95% of the points
-        pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (inttime*pol*real*nbls*cnt*nmodes) ) # this 2-sigma curve should line up with pI
-        # Plot analytical noise curve on plots
-        ax1[gs_ind].plot(pspec_dict['k'],pk_noise*pspec_dict['k']**3/(2*np.pi**2),'g-',label='Analytical 2-sigma')
-        ax2[gs_ind].axhline(pk_noise,color='g',marker='_',label='Analytical 2-sigma')
-        ax3[gs_ind].plot(pspec_dict['k'],pk_noise*pspec_dict['k']**3/(2*np.pi**2),'g-',label='Analytical 2-sigma')
-        ax4[gs_ind].axhline(pk_noise,color='g',marker='_',label='Analytical 2-sigma')
+            #   Tsys
+            #S.Tsys = 551e3  #set to match 21cmsense exactly
+            #S.Tsys = 505e3 #Ali et al, at 164MHz
+            S.Tsys = (200 + 180.*(f/.180)**-2.55)*1e3 #set to match noise realization
+            print "Tsys = ",S.Tsys
+
+            S.t_int = inttime
+            S.Ndays = cnt  #effective number of days
+            S.Nlstbins = nlsts  #either Nlsthours or Nlstbins must be set
+            S.Nbls = nbls #nbls = nbls * sqrt((1-1/ngroups)/2), calculated in
+            S.Nblgroups = 0
+            S.Nseps = 3
+            S.Nblgroups = 1 #groups are already folded into the calculation of nbls_eff
+            S.Omega_eff = 0.51**2/0.24 #use the FRF weighted beams listed in T1 of Parsons etal beam sculpting paper
+            S.calc()
+            print "capo.sensitivity Pk_noise = ",S.P_N
+            k = pspec_dict['k']
+            # Plot analytical noise curve on plots
+            ax1[gs_ind].plot(k,S.Delta2_N(k)*2,'g-',label='Analytical 2-sigma')
+            ax2[gs_ind].axhline(S.P_N*2,color='g',marker='_',label='Analytical 2-sigma')
+            ax3[gs_ind].plot(k,S.Delta2_N(k)*2,'g-',label='Analytical 2-sigma')
+            ax4[gs_ind].axhline(S.P_N*2,color='g',marker='_',label='Analytical 2-sigma')
+
 
 # set up some parameters to make the figures pretty
 for gs_ind in xrange(Nzs):
