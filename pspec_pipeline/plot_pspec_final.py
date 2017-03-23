@@ -177,7 +177,7 @@ for filename in args.files:
         if pspec_dict['frf_inttime'] == pspec_dict['inttime']:
             fr_correct = 1
         else:
-            fr_correct = 1.77
+            fr_correct = 1.
         print 'Redshift:', redshift
         print '\tT_int:', inttime
         print '\tNbls:', nbls
@@ -185,7 +185,7 @@ for filename in args.files:
         print '\tNlsts:', nlsts
 
         tsys = 500e3  #mK
-        nseps = 1  #number of seps used
+        nseps = 3  #number of seps used
         folding = 2 # XXX 2 for delta^2
         nmodes = (nlsts*nseps*folding)**.5
         pol = 2
