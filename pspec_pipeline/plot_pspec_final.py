@@ -190,11 +190,11 @@ for filename in args.files:
         nmodes = (nlsts*nseps*folding)**.5
         pol = 2
         real = np.sqrt(2)
-        z = capo.pspec.f2z(freq)
-        X2Y = capo.pspec.X2Y(z)/1e9 #h^-3 Mpc^3 / str/ Hz
         sdf = .1/203
         freqs = pspec_dict['afreqs']
         freq = pspec_dict['freq']
+        z = capo.pspec.f2z(freq)
+        X2Y = capo.pspec.X2Y(z)/1e9 #h^-3 Mpc^3 / str/ Hz
         B = sdf*freqs.size
         bm = np.polyval(capo.pspec.DEFAULT_BEAM_POLY, freq) * 2.35 #correction for beam^2
         scalar = X2Y * bm #* B
@@ -234,14 +234,14 @@ for gs_ind in xrange(Nzs):
     ax3[gs_ind].set_yscale('log', nonposy='clip')
     ax3[gs_ind].set_xlabel('$k$ [$h$ Mpc$^{-1}$]')
     ax3[gs_ind].set_xlim(0, k_max * 1.01)
-    ax3[gs_ind].get_shared_y_axes().join(ax1[0], ax1[gs_ind])
+    ax3[gs_ind].get_shared_y_axes().join(ax3[0], ax3[gs_ind])
     ax3[gs_ind].grid(True)
 
     ax4[gs_ind].set_yscale('log', nonposy='clip')
     ax4[gs_ind].set_title('z = {0:.2f}'.format(zs[gs_ind]))
     ax4[gs_ind].set_xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]')
     ax4[gs_ind].set_xlim(-1.01 * k_par_max, k_par_max * 1.01)
-    ax4[gs_ind].get_shared_y_axes().join(ax2[0], ax2[gs_ind])
+    ax4[gs_ind].get_shared_y_axes().join(ax4[0], ax4[gs_ind])
     ax4[gs_ind].grid(True)
 
     # if multi redshift, make shared axes invisible
@@ -276,4 +276,4 @@ fig3.savefig(args.outfile+'_noise.png', format='png')
 fig3.savefig(args.outfile+'_pk_noise.png', format='png')
 
 if args.plot:
-    plt.show(block=True)
+    plt.show()
