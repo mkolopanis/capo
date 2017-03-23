@@ -33,7 +33,7 @@ DIRNAME=$2
 RA='-0.1_8.6'
 CALFILE='psa6240_v003'
 SEP='0,1 1,1 -1,1'
-CHAN='30_50 95_115'
+CHAN='95_115'
 NBOOT=60
 POL='I'
 weight='I'
@@ -52,6 +52,7 @@ mkdir ${DIRNAME}
 echo Making Directory ${DIRNAME}
 
 for sep in $SEP; do
+    continue
     mkdir ${DIRNAME}/sep${sep}
     EVEN_FILES=${DATA}'/even/sep'${sep}'/*.uvGAL'
     ODD_FILES=${DATA}'/odd/sep'${sep}'/*.uvGAL'
