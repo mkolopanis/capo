@@ -15,6 +15,8 @@ o.add_option('--plot',action='store_true',
             help='Show plots.')
 o.add_option('--median',action='store_true',
             help='Correct by median correction factor.')
+o.add_option('--skip_sigloss',action='store_true',
+            help='Save values without correcting for signal loss.')
 opts,args = o.parse_args(sys.argv[1:])
 
 # read one pspec_pk_k3pk.npz file for data points
@@ -260,6 +262,7 @@ for count in range(2):
 
 # correct factors if I factors are inflated (> 1.0)
 if True:
+    sigfactors /= n.array(sigfactors_I)
     sigfactors_I /= n.array(sigfactors_I)
     sigfactors_noise /= n.array(sigfactors_noise_I)
     sigfactors_noise_I /= n.array(sigfactors_noise_I)
@@ -267,6 +270,16 @@ if True:
     sigfactors_I_fold /= n.array(sigfactors_I_fold)
     sigfactors_noise_fold /= n.array(sigfactors_noise_I_fold)
     sigfactors_noise_I_fold /= n.array(sigfactors_noise_I_fold)
+
+if opts.skip_sigloss:
+    sigfactors = n.ones_like(sigfactors)
+    sigfactors_noise = n.ones_like(sigfactors_noise)
+    sigfactors_I = n.ones_like(sigfactors_I)
+    sigfactors_noise_I = n.ones_like(sigfactors_noise_I)
+    sigfactors_fold = n.ones_like(sigfactors_fold)
+    sigfactors_noise_fold = n.ones_like(sigfactors_noise_fold)
+    sigfactors_I_fold = n.ones_like(sigfactors_I_fold)
+    sigfactors_noise_I_fold = n.ones_like(sigfactors_noise_I_fold)
 
 # save final values
 if opts.median: other_factors = 1/n.log(2)  # median correction factor
