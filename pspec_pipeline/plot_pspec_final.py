@@ -124,6 +124,10 @@ for filename in args.files:
     ax1[gs_ind].plot(pspec_dict['k'],
                      pspec_dict['pI_fold'] + pspec_dict['pI_fold_up'], '--',
                      label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)))
+    #ax1[gs_ind].errorbar(pspec_dict['k'],
+    #                pspec_dict['pI_fold'], pspec_dict['pI_fold_up'],
+    #                label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)),
+    #                linestyle='',marker=marker,color='blue')
     ax1[gs_ind].errorbar(pspec_dict['k'][pos_ind_fold],
                          pspec_dict['pC_fold'][pos_ind_fold],
                          pspec_dict['pC_fold_up'][pos_ind_fold],
@@ -136,6 +140,10 @@ for filename in args.files:
     ax2[gs_ind].plot(pspec_dict['kpl'],
                      pspec_dict['pI'] + pspec_dict['pI_up'], '--',
                      label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)))
+    #ax2[gs_ind].errorbar(pspec_dict['kpl'],
+    #                pspec_dict['pI'], pspec_dict['pI_up'],
+    #                label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)),
+    #                linestyle='',marker=marker,color='blue')
     ax2[gs_ind].errorbar(pspec_dict['kpl'][pos_ind], pspec_dict['pC'][pos_ind],
                          pspec_dict['pC_up'][pos_ind],
                          label='pC {0:02d}%'.format(int(pspec_dict['prob']*100)),
@@ -146,6 +154,10 @@ for filename in args.files:
     ax3[gs_ind].plot(pspec_dict['k'],
                      pspec_dict['pIn_fold'] + pspec_dict['pIn_fold_up'], '--',
                      label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)))
+    #ax3[gs_ind].errorbar(pspec_dict['k'],
+    #                    pspec_dict['pIn_fold'], pspec_dict['pIn_fold_up'],
+    #                    label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)),
+    #                    linestyle='', marker=marker, color='blue')
     ax3[gs_ind].errorbar(pspec_dict['k'][pos_ind_noise_fold],
                          pspec_dict['pCn_fold'][pos_ind_noise_fold],
                          pspec_dict['pCn_fold_up'][pos_ind_noise_fold],
@@ -158,6 +170,10 @@ for filename in args.files:
     ax4[gs_ind].plot(pspec_dict['kpl'],
                      pspec_dict['pIn'] + pspec_dict['pIn_up'], '--',
                      label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)))
+    #ax4[gs_ind].errorbar(pspec_dict['kpl'],
+    #                pspec_dict['pIn'], pspec_dict['pIn_up'],
+    #                label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)),
+    #                linestyle='', marker=marker, color='blue')
     ax4[gs_ind].errorbar(pspec_dict['kpl'][pos_ind_noise],
                          pspec_dict['pCn'][pos_ind_noise],
                          pspec_dict['pCn_up'][pos_ind_noise],
