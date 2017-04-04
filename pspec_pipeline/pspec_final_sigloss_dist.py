@@ -98,7 +98,7 @@ for count in range(2):
             if opts.plot:
 
                 p.figure(1) # Pin vs. Pout
-                p.subplot(3, 7, ind)
+                p.subplot(3, 7, ind+1)
                 p.loglog(Pin[:,ind], Pout[:,ind], 'k.')  # points
                 # p.loglog(Pin[ind],Pout_noise[ind],'b.') # noise points
                 p.loglog([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
@@ -109,7 +109,7 @@ for count in range(2):
                 p.title('kpl = '+str("%.4f" % kpl[ind]), fontsize=8)
 
                 p.figure(2) # alpha vs. Pout
-                p.subplot(3, 7, ind)
+                p.subplot(3, 7, ind+1)
                 p.loglog(Pin[:,ind]/Pout[:,ind],Pout[:,ind],'k.') # points
                 p.grid(True)
                 p.xlim(1e-3,1e7)
@@ -118,7 +118,7 @@ for count in range(2):
                 p.title('kpl = '+str("%.4f" % kpl[ind]), fontsize=8)
 
                 p.figure(3) # Pin vs. Pout for I case
-                p.subplot(3, 7, ind)
+                p.subplot(3, 7, ind+1)
                 p.loglog(Pin[:,ind], Pout_I[:,ind], 'k.')  # points
                 p.loglog([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
                 p.grid(True)
@@ -128,7 +128,7 @@ for count in range(2):
                 p.title('kpl = '+str("%.4f" % kpl[ind]), fontsize=8)
 
                 p.figure(4) # alpha vs. Pout for I case
-                p.subplot(3, 7, ind)
+                p.subplot(3, 7, ind+1)
                 p.loglog(Pin[:,ind]/Pout_I[:,ind],Pout_I[:,ind],'k.') # points
                 p.grid(True)
                 p.xlim(1e-3,1e7)
