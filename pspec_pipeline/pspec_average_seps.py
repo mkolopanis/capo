@@ -45,6 +45,8 @@ flat_power_spectra = [p + x for p in ['pC',  'pI']
                       for x in ['e', 'r', 's', 'v', 'n']]
 flat_power_spectra.append('pCr-pCv')
 flat_power_spectra.append('pCs-pCn')
+flat_power_spectra.append('pIr-pIv')
+flat_power_spectra.append('pIs-pIn')
 folded_power_spectra = [x + '_fold' for x in flat_power_spectra]
 flat_errors = [x + '_err' for x in flat_power_spectra]
 folded_errors = [x + '_err' for x in folded_power_spectra]
@@ -53,6 +55,8 @@ summed_pspec = {key: {} for key in np.concatenate([flat_power_spectra,
                                                    folded_power_spectra])}
 summed_weights = {key: {} for key in np.concatenate([flat_errors,
                                                      folded_errors])}
+single_keys = np.concatenate([['kpl', 'k'], flat_power_spectra, flat_errors,
+                              folded_power_spectra, folded_errors])
 out_dict = {}
 kpls, ks = [], []
 for filename in args.files:
@@ -64,10 +68,7 @@ for filename in args.files:
     # if these aren't the same you should not be
     # averaging these quantities anyway
     # For all these extra key words, we will keep all of the info for now.
-    generator = (x for x in f.keys() if x not in
-                 np.concatenate([['kpl', 'k'],
-                                 flat_power_spectra, flat_errors,
-                                 folded_power_spectra, folded_errors]))
+    generator = (x for x in f.keys() if x not in single_keys)
     for key in generator:
         if key not in out_dict.keys():
             out_dict[key] = [f[key]]
@@ -125,7 +126,8 @@ out_dict['kpl'] = np.array(kpl)
 if np.size(out_dict['cmd']) == 1:
     out_dict['cmd'] = out_dict['cmd'].item() + ' \n ' + ' '.join(sys.argv)
 else:
-    out_dict['cmd'] = ' '.join(out_dict['cmd']) + ' \n ' + ' '.join(sys.argv)
+    full_cmd = np.concatenate([[_c] for _c in out_dict['cmd']])
+    out_dict['cmd'] = ' '.join(full_cmd) + ' \n ' + ' '.join(sys.argv)
 
 for key1, key2 in zip(flat_power_spectra, flat_errors):
     out_dict[key1] = np.array([summed_pspec[key1][_k]
@@ -159,5 +161,15 @@ for key1, key2 in zip(folded_power_spectra, folded_errors):
 # set output k values to mean over kperp
 out_dict['k'] = np.sqrt(np.mean(out_dict['kperp'])**2
                         + out_dict['kpl_fold']**2)
+gen = (x for x in out_dict if x not in np.concatenate([single_keys,
+                                                       ['cmd', 'afreqs', 'k',
+                                                        'kpl', 'kpl_fold']]))
+for key in gen:
+    if np.size(out_dict[key]) == 1:
+        continue
+    if isinstance(np.squeeze(out_dict[key])[0], str):
+        continue
+    out_dict[key] = np.mean(out_dict[key], axis=0).squeeze()
+
 print 'Saving output to: '+args.outfile
 np.savez(args.outfile, **out_dict)

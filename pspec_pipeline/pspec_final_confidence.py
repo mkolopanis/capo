@@ -110,6 +110,8 @@ flat_power_spectra = [p + x for p in ['pC',  'pI']
                       for x in ['e', 'r', 's', 'v', 'n']]
 flat_power_spectra.append('pCr-pCv')
 flat_power_spectra.append('pCs-pCn')
+flat_power_spectra.append('pIr-pIv')
+flat_power_spectra.append('pIs-pIn')
 folded_power_spectra = [x + '_fold' for x in flat_power_spectra]
 flat_errors = [x + '_err' for x in flat_power_spectra]
 folded_errors = [x + '_err' for x in folded_power_spectra]
@@ -146,7 +148,7 @@ generator = (x for x in F.keys()
                                          flat_power_spectra, flat_errors,
                                          folded_power_spectra, folded_errors]))
 for key in generator:
-    meta_data[key] = [F[key]]
+    meta_data[key] = F[key]
 
 # limit option #1. the net probability that pC is above pcV
 probs_data = np.zeros((Ninj, Nk))
