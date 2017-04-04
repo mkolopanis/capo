@@ -13,8 +13,6 @@ o = optparse.OptionParser()
 o.set_description(__doc__)
 o.add_option('--plot',action='store_true',
             help='Show plots.')
-o.add_option('--median',action='store_true',
-            help='Correct by median correction factor.')
 o.add_option('--skip_sigloss',action='store_true',
             help='Save values without correcting for signal loss.')
 opts,args = o.parse_args(sys.argv[1:])
@@ -282,8 +280,7 @@ if opts.skip_sigloss:
     sigfactors_noise_I_fold = n.ones_like(sigfactors_noise_I_fold)
 
 # save final values
-if opts.median: other_factors = 1/n.log(2)  # median correction factor
-else: other_factors = 1
+other_factors = 1
 fold_factor = file['k']**3/(2*n.pi**2)
 
 pIv = file['pIv']*sigfactors_I*other_factors
