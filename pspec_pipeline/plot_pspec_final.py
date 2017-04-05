@@ -3,7 +3,7 @@
 
 Takes outputs from pspec_final_???.py and creates 2 sigma errorbar plots.
 """
-old_analytical = False
+old_analytical = True
 import numpy as np
 import sys
 import os
@@ -191,9 +191,11 @@ for filename in args.files:
         nlsts = len(pspec_dict['lsts']) * pspec_dict['inttime']
         nlsts /= pspec_dict['frf_inttime']
         if pspec_dict['frf_inttime'] == pspec_dict['inttime']:
-            fr_correct = 1
+            fr_correct = 1 # for old analytical
+            omega_eff = .74**2/.32 # for capo analytical; from T1 of Parsons FRF paper
         else:
-            fr_correct = 1.77
+            fr_correct = 1.77 # for old analyical
+            omega_eff = .51**2/.24
         print 'Redshift:', redshift
         print '\tT_int:', inttime
         print '\tNbls:', nbls
@@ -238,10 +240,10 @@ for filename in args.files:
             S.Ndays = cnt  #effective number of days
             S.Nlstbins = nlsts  #either Nlsthours or Nlstbins must be set
             S.Nbls = nbls #nbls = nbls * sqrt((1-1/ngroups)/2), calculated in
-            S.Nblgroups = 0
-            S.Nseps = 3
+            S.Npols = 2
+            S.Nseps = 1
             S.Nblgroups = 1 #groups are already folded into the calculation of nbls_eff
-            S.Omega_eff = 0.51**2/0.24 #use the FRF weighted beams listed in T1 of Parsons etal beam sculpting paper
+            S.Omega_eff = omega_eff #use the FRF weighted beams listed in T1 of Parsons etal beam sculpting paper
             S.calc()
             print "capo.sensitivity Pk_noise = ",S.P_N
             k = pspec_dict['k']
