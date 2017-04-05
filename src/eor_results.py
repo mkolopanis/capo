@@ -641,8 +641,7 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
             Z = scramble_avg_bootstrap_array_v2(indata[inname], func=avg_func)
             vals[outname] = Z.data #bboots.data
             # power spectrum is the mean and std dev over scramble dimension
-            if avg_func == n.median: outdata[outname] = pspec_median(Z, axis=0)
-            else: outdata[outname] = avg_func(Z, axis=0)
+            outdata[outname] = n.average(Z, axis=0)
             outdata[outname + '_err'] = n.std(Z, axis=0)
             # also do the folded version
             outname += '_fold'
@@ -651,8 +650,7 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
             #                                 Nboots=Nboots)
             Z = scramble_avg_bootstrap_array_v2(X, func=avg_func)
             vals_fold[outname] = Z.data
-            if avg_func == n.median: outdata[outname] = pspec_median(Z, axis=0)
-            else: outdata[outname] = avg_func(Z, axis=0)
+            outdata[outname] = n.average(Z, axis=0)
             outdata[outname + '_err'] = n.std(Z, axis=0)
             outdata['kpl_fold'] = kpl_fold
 
@@ -679,7 +677,8 @@ def scramble_avg_bootstrap_array(X, Nt_eff=10, Nboots=100, func=n.median):
         bs_i = n.random.choice(X.shape[0], Nt_eff, replace=True)
         bboots.append(X[bs_i, :, times_i].squeeze().T)
     bboots = n.ma.masked_invalid(n.array(bboots))
-    return func(bboots, axis=-1)
+    if func == n.median: return pspec_median(bboots, axis=-1)
+    else: return func(bboots, axis=-1)
 
 def scramble_avg_bootstrap_array_v2(X, func=n.median):
     """For every bootstrap file, choose random times and 
@@ -689,7 +688,8 @@ def scramble_avg_bootstrap_array_v2(X, func=n.median):
     bboots = []
     for j in range(X.shape[0]):
         times_i = n.random.choice(X.shape[-1], 1000, replace=True) #XXX 1000 is chosen arbitrarily, but any large number should converge on the same answer
-        bboots.append(func(X[j, :, times_i], axis=0))
+        if func == n.median: bboots.append(pspec_median(X[j, :, times_i], axis=0)
+        else: bboots.append(func(X[j, :, times_i], axis=0))
     bboots = n.ma.masked_invalid(n.array(bboots))
     return bboots
 
