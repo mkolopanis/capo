@@ -663,7 +663,7 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
 
 def pspec_median(X, axis=0):
     factor = 1/n.log(2) # median correction factor
-    return n.median(X*factor, axis=0)
+    return n.median(X*factor, axis=axis)
 
 def scramble_avg_bootstrap_array(X, Nt_eff=10, Nboots=100, func=n.median):
     """Perform scramble accumulation of times and bootstraps.
@@ -679,8 +679,7 @@ def scramble_avg_bootstrap_array(X, Nt_eff=10, Nboots=100, func=n.median):
         bs_i = n.random.choice(X.shape[0], Nt_eff, replace=True)
         bboots.append(X[bs_i, :, times_i].squeeze().T)
     bboots = n.ma.masked_invalid(n.array(bboots))
-    if func == n.median: return pspec_median(bboots, axis=-1)
-    else: return func(bboots, axis=-1)
+    return func(bboots, axis=-1)
 
 def scramble_avg_bootstrap_array_v2(X, func=n.median):
     """For every bootstrap file, choose random times and 
@@ -690,8 +689,7 @@ def scramble_avg_bootstrap_array_v2(X, func=n.median):
     bboots = []
     for j in range(X.shape[0]):
         times_i = n.random.choice(X.shape[-1], 1000, replace=True) #XXX 1000 is chosen arbitrarily, but any large number should converge on the same answer
-        if func == n.median: bboots.append(pspec_median(X[j, :, times_i], axis=0))
-        else: bboots.append(func(X[j, :, times_i], axis=0))
+        bboots.append(func(X[j, :, times_i], axis=0))
     bboots = n.ma.masked_invalid(n.array(bboots))
     return bboots
 
