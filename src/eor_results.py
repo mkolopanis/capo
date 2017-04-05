@@ -643,6 +643,7 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
             # power spectrum is the mean and std dev over scramble dimension
             outdata[outname] = n.ma.average(Z, axis=0)
             outdata[outname + '_err'] = n.std(Z, axis=0)
+            #outdata[outname + '_err'] = n.ma.array((n.percentile(Z, 95, axis=0))) / 2 # effective 1-sigma derived from 2-sigma 
             # also do the folded version
             outname += '_fold'
             kpl_fold, X = split_stack_kpl(indata[inname], indata['kpl'])
@@ -652,6 +653,7 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
             vals_fold[outname] = Z.data
             outdata[outname] = n.ma.average(Z, axis=0)
             outdata[outname + '_err'] = n.std(Z, axis=0)
+            #outdata[outname + '_err'] = n.ma.array((n.percentile(Z, 95, axis=0))) / 2
             outdata['kpl_fold'] = kpl_fold
 
         else:
