@@ -43,6 +43,10 @@ o.add_option('--rmbls', dest='rmbls', type='string',
                    'to remove from the power spectrum analysis.'))
 o.add_option('--NGPS', type='int', default=5,
              help='Number of Groups used in bootstrapping (default 5)')
+o.add_option('--lmode',type='int', default=None,
+             help='Eigenvalue mode of C (in decreasing order) to be the minimum value used in C^-1')
+o.add_option('--changeC', action='store_true',
+            help='Change covariance matrix C.')
 opts, args = o.parse_args(sys.argv[1:])
 
 # Basic parameters
@@ -55,6 +59,7 @@ DELAY = False
 NGPS = opts.NGPS # number of groups to break the random sampled bls into
 PLOT = opts.plot
 INJECT_SIG = opts.inject
+LMODE = opts.lmode
 
 try:
     rmbls = []
@@ -185,6 +190,13 @@ def make_PS(keys, ds, grouping=True):
         p.show()
     return pC, pI
 
+
+def change_C(keys, ds):
+    newC = {}
+    for key in keys:
+        newC[key] = ds.C(key) * n.identity(len(ds.C(key))) # identity multiplication
+        #newC[key] = ds.C(key) + n.identity(len(ds.C(key)))*10000.0 # identity addition
+    return newC
 
 def cov(m):
     """Compute Complex Covariance.
@@ -379,10 +391,16 @@ for key in data_dict_n:
         data_dict_n[key] = n.conj(data_dict_n[key])
 
 # Set data
-dsv = oqe.DataSet()  # just data
+dsv = oqe.DataSet(lmode=LMODE)  # just data
 dsv.set_data(dsets=data_dict_v, conj=conj_dict, wgts=flg_dict)
-dsn = oqe.DataSet()  # just noise
+dsn = oqe.DataSet(lmode=LMODE)  # just noise
 dsn.set_data(dsets=data_dict_n, conj=conj_dict, wgts=flg_dict)
+
+if opts.changeC:
+    newCv = change_C(keys, dsv)
+    dsv.set_C(newCv)
+    newCn = change_C(keys, dsn)
+    dsn.set_C(newCn)
 
 """
 n_to_save = {}
@@ -459,12 +477,20 @@ for boot in xrange(opts.nboot):
             data_dict_s[key] = data_dict_n[key].copy() + eorinject
 
     # Set data
-    dsr = oqe.DataSet()  # data + eor
+    dsr = oqe.DataSet(lmode=LMODE)  # data + eor
     dsr.set_data(dsets=data_dict_r, conj=conj_dict, wgts=flg_dict)
-    dse = oqe.DataSet()  # just eor
+    dse = oqe.DataSet(lmode=LMODE)  # just eor
     dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
-    dss = oqe.DataSet()  # noise + eor
+    dss = oqe.DataSet(lmode=LMODE)  # noise + eor
     dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)
+
+    if opts.changeC:
+        newCr = change_C(keys, dsr)
+        dsr.set_C(newCr)
+        newCe = change_C(keys, dse)
+        dse.set_C(newCe)
+        newCs = change_C(keys, dss)
+        dss.set_C(newCs)
 
     pCr, pIr = make_PS(keys, dsr, grouping=True)
     pCe, pIe = make_PS(keys, dse, grouping=True)
