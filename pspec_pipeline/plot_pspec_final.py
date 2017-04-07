@@ -191,10 +191,8 @@ for filename in args.files:
         nlsts = len(pspec_dict['lsts']) * pspec_dict['inttime']
         nlsts /= pspec_dict['frf_inttime']
         if pspec_dict['frf_inttime'] == pspec_dict['inttime']:
-            fr_correct = 1 # for old analytical
             omega_eff = .74**2/.32 # for capo analytical; from T1 of Parsons FRF paper
         else:
-            fr_correct = 1.77 # for old analyical
             omega_eff = .51**2/.24
         print 'Redshift:', redshift
         print '\tT_int:', inttime
@@ -215,10 +213,12 @@ for filename in args.files:
             X2Y = capo.pspec.X2Y(z)/1e9 #h^-3 Mpc^3 / str/ Hz
             B = sdf*freqs.size
             bm = np.polyval(capo.pspec.DEFAULT_BEAM_POLY, freq) * 2.35 #correction for beam^2
+            if pspec_dict['frf_inttime'] != pspec_dict['inttime']:
+                bm *= 1.3 # correction factor for FRF version of omega_pp = .32/.24 = 1.3
             scalar = X2Y * bm #* B
             #error bars minimum width. Consider them flat for P(k). Factor of 2 at the end is due to folding of kpl (root(2)) and root(2) in radiometer equation.
             #pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (2*inttime*pol*real*nbls*ndays*nmodes) ) #this 2-sigma curve should encompass 95% of the points
-            pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (inttime*pol*real*nbls*cnt*nmodes) ) # this 2-sigma curve should line up with pI
+            pk_noise = 2*scalar*( (tsys)**2 / (inttime*pol*real*nbls*cnt*nmodes) ) # this 2-sigma curve should line up with pI
             # Plot analytical noise curve on plots
             ax1[gs_ind].plot(pspec_dict['k'],pk_noise*pspec_dict['k']**3/(2*np.pi**2),'g-',label='Analytical 2-sigma')
             ax2[gs_ind].axhline(pk_noise,color='g',marker='_',label='Analytical 2-sigma')
