@@ -71,15 +71,9 @@ pk_pspecs['k'] = np.sqrt(kperp**2 + pk_pspecs['kpl_fold']**2)
 pk_pspecs['kperp'] = np.ma.masked_invalid(kperp)
 pk_pspecs['cmd'] = pk_pspecs['cmd'].item() + ' \n ' + ' '.join(sys.argv)
 for key in pk_pspecs.keys():
-    if key in ['cmd']:
-        continue
-    if pk_pspecs[key].dtype not in [np.float]:
-        continue
-    try:
+    if isinstance(pk_pspecs[key], np.ma.MaskedArray):
         pk_pspecs[key].fill_value = 0  # fills invalid values with 0's
         pk_pspecs[key] = pk_pspecs[key].filled()  # returns corrected array
-    except:
-        import ipdb
-        ipdb.set_trace()
+
 print 'Saving', args.output + 'pspec_pk_k3pk.npz'
 np.savez(args.output + 'pspec_pk_k3pk.npz', **pk_pspecs)
