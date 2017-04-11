@@ -3,7 +3,7 @@
 
 Takes outputs from pspec_final_???.py and creates 2 sigma errorbar plots.
 """
-old_analytical = True
+old_analytical = False
 import numpy as np
 import sys
 import os
@@ -193,7 +193,7 @@ for filename in args.files:
         if pspec_dict['frf_inttime'] == pspec_dict['inttime']:
             omega_eff = .74**2/.32 # for capo analytical; from T1 of Parsons FRF paper
         else:
-            omega_eff = .51**2/.24
+            omega_eff = .74**2/.24
         print 'Redshift:', redshift
         print '\tT_int:', inttime
         print '\tNbls:', nbls
