@@ -3,19 +3,17 @@
 ### Sample Call ###
 #   $ pspec_batch.sh <path to LST-binned files> <directory name to save all outputs>
 
-### My Paths ###
-DATA=$1
-EVEN_FILES=${DATA}'/even/sep0,2/*I.uvGAL'
-ODD_FILES=${DATA}'/odd/sep0,2/*I.uvGAL'
-DIRNAME=$2
-
 ### My Options ###
-RA='1_10'
 CALFILE='psa6622_v003'
+RA='1_10'
+SEP='0,2'
+DATA=$1
+EVEN_FILES=${DATA}'/even/sep'${SEP}'/*I.uvGAL'
+ODD_FILES=${DATA}'/odd/sep'${SEP}'/*I.uvGAL'
+DIRNAME=$2
 EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
-SEP='0,2'
-CHAN='79_99'
+CHAN='110_130'
 NBOOT=20
 POL='I'
 weight='L^-1'
