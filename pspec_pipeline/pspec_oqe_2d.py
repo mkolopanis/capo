@@ -14,7 +14,7 @@ import sys
 import random
 from capo import zsa, oqe, cosmo_units, frf_conv as fringe
 import capo
-
+# TEST
 o = optparse.OptionParser()
 a.scripting.add_standard_options(o, ant=True, pol=True, chan=True, cal=True)
 o.add_option('-b', '--nboot', type='int', default=20,
