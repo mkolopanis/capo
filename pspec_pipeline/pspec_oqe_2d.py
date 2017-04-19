@@ -14,11 +14,9 @@ import sys
 import random
 from capo import zsa, oqe, cosmo_units, frf_conv as fringe
 import capo
-# TEST
+
 o = optparse.OptionParser()
 a.scripting.add_standard_options(o, ant=True, pol=True, chan=True, cal=True)
-o.add_option('-b', '--nboot', type='int', default=20,
-             help='Number of bootstraps.  Default is 20.')
 o.add_option('--plot', action='store_true',
              help='Generate plots')
 o.add_option('--window', dest='window', default='blackman-harris',
@@ -41,8 +39,6 @@ o.add_option('--Trcvr', type='float', default=200,
 o.add_option('--rmbls', dest='rmbls', type='string',
              help=('List of baselines (ex:1_4,2_33) '
                    'to remove from the power spectrum analysis.'))
-o.add_option('--NGPS', type='int', default=5,
-             help='Number of Groups used in bootstrapping (default 5)')
 o.add_option('--lmode',type='int', default=None,
              help='Eigenvalue mode of C (in decreasing order) to be the minimum value used in C^-1')
 o.add_option('--changeC', action='store_true',
@@ -56,7 +52,6 @@ POL = opts.pol
 if POL == 'xx' or POL == 'yy': NPOL = 1
 else: NPOL = 2
 DELAY = False
-NGPS = opts.NGPS # number of groups to break the random sampled bls into
 PLOT = opts.plot
 INJECT_SIG = opts.inject
 LMODE = opts.lmode
@@ -127,36 +122,77 @@ def make_eor(shape):  # Create and fringe rate filter noise
     dij = oqe.noise(size=shape)
     return dij
 
-def make_PS(keys, ds, grouping=True):
+def make_PS(keys, dsv, dsn, dse, dsr, dss):
     """Use OQE formalism to generate power spectrum.
 
     Output weighted and identity weightings.
     """
-    if grouping:
-        newkeys, dsC = ds.group_data(keys, gps)
-        newkeys, dsI = ds.group_data(keys, gps, use_cov=False)
-    else:  # no groups (slower)
-        newkeys = [random.choice(keys) for key in keys]
-        # sample w/replacement for bootstrapping
-        dsI, dsC = ds, ds  # identity and covariance case dataset is the same
-    FI = n.zeros((nchan, nchan), dtype=n.complex)
-    FC = n.zeros((nchan, nchan), dtype=n.complex)
-    qI = n.zeros((nchan, nlst), dtype=n.complex)
-    qC = n.zeros((nchan, nlst), dtype=n.complex)
-    for k, key1 in enumerate(newkeys):
-        #print '   ',k+1,'/',len(newkeys)
-        for key2 in newkeys[k:]:
+    pCvs = []; pIvs = []
+    pCns = []; pIns = []
+    pCes = []; pIes = []
+    pCrs = []; pIrs = []
+    pCss = []; pIss = []
+    for k, key1 in enumerate(keys):
+        print '   ',k+1,'/',len(keys)
+        for key2 in keys[k:]:
             if key1[0] == key2[0] or key1[1] == key2[1]:
                 continue  # don't do even w/even or bl w/same bl
             else:
-                FC += dsC.get_F(key1, key2, cov_flagging=False)
-                FI += dsI.get_F(key1, key2, use_cov=False, cov_flagging=False)
-                qC += dsC.q_hat(key1, key2, cov_flagging=False)
-                qI += dsI.q_hat(key1, key2, use_cov=False, cov_flagging=False)
-    MC, WC = dsC.get_MW(FC, mode=opts.weight)  # Cholesky decomposition
-    MI, WI = dsI.get_MW(FI, mode='I')
-    pC = dsC.p_hat(MC, qC, scalar=scalar)
-    pI = dsI.p_hat(MI, qI, scalar=scalar)
+                FCv = dsv.get_F(key1, key2, cov_flagging=False)
+                FIv = dsv.get_F(key1, key2, use_cov=False, cov_flagging=False)
+                qCv = dsv.q_hat(key1, key2, cov_flagging=False)
+                qIv = dsv.q_hat(key1, key2, use_cov=False, cov_flagging=False)
+                MCv, WCv = dsv.get_MW(FCv, mode=opts.weight)  
+                MIv, WIv = dsv.get_MW(FIv, mode='I')
+                pCv = dsv.p_hat(MCv, qCv, scalar=scalar)
+                pIv = dsv.p_hat(MIv, qIv, scalar=scalar)
+                pCvs.append(pCv)
+                pIvs.append(pIv)
+
+                FCn = dsn.get_F(key1, key2, cov_flagging=False)
+                FIn = dsn.get_F(key1, key2, use_cov=False, cov_flagging=False)
+                qCn = dsn.q_hat(key1, key2, cov_flagging=False)
+                qIn = dsn.q_hat(key1, key2, use_cov=False, cov_flagging=False)
+                MCn, WCn = dsn.get_MW(FCn, mode=opts.weight)  
+                MIn, WIn = dsn.get_MW(FIn, mode='I')
+                pCn = dsv.p_hat(MCn, qCn, scalar=scalar)
+                pIn = dsv.p_hat(MIn, qIn, scalar=scalar)
+                pCns.append(pCn)
+                pIns.append(pIn)
+
+                FCe = dse.get_F(key1, key2, cov_flagging=False)
+                FIe = dse.get_F(key1, key2, use_cov=False, cov_flagging=False)
+                qCe = dse.q_hat(key1, key2, cov_flagging=False)
+                qIe = dse.q_hat(key1, key2, use_cov=False, cov_flagging=False)
+                MCe, WCe = dse.get_MW(FCe, mode=opts.weight) 
+                MIe, WIe = dse.get_MW(FIe, mode='I')
+                pCe = dse.p_hat(MCe, qCe, scalar=scalar)
+                pIe = dse.p_hat(MIe, qIe, scalar=scalar)
+                pCes.append(pCe)
+                pIes.append(pIe)
+
+                FCr = dsr.get_F(key1, key2, cov_flagging=False)
+                FIr = dsr.get_F(key1, key2, use_cov=False, cov_flagging=False)
+                qCr = dsr.q_hat(key1, key2, cov_flagging=False)
+                qIr = dsr.q_hat(key1, key2, use_cov=False, cov_flagging=False)
+                MCr, WCr = dsr.get_MW(FCr, mode=opts.weight)  
+                MIr, WIr = dsr.get_MW(FIr, mode='I')
+                pCr = dsr.p_hat(MCr, qCr, scalar=scalar)
+                pIr = dsr.p_hat(MIr, qIr, scalar=scalar)
+                pCrs.append(pCr)
+                pIrs.append(pIr)
+
+                FCs = dss.get_F(key1, key2, cov_flagging=False)
+                FIs = dss.get_F(key1, key2, use_cov=False, cov_flagging=False)
+                qCs = dss.q_hat(key1, key2, cov_flagging=False)
+                qIs = dss.q_hat(key1, key2, use_cov=False, cov_flagging=False)
+                MCs, WCs = dss.get_MW(FCs, mode=opts.weight)  
+                MIs, WIs = dss.get_MW(FIs, mode='I')
+                pCs = dss.p_hat(MCs, qCs, scalar=scalar)
+                pIs = dss.p_hat(MIs, qIs, scalar=scalar)
+                pCss.append(pCs)
+                pIss.append(pIs)
+
     if PLOT:
         p.subplot(121)
         capo.arp.waterfall(FC, drng=4)
@@ -188,7 +224,7 @@ def make_PS(keys, ds, grouping=True):
         p.plot(kpl, n.average(pI.real, axis=1), 'k.-', label='pI')
         p.legend()
         p.show()
-    return pC, pI
+    return n.array(pCv), n.array(pIv), n.array(pCn), n.array(pIn), n.array(pCe), n.array(pIe), n.array(pCr), n.array(pIr), n.array(pCs), n.array(pIs)
 
 
 def change_C(keys, ds):
@@ -371,7 +407,8 @@ lsts = lsts[lsts.keys()[0]]
 # calculate the effective number of counts used in the data
 cnt_eff = 1./n.sqrt(n.ma.masked_invalid(1./cnt_full**2).mean())
 # calculate the effective numbe of baselines given grouping:
-nbls_eff = len(bls_master) / n.sqrt(2) * n.sqrt(1. - 1./NGPS)
+N = len(bls_master)
+nbls_eff = N * (n.sqrt((N**2 - N)/2.)/(n.sqrt(N**2))) # len(bls_master) / n.sqrt(2) * n.sqrt(1. - 1./NGPS)
 
 # Fringe-rate filter noise
 if opts.frf:
@@ -434,102 +471,89 @@ if PLOT and False:
         p.tight_layout()
         p.show()
 
-# Bootstrapping
-for boot in xrange(opts.nboot):
-    print '\nBootstrap %d / %d' % (boot + 1, opts.nboot)
+# Create fake eor signal    
+if INJECT_SIG > 0.: 
+    print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
+    eij = make_eor((nlst, nchan))
+    size = nlst
+    eij = n.repeat(eij, 3, axis=0)
+    wij = n.ones(eij.shape, dtype=bool)
+    eij_frf = fringe_rate_filter(aa, eij, wij, ij[0], ij[1], POL, bins, fir)
+    eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1], POL, bins, fir_conj)
+    if opts.frf: # double frf eor
+        eij_frf = fringe_rate_filter(aa, eij_frf, wij, ij[0], ij[1], POL, bins, fir)
+        eij_conj_frf = fringe_rate_filter(aa, eij_conj_frf, wij, ij[0], ij[1], POL, bins, fir_conj)
 
-    # Make groups
-    gps = dsv.gen_gps(bls_master, ngps=NGPS)
+    eor = eij_frf[size:2*size,:]*INJECT_SIG
+    eor_conj = eij_conj_frf[size:2*size,:]*INJECT_SIG
+    data_dict_r = {}
+    data_dict_e = {}
+    data_dict_s = {}
+    for key in data_dict_v:
+        if conj_dict[key[1]] is True:
+            eorinject = n.conj(eor_conj)
+        else:
+            eorinject = eor
+        # track eor in separate dict
+        data_dict_e[key] = eorinject
+        # add injected signal to data
+        data_dict_r[key] = data_dict_v[key].copy() + eorinject
+        # add injected signal to noise
+        data_dict_s[key] = data_dict_n[key].copy() + eorinject
 
-    # Only data
-    pCv, pIv = make_PS(keys, dsv, grouping=True)
-    # Only noise
-    pCn, pIn = make_PS(keys, dsn, grouping=True)
+# Set data
+dsr = oqe.DataSet(lmode=LMODE)  # data + eor
+dsr.set_data(dsets=data_dict_r, conj=conj_dict, wgts=flg_dict)
+dse = oqe.DataSet(lmode=LMODE)  # just eor
+dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
+dss = oqe.DataSet(lmode=LMODE)  # noise + eor
+dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)
 
-    # Calculate pCr & pIr (data+eor), pCs & pIs (noise+eor)
-    # and pCe & pIe (eor) #
-    if INJECT_SIG > 0.:  # Create a fake EoR signal to inject
-        print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
-        eij = make_eor((nlst, nchan))
-        size = nlst
-        eij = n.repeat(eij, 3, axis=0)
-        wij = n.ones(eij.shape, dtype=bool)
-        eij_frf = fringe_rate_filter(aa, eij, wij, ij[0], ij[1], POL, bins, fir)
-        eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1], POL, bins, fir_conj)
-        if opts.frf: # double frf eor
-            eij_frf = fringe_rate_filter(aa, eij_frf, wij, ij[0], ij[1], POL, bins, fir)
-            eij_conj_frf = fringe_rate_filter(aa, eij_conj_frf, wij, ij[0], ij[1], POL, bins, fir_conj)
+if opts.changeC:
+    newCr = change_C(keys, dsr)
+    dsr.set_C(newCr)
+    newCe = change_C(keys, dse)
+    dse.set_C(newCe)
+    newCs = change_C(keys, dss)
+    dss.set_C(newCs)
 
-        eor = eij_frf[size:2*size,:]*INJECT_SIG
-        eor_conj = eij_conj_frf[size:2*size,:]*INJECT_SIG
-        data_dict_r = {}
-        data_dict_e = {}
-        data_dict_s = {}
-        for key in data_dict_v:
-            if conj_dict[key[1]] is True:
-                eorinject = n.conj(eor_conj)
-            else:
-                eorinject = eor
-            # track eor in separate dict
-            data_dict_e[key] = eorinject
-            # add injected signal to data
-            data_dict_r[key] = data_dict_v[key].copy() + eorinject
-            # add injected signal to noise
-            data_dict_s[key] = data_dict_n[key].copy() + eorinject
+# Compute power spectra
+pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs = make_PS(keys, dsv, dsn, dse, dsr, dss)
 
-    # Set data
-    dsr = oqe.DataSet(lmode=LMODE)  # data + eor
-    dsr.set_data(dsets=data_dict_r, conj=conj_dict, wgts=flg_dict)
-    dse = oqe.DataSet(lmode=LMODE)  # just eor
-    dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
-    dss = oqe.DataSet(lmode=LMODE)  # noise + eor
-    dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)
+print '     Data:         pCv =', n.median(pCv.real),
+print 'pIv =', n.median(pIv.real)
+print '     EoR:          pCe =', n.median(pCe.real),
+print 'pIe =', n.median(pIe.real)
+print '     Noise:        pCn =', n.median(pCn.real),
+print 'pIn =', n.median(pIn.real)
+print '     Data + EoR:   pCr =', n.median(pCr.real),
+print 'pIr =', n.median(pIr.real)
+print '     Noise + EoR:  pCs =', n.median(pCs.real),
+print 'pIs =', n.median(pIs.real)
 
-    if opts.changeC:
-        newCr = change_C(keys, dsr)
-        dsr.set_C(newCr)
-        newCe = change_C(keys, dse)
-        dse.set_C(newCe)
-        newCs = change_C(keys, dss)
-        dss.set_C(newCs)
+print '       Signal Loss Data  ~ pIe/(pCr-pCv) =',
+print n.abs(n.median(pIe.real)) / n.abs(n.median(pCr.real) - n.median(pCv))
+print '       Signal Loss Noise ~ pIe/(pCs-pCn) =',
+print n.abs(n.median(pIe.real)) / n.abs(n.median(pCs.real) - n.median(pCn))
 
-    pCr, pIr = make_PS(keys, dsr, grouping=True)
-    pCe, pIe = make_PS(keys, dse, grouping=True)
-    pCs, pIs = make_PS(keys, dss, grouping=True)
+if PLOT:
+    p.plot(kpl, n.average(pCr.real, axis=1), 'b.-')
+    p.plot(kpl, n.average(pIr.real, axis=1), 'k.-')
+    p.title('Data + EoR')
+    p.show()
 
-    print '     Data:         pCv =', n.median(pCv.real),
-    print 'pIv =', n.median(pIv.real)
-    print '     EoR:          pCe =', n.median(pCe.real),
-    print 'pIe =', n.median(pIe.real)
-    print '     Noise:        pCn =', n.median(pCn.real),
-    print 'pIn =', n.median(pIn.real)
-    print '     Data + EoR:   pCr =', n.median(pCr.real),
-    print 'pIr =', n.median(pIr.real)
-    print '     Noise + EoR:  pCs =', n.median(pCs.real),
-    print 'pIs =', n.median(pIs.real)
 
-    print '       Signal Loss Data  ~ pIe/(pCr-pCv) =',
-    print n.abs(n.median(pIe.real)) / n.abs(n.median(pCr.real) - n.median(pCv))
-    print '       Signal Loss Noise ~ pIe/(pCs-pCn) =',
-    print n.abs(n.median(pIe.real)) / n.abs(n.median(pCs.real) - n.median(pCn))
-
-    if PLOT:
-        p.plot(kpl, n.average(pCr.real, axis=1), 'b.-')
-        p.plot(kpl, n.average(pIr.real, axis=1), 'k.-')
-        p.title('Data + EoR')
-        p.show()
-
-    # Save Output
-    if len(opts.output) > 0:
-        outpath = opts.output + '/pspec_bootsigloss%04d.npz' % boot
-    else:
-        outpath = 'pspec_bootsigloss%04d.npz' % boot
-    print '   Writing ' + outpath
-    n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
-            pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe,
-            pIe=pIe, pCn=pCn, pIn=pIn, pCs=pCs, pIs=pIs,
-            sep=sep_type, uvw=uvw,
-            frf_inttime=frf_inttime, inttime=inttime,
-            inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
-            cnt_eff=cnt_eff, nbls_eff=nbls_eff,
-            cmd=' '.join(sys.argv))
+# Save Output
+if len(opts.output) > 0:
+    outpath = opts.output + '/pspec_oqe_2d.npz' 
+else:
+    outpath = 'pspec_oqe_2d.npz' 
+print '   Writing ' + outpath
+n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
+        pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe,
+        pIe=pIe, pCn=pCn, pIn=pIn, pCs=pCs, pIs=pIs,
+        sep=sep_type, uvw=uvw,
+        frf_inttime=frf_inttime, inttime=inttime,
+        inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
+        cnt_eff=cnt_eff, nbls_eff=nbls_eff,
+        cmd=' '.join(sys.argv))
