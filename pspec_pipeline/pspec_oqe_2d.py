@@ -224,7 +224,7 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss):
         p.plot(kpl, n.average(pI.real, axis=1), 'k.-', label='pI')
         p.legend()
         p.show()
-    return n.array(pCv), n.array(pIv), n.array(pCn), n.array(pIn), n.array(pCe), n.array(pIe), n.array(pCr), n.array(pIr), n.array(pCs), n.array(pIs)
+    return n.array(pCvs), n.array(pIvs), n.array(pCns), n.array(pIns), n.array(pCes), n.array(pIes), n.array(pCrs), n.array(pIrs), n.array(pCss), n.array(pIss)
 
 
 def change_C(keys, ds):
@@ -541,7 +541,6 @@ if PLOT:
     p.plot(kpl, n.average(pIr.real, axis=1), 'k.-')
     p.title('Data + EoR')
     p.show()
-
 
 # Save Output
 if len(opts.output) > 0:
