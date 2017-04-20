@@ -39,6 +39,8 @@ o.add_option('--Trcvr', type='float', default=200,
 o.add_option('--rmbls', dest='rmbls', type='string',
              help=('List of baselines (ex:1_4,2_33) '
                    'to remove from the power spectrum analysis.'))
+o.add_option('--NGPS', type='int', default=5,
+             help='Number of Groups used in bootstrapping (default 5)')
 o.add_option('--lmode',type='int', default=None,
              help='Eigenvalue mode of C (in decreasing order) to be the minimum value used in C^-1')
 o.add_option('--changeC', action='store_true',
@@ -52,6 +54,7 @@ POL = opts.pol
 if POL == 'xx' or POL == 'yy': NPOL = 1
 else: NPOL = 2
 DELAY = False
+NGPS = opts.NGPS # number of groups to break the random sampled bls into
 PLOT = opts.plot
 INJECT_SIG = opts.inject
 LMODE = opts.lmode
@@ -122,106 +125,125 @@ def make_eor(shape):  # Create and fringe rate filter noise
     dij = oqe.noise(size=shape)
     return dij
 
-def make_PS(keys, dsv, dsn, dse, dsr, dss):
+def make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True):
     """Use OQE formalism to generate power spectrum.
 
     Output weighted and identity weightings.
     """
+    if grouping:
+        newkeys, dsCv = dsv.group_data(keys, gps)
+        newkeys, dsIv = dsv.group_data(keys, gps, use_cov=False)
+        newkeys, dsCn = dsn.group_data(keys, gps)
+        newkeys, dsIn = dsn.group_data(keys, gps, use_cov=False)
+        newkeys, dsCe = dse.group_data(keys, gps)
+        newkeys, dsIe = dse.group_data(keys, gps, use_cov=False)
+        newkeys, dsCr = dsr.group_data(keys, gps)
+        newkeys, dsIr = dsr.group_data(keys, gps, use_cov=False)
+        newkeys, dsCs = dss.group_data(keys, gps)
+        newkeys, dsIs = dss.group_data(keys, gps, use_cov=False)
+    else:  # no groups (slower)
+        newkeys = keys
+        dsIv, dsCv = dsv, dsv  # identity and covariance case dataset is the same
+        dsIn, dsCn = dsn, dsn
+        dsIe, dsCe = dse, dse
+        dsIr, dsCr = dsr, dsr
+        dsIs, dsCs = dss, dss
+
     pCvs = []; pIvs = []
     pCns = []; pIns = []
     pCes = []; pIes = []
     pCrs = []; pIrs = []
     pCss = []; pIss = []
-    for k, key1 in enumerate(keys):
-        print '   ',k+1,'/',len(keys)
-        for key2 in keys[k:]:
+    for k, key1 in enumerate(newkeys):
+        print '   ',k+1,'/',len(newkeys)
+        for key2 in newkeys[k:]:
             if key1[0] == key2[0] or key1[1] == key2[1]:
                 continue  # don't do even w/even or bl w/same bl
             else:
-                FCv = dsv.get_F(key1, key2, cov_flagging=False)
-                FIv = dsv.get_F(key1, key2, use_cov=False, cov_flagging=False)
-                qCv = dsv.q_hat(key1, key2, cov_flagging=False)
-                qIv = dsv.q_hat(key1, key2, use_cov=False, cov_flagging=False)
-                MCv, WCv = dsv.get_MW(FCv, mode=opts.weight)  
-                MIv, WIv = dsv.get_MW(FIv, mode='I')
-                pCv = dsv.p_hat(MCv, qCv, scalar=scalar)
-                pIv = dsv.p_hat(MIv, qIv, scalar=scalar)
+                FCv = dsCv.get_F(key1, key2, cov_flagging=False)
+                FIv = dsIv.get_F(key1, key2, use_cov=False, cov_flagging=False)
+                qCv = dsCv.q_hat(key1, key2, cov_flagging=False)
+                qIv = dsIv.q_hat(key1, key2, use_cov=False, cov_flagging=False)
+                MCv, WCv = dsCv.get_MW(FCv, mode=opts.weight)  
+                MIv, WIv = dsIv.get_MW(FIv, mode='I')
+                pCv = dsCv.p_hat(MCv, qCv, scalar=scalar)
+                pIv = dsIv.p_hat(MIv, qIv, scalar=scalar)
                 pCvs.append(pCv)
                 pIvs.append(pIv)
 
-                FCn = dsn.get_F(key1, key2, cov_flagging=False)
-                FIn = dsn.get_F(key1, key2, use_cov=False, cov_flagging=False)
-                qCn = dsn.q_hat(key1, key2, cov_flagging=False)
-                qIn = dsn.q_hat(key1, key2, use_cov=False, cov_flagging=False)
-                MCn, WCn = dsn.get_MW(FCn, mode=opts.weight)  
-                MIn, WIn = dsn.get_MW(FIn, mode='I')
-                pCn = dsv.p_hat(MCn, qCn, scalar=scalar)
-                pIn = dsv.p_hat(MIn, qIn, scalar=scalar)
+                FCn = dsCn.get_F(key1, key2, cov_flagging=False)
+                FIn = dsIn.get_F(key1, key2, use_cov=False, cov_flagging=False)
+                qCn = dsCn.q_hat(key1, key2, cov_flagging=False)
+                qIn = dsIn.q_hat(key1, key2, use_cov=False, cov_flagging=False)
+                MCn, WCn = dsCn.get_MW(FCn, mode=opts.weight)  
+                MIn, WIn = dsIn.get_MW(FIn, mode='I')
+                pCn = dsCv.p_hat(MCn, qCn, scalar=scalar)
+                pIn = dsIv.p_hat(MIn, qIn, scalar=scalar)
                 pCns.append(pCn)
                 pIns.append(pIn)
 
-                FCe = dse.get_F(key1, key2, cov_flagging=False)
-                FIe = dse.get_F(key1, key2, use_cov=False, cov_flagging=False)
-                qCe = dse.q_hat(key1, key2, cov_flagging=False)
-                qIe = dse.q_hat(key1, key2, use_cov=False, cov_flagging=False)
-                MCe, WCe = dse.get_MW(FCe, mode=opts.weight) 
-                MIe, WIe = dse.get_MW(FIe, mode='I')
-                pCe = dse.p_hat(MCe, qCe, scalar=scalar)
-                pIe = dse.p_hat(MIe, qIe, scalar=scalar)
+                FCe = dsCe.get_F(key1, key2, cov_flagging=False)
+                FIe = dsIe.get_F(key1, key2, use_cov=False, cov_flagging=False)
+                qCe = dsCe.q_hat(key1, key2, cov_flagging=False)
+                qIe = dsIe.q_hat(key1, key2, use_cov=False, cov_flagging=False)
+                MCe, WCe = dsCe.get_MW(FCe, mode=opts.weight) 
+                MIe, WIe = dsIe.get_MW(FIe, mode='I')
+                pCe = dsCe.p_hat(MCe, qCe, scalar=scalar)
+                pIe = dsIe.p_hat(MIe, qIe, scalar=scalar)
                 pCes.append(pCe)
                 pIes.append(pIe)
 
-                FCr = dsr.get_F(key1, key2, cov_flagging=False)
-                FIr = dsr.get_F(key1, key2, use_cov=False, cov_flagging=False)
-                qCr = dsr.q_hat(key1, key2, cov_flagging=False)
-                qIr = dsr.q_hat(key1, key2, use_cov=False, cov_flagging=False)
-                MCr, WCr = dsr.get_MW(FCr, mode=opts.weight)  
-                MIr, WIr = dsr.get_MW(FIr, mode='I')
-                pCr = dsr.p_hat(MCr, qCr, scalar=scalar)
-                pIr = dsr.p_hat(MIr, qIr, scalar=scalar)
+                FCr = dsCr.get_F(key1, key2, cov_flagging=False)
+                FIr = dsIr.get_F(key1, key2, use_cov=False, cov_flagging=False)
+                qCr = dsCr.q_hat(key1, key2, cov_flagging=False)
+                qIr = dsIr.q_hat(key1, key2, use_cov=False, cov_flagging=False)
+                MCr, WCr = dsCr.get_MW(FCr, mode=opts.weight)  
+                MIr, WIr = dsIr.get_MW(FIr, mode='I')
+                pCr = dsCr.p_hat(MCr, qCr, scalar=scalar)
+                pIr = dsIr.p_hat(MIr, qIr, scalar=scalar)
                 pCrs.append(pCr)
                 pIrs.append(pIr)
 
-                FCs = dss.get_F(key1, key2, cov_flagging=False)
-                FIs = dss.get_F(key1, key2, use_cov=False, cov_flagging=False)
-                qCs = dss.q_hat(key1, key2, cov_flagging=False)
-                qIs = dss.q_hat(key1, key2, use_cov=False, cov_flagging=False)
-                MCs, WCs = dss.get_MW(FCs, mode=opts.weight)  
-                MIs, WIs = dss.get_MW(FIs, mode='I')
-                pCs = dss.p_hat(MCs, qCs, scalar=scalar)
-                pIs = dss.p_hat(MIs, qIs, scalar=scalar)
+                FCs = dsCs.get_F(key1, key2, cov_flagging=False)
+                FIs = dsIs.get_F(key1, key2, use_cov=False, cov_flagging=False)
+                qCs = dsCs.q_hat(key1, key2, cov_flagging=False)
+                qIs = dsIs.q_hat(key1, key2, use_cov=False, cov_flagging=False)
+                MCs, WCs = dsCs.get_MW(FCs, mode=opts.weight)  
+                MIs, WIs = dsIs.get_MW(FIs, mode='I')
+                pCs = dsCs.p_hat(MCs, qCs, scalar=scalar)
+                pIs = dsIs.p_hat(MIs, qIs, scalar=scalar)
                 pCss.append(pCs)
                 pIss.append(pIs)
 
     if PLOT:
         p.subplot(121)
-        capo.arp.waterfall(FC, drng=4)
+        capo.arp.waterfall(FCv, drng=4)
         p.title('FC')
         p.subplot(122)
-        capo.arp.waterfall(FI, drng=4)
+        capo.arp.waterfall(FIv, drng=4)
         p.title('FI')
         p.show()
     if PLOT:
         p.subplot(411)
-        capo.arp.waterfall(qC, mode='real')
+        capo.arp.waterfall(qCv, mode='real')
         p.colorbar(shrink=.5)
         p.title('qC')
         p.subplot(412)
-        capo.arp.waterfall(pC, mode='real')
+        capo.arp.waterfall(pCv, mode='real')
         p.colorbar(shrink=.5)
         p.title('pC')
         p.subplot(413)
-        capo.arp.waterfall(qI, mode='real')
+        capo.arp.waterfall(qIv, mode='real')
         p.colorbar(shrink=.5)
         p.title('qI')
         p.subplot(414)
-        capo.arp.waterfall(pI, mode='real')
+        capo.arp.waterfall(pIv, mode='real')
         p.colorbar(shrink=.5)
         p.title('pI')
         p.show()
     if PLOT:
-        p.plot(kpl, n.average(pC.real, axis=1), 'b.-', label='pC')
-        p.plot(kpl, n.average(pI.real, axis=1), 'k.-', label='pI')
+        p.plot(kpl, n.average(pCv.real, axis=1), 'b.-', label='pC')
+        p.plot(kpl, n.average(pIv.real, axis=1), 'k.-', label='pI')
         p.legend()
         p.show()
     return n.array(pCvs), n.array(pIvs), n.array(pCns), n.array(pIns), n.array(pCes), n.array(pIes), n.array(pCrs), n.array(pIrs), n.array(pCss), n.array(pIss)
@@ -518,7 +540,9 @@ if opts.changeC:
     dss.set_C(newCs)
 
 # Compute power spectra
-pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs = make_PS(keys, dsv, dsn, dse, dsr, dss)
+gps = [bls_master[i::NGPS] for i in range(NGPS)] # used if grouping=True in make_PS
+    # no repeated baselines between or within groups
+pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs = make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True)
 
 print '     Data:         pCv =', n.median(pCv.real),
 print 'pIv =', n.median(pIv.real)
