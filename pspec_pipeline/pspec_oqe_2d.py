@@ -430,7 +430,10 @@ lsts = lsts[lsts.keys()[0]]
 cnt_eff = 1./n.sqrt(n.ma.masked_invalid(1./cnt_full**2).mean())
 # calculate the effective numbe of baselines given grouping:
 N = len(bls_master)
-nbls_eff = N * (n.sqrt((N**2 - N)/2.)/(n.sqrt(N**2))) # len(bls_master) / n.sqrt(2) * n.sqrt(1. - 1./NGPS)
+if True: # grouping
+    nbls_eff = N / n.sqrt(2) * n.sqrt(1. - 1./NGPS)
+else: # no grouping 
+    nbls_eff = N * (n.sqrt((N**2 - N)/2.)/(n.sqrt(N**2))) 
 
 # Fringe-rate filter noise
 if opts.frf:
