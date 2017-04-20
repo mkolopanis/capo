@@ -28,7 +28,19 @@ parser.add_argument('--Neff_lst', default=None,
 args = parser.parse_args()
 
 np.random.seed(0)
-pspecs = read_bootstraps_dcj(args.files)
+print 'Reading', args.files[0] # only one file from pspec_oqe_2d
+power_spectrum_channels = ['pC', 'pI', 'err', 'pCv', 'var', 'pIv',
+                               'pCe', 'pIe', 'pIr', 'pCr', 'pCr-pCv', 'pIr-pIv',
+                               'pCn', 'pIn', 'pCs', 'pIs', 'pCs-pCn', 'pIs-pIn']
+file = np.load(args.files[0])
+pspecs = {}
+for key in file:
+    if key in power_spectrum_channels:
+        pspecs[key] = np.real(file[key]) # take real part
+    else:
+        pspecs[key] = file[key] # keys not in power_spectrum_channels
+
+#pspecs = read_bootstraps_dcj(args.files)
 if args.Neff_lst == None:
     Nlstbins = np.shape(pspecs['pCr'])[-1]
     # get the number of lst integrations in the dataset
@@ -55,6 +67,7 @@ pspecs['pIr-pIv'] = pspecs['pIr'] - pspecs['pIv']
 pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 
 # compute Pk vs kpl vs bootstraps
+print "Bootstrapping..."
 pk_pspecs, vals  = average_bootstraps(pspecs, Nt_eff=Neff_lst,
                                      Nboots=args.nboots, avg_func=np.median)
 print 'Saving pspec_2d_to_1d.npz'  # save all values used in bootstrapping
