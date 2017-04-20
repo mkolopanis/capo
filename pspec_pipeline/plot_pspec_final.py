@@ -122,7 +122,7 @@ for filename in args.files:
     neg_ind_noise_fold = np.where(pspec_dict['pCn_fold'] < 0)[0]
 
     ax1[gs_ind].plot(pspec_dict['k'],
-                     pspec_dict['pI_fold'] + pspec_dict['pI_fold_up'], '--',
+                     np.abs(pspec_dict['pI_fold']) + pspec_dict['pI_fold_up'], '--',
                      label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)))
     #ax1[gs_ind].errorbar(pspec_dict['k'],
     #                pspec_dict['pI_fold'], pspec_dict['pI_fold_up'],
@@ -138,7 +138,7 @@ for filename in args.files:
                          pspec_dict['pC_fold_up'][neg_ind_fold],
                          linestyle='',marker=marker, color='0.5')
     ax2[gs_ind].plot(pspec_dict['kpl'],
-                     pspec_dict['pI'] + pspec_dict['pI_up'], '--',
+                     np.abs(pspec_dict['pI']) + pspec_dict['pI_up'], '--',
                      label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)))
     #ax2[gs_ind].errorbar(pspec_dict['kpl'],
     #                pspec_dict['pI'], pspec_dict['pI_up'],
@@ -152,7 +152,7 @@ for filename in args.files:
                          pspec_dict['pC_up'][neg_ind],
                          linestyle='', marker=marker, color='0.5')
     ax3[gs_ind].plot(pspec_dict['k'],
-                     pspec_dict['pIn_fold'] + pspec_dict['pIn_fold_up'], '--',
+                     np.abs(pspec_dict['pIn_fold']) + pspec_dict['pIn_fold_up'], '--',
                      label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)))
     #ax3[gs_ind].errorbar(pspec_dict['k'],
     #                    pspec_dict['pIn_fold'], pspec_dict['pIn_fold_up'],
@@ -168,7 +168,7 @@ for filename in args.files:
                          pspec_dict['pCn_fold_up'][neg_ind_noise_fold],
                          linestyle='', marker=marker, color='0.5')
     ax4[gs_ind].plot(pspec_dict['kpl'],
-                     pspec_dict['pIn'] + pspec_dict['pIn_up'], '--',
+                     np.abs(pspec_dict['pIn']) + pspec_dict['pIn_up'], '--',
                      label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)))
     #ax4[gs_ind].errorbar(pspec_dict['kpl'],
     #                pspec_dict['pIn'], pspec_dict['pIn_up'],
@@ -183,7 +183,6 @@ for filename in args.files:
                          -pspec_dict['pCn'][neg_ind_noise],
                          pspec_dict['pCn_up'][neg_ind_noise],
                          linestyle='', marker=marker, color='0.5')
-
     if args.analytical:
         inttime = pspec_dict['frf_inttime']
         nbls = pspec_dict['nbls_eff']
