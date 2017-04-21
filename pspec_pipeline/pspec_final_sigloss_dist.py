@@ -104,6 +104,7 @@ for count in range(2):
                 p.loglog(Pin[:,ind], Pout[:,ind], 'k.')  # points
                 # p.loglog(Pin[ind],Pout_noise[ind],'b.') # noise points
                 p.loglog([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
+                p.axhline(pC[:,ind].max(), color='0.5') # max pC
                 p.grid(True)
                 p.xlim(pklo, pkhi)
                 p.ylim(pklo, pkhi)
@@ -113,6 +114,7 @@ for count in range(2):
                 p.figure(2) # alpha vs. Pout
                 p.subplot(3, 7, ind+1)
                 p.loglog(Pin[:,ind]/Pout[:,ind],Pout[:,ind],'k.') # points
+                p.axhline(pC[:,ind].max(), color='0.5') # max pC
                 p.grid(True)
                 p.xlim(1e-3,1e7)
                 p.ylim(pklo, pkhi)
@@ -123,6 +125,7 @@ for count in range(2):
                 p.subplot(3, 7, ind+1)
                 p.loglog(Pin[:,ind], Pout_I[:,ind], 'k.')  # points
                 p.loglog([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
+                p.axhline(pI[:,ind].max(), color='0.5') # max pI
                 p.grid(True)
                 p.xlim(pklo, pkhi)
                 p.ylim(pklo, pkhi)
@@ -132,6 +135,7 @@ for count in range(2):
                 p.figure(4) # alpha vs. Pout for I case
                 p.subplot(3, 7, ind+1)
                 p.loglog(Pin[:,ind]/Pout_I[:,ind],Pout_I[:,ind],'k.') # points
+                p.axhline(pI[:,ind].max(), color='0.5') # max pI
                 p.grid(True)
                 p.xlim(1e-3,1e7)
                 p.ylim(pklo, pkhi)
@@ -190,8 +194,8 @@ for count in range(2):
 
     # bin Pout, Pout_I, pCv, pIv
     #nbins = Pouts[key].shape[0] / Pout.shape[0] # number of injections
-    nbins = 100
-    nbins_I = 100
+    nbins = 25
+    nbins_I = 25
     sigloss_final = {}; sigloss_final_fold = {}
     sigloss_final_I = {}; sigloss_final_I_fold = {}
 
@@ -284,7 +288,6 @@ if opts.skip_sigloss:
 # save final values
 other_factors = 1
 fold_factor = file['k']**3/(2*n.pi**2)
-
 pIv = file['pIv']*sigfactors_I*other_factors
 pCv = file['pCv']*sigfactors*other_factors
 pIn = file['pIn']*sigfactors_noise_I*other_factors
