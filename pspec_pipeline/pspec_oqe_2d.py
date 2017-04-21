@@ -428,7 +428,7 @@ cnt_full = cnt_full[:, chans]
 lsts = lsts[lsts.keys()[0]]
 # calculate the effective number of counts used in the data
 cnt_eff = 1./n.sqrt(n.ma.masked_invalid(1./cnt_full**2).mean())
-# calculate the effective numbe of baselines given grouping:
+# calculate the effective number of baselines given grouping:
 N = len(bls_master)
 if True: # grouping
     nbls_eff = N / n.sqrt(2) * n.sqrt(1. - 1./NGPS)
@@ -440,7 +440,7 @@ if opts.frf:
     print 'Fringe-rate-filtering noise'
     for key in data_dict_n:
         size = data_dict_n[key].shape[0]
-        nij = n.repeat(data_dict_n[key], 3, axis=0)
+        nij = n.tile(data_dict_n[key].flatten(), 3).reshape((3*size,nchan)) # add padding
         wij = n.ones(nij.shape, dtype=bool)
         if conj_dict[key[1]] is True: # apply frf using the conj of data and the conj fir
             nij_frf = fringe_rate_filter(aa, n.conj(nij), wij, ij[0], ij[1], POL, bins, fir_conj)
@@ -501,7 +501,7 @@ if INJECT_SIG > 0.:
     print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
     eij = make_eor((nlst, nchan))
     size = nlst
-    eij = n.repeat(eij, 3, axis=0)
+    eij = n.tile(eij.flatten(), 3).reshape((3*nlst,nchan)) # add padding
     wij = n.ones(eij.shape, dtype=bool)
     eij_frf = fringe_rate_filter(aa, eij, wij, ij[0], ij[1], POL, bins, fir)
     eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1], POL, bins, fir_conj)
@@ -546,7 +546,7 @@ if opts.changeC:
 gps = [bls_master[i::NGPS] for i in range(NGPS)] # used if grouping=True in make_PS
     # no repeated baselines between or within groups
 pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs = make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True)
-
+import IPython;IPython.embed()
 print '     Data:         pCv =', n.median(pCv.real),
 print 'pIv =', n.median(pIv.real)
 print '     EoR:          pCe =', n.median(pCe.real),
