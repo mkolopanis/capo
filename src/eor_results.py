@@ -638,7 +638,7 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
             # only draw as many times as we have independent lsts (Nt_eff)
             #Z = scramble_avg_bootstrap_array(indata[inname], Nt_eff=Nt_eff,
             #                                 func=avg_func, Nboots=Nboots)
-            Z = scramble_avg_bootstrap_array_v2(indata[inname], func=avg_func)
+            Z = scramble_avg_bootstrap_array_v3(indata[inname], Nboots=Nboots)
             vals[outname] = Z.data #bboots.data
             # power spectrum is the mean and std dev over scramble dimension
             outdata[outname] = n.ma.average(Z, axis=0)
@@ -649,7 +649,7 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
             kpl_fold, X = split_stack_kpl(indata[inname], indata['kpl'])
             #Z = scramble_avg_bootstrap_array(X, Nt_eff=Nt_eff, func=avg_func,
             #                                 Nboots=Nboots)
-            Z = scramble_avg_bootstrap_array_v2(X, func=avg_func)
+            Z = scramble_avg_bootstrap_array_v3(X, Nboots=Nboots)
             vals_fold[outname] = Z.data
             outdata[outname] = n.ma.average(Z, axis=0)
             outdata[outname + '_err'] = n.std(Z, axis=0)
@@ -692,6 +692,17 @@ def scramble_avg_bootstrap_array_v2(X, func=n.median):
         times_i = n.random.choice(X.shape[-1], 1000, replace=True) #XXX 1000 is chosen arbitrarily, but any large number should converge on the same answer
         if func == n.median: bboots.append(pspec_median(X[j, :, times_i], axis=0))
         else: bboots.append(func(X[j, :, times_i], axis=0))
+    bboots = n.ma.masked_invalid(n.array(bboots))
+    return bboots
+
+def scramble_avg_bootstrap_array_v3(X, Nboots=100):
+    """Collapse (baseline, k, time) array in baseline and time 
+    and then bootstrap"""
+    bboots = []
+    X = X.swapaxes(0,1).reshape((X.shape[1],X.shape[0]*X.shape[2])) # reshape to (k, bl*time)
+    for i in range(Nboots):
+        choice = n.random.choice(X.shape[1], X.shape[1], replace=True)
+        bboots.append(n.mean(X[:,choice],axis=1))
     bboots = n.ma.masked_invalid(n.array(bboots))
     return bboots
 
