@@ -608,5 +608,5 @@ n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
         sep=sep_type, uvw=uvw,
         frf_inttime=frf_inttime, inttime=inttime,
         inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
-        cnt_eff=cnt_eff, nbls_eff=nbls_eff, err_factors=err_factors,
+        cnt_eff=cnt_eff, nbls_eff=nbls_eff, err_factors=err_factors.real,
         cmd=' '.join(sys.argv))
