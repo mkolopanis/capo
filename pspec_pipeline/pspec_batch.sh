@@ -19,6 +19,7 @@ POL='I'
 weight='L^-1'
 WINDOW='none'
 FRF='--frf'
+NOFRFPATH='--nofrfpath pspec128_uvGA/inject_sep'${SEP}'_0.01/pspec_pk_k3pk.npz' # path to one pspec_2d_to_1d.py output for NONFRF case
 LMODE='' #'--lmode=12'
 CHANGEC='' #'--changeC'
 
@@ -43,5 +44,5 @@ for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-
     ~/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/inject_sep${SEP}_${inject} ${EVEN_FILES} ${ODD_FILES}
 
     # Stage 2: pspec_2d_to_1d.py
-    ~/capo/pspec_pipeline/pspec_2d_to_1d.py --output ${DIRNAME}/inject_sep${SEP}_${inject}/ ${DIRNAME}/inject_sep${SEP}_${inject}/*pspec_oqe_2d*
+    ~/capo/pspec_pipeline/pspec_2d_to_1d.py ${FRF} ${NOFRFPATH} --output ${DIRNAME}/inject_sep${SEP}_${inject}/ ${DIRNAME}/inject_sep${SEP}_${inject}/*pspec_oqe_2d*
 done
