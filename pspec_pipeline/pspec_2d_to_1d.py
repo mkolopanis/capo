@@ -89,8 +89,8 @@ if args.frf:
         factors_fold = pspecs['err_factors'][:11] # XXX
         for key in pk_pspecs.keys():
             if key[-3:] == 'err':
-                if key[-8:] == 'fold_err': pk_pspecs[key] = pk_pspecs[key] * factors_fold
-                else: pk_pspecs[key] = pk_pspecs[key] * factor
+                if key[-8:] == 'fold_err': pk_pspecs[key] = file[key] * factors_fold
+                else: pk_pspecs[key] = file[key] * factor
 
 # Compute |k|
 bl_length = np.linalg.norm(pspecs['uvw'])
