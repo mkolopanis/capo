@@ -315,7 +315,7 @@ afreqs = freqs.take(chans)
 nchan = chans.size
 fq = n.average(afreqs)
 z = capo.pspec.f2z(fq)
-aa = a.cal.get_aa(opts.cal, afreqs)
+aa = a.cal.get_aa(opts.cal, freqs) # all freqs
 bls, conj = capo.red.group_redundant_bls(aa.ant_layout)
 sep2ij, blconj, bl2sep = capo.zsa.grid2ij(aa.ant_layout)
 jy2T = capo.pspec.jy2T(afreqs)
@@ -369,13 +369,15 @@ sep_type = bl2sep[a.miriad.ij2bl(ij[0], ij[1])]
 # convert uvw in light-nanoseconds to m, (cosmo_units.c in m/s)
 uvw = aa.get_baseline(ij[0], ij[1], src='z') * cosmo_units.c * 1e-9
 bins = fringe.gen_frbins(inttime)
-frp, bins = fringe.aa_to_fr_profile(aa, ij, len(afreqs) / 2, bins=bins)
+mychan = 101 # XXX use this to match frf_filter.py
+frp, bins = fringe.aa_to_fr_profile(aa, ij, mychan, bins=bins)
 timebins, firs = fringe.frp_to_firs(frp, bins, aa.get_freqs(),
-                                    fq0=aa.get_freqs()[len(afreqs) / 2])
+                                    fq0=aa.get_freqs()[mychan])
 fir = {(ij[0], ij[1], POL): firs}
 fir_conj = {} # fir for conjugated baselines
 for key in fir:
     fir_conj[key] = n.conj(fir[key])
+aa = a.cal.get_aa(opts.cal, afreqs) # aa is now subset of freqs, for use in apply_frf later
 
 # Acquire data
 data_dict_v = {}
@@ -422,6 +424,31 @@ nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
 # but the lsts returned is one array
 
+# Save error bar correction factor R
+N = len(lsts[lsts.keys()[0]]) 
+filt_len = len(frp) 
+err_factors = []
+for f,chan in enumerate(chans):
+    Rtop = n.zeros((N, N+filt_len-1), dtype='complex')
+    for i in range(N):
+        for j in range(N+filt_len-1):
+            index = j-i
+            if index > filt_len-1 or index < 0:
+                Rtop[i,j] = 0.
+            else:
+                Rtop[i,j] = fir[fir.keys()[0]][chan,:][index]
+    Rtop = Rtop[:, (filt_len-1)/2:-(filt_len-1)/2].T
+    weights = flg_dict[(flg_dict.keys()[0][0],(fir.keys()[0][0],fir.keys()[0][1]),fir.keys()[0][2])][:,f] # use same baseline that FIR was built off of for weights
+    Rbottom = n.convolve(weights, n.abs(fir[fir.keys()[0]][chan,:]), mode='same')
+    Rbot = n.zeros_like(Rtop)
+    for k in range(N):
+        Rbot[k,k] = 1./Rbottom[k]
+    Rfinal = n.dot(Rbot, Rtop)
+    factor = n.sqrt(n.trace(n.dot(Rfinal,n.dot(n.conj(Rfinal).T,n.dot(Rfinal,n.conj(Rfinal).T))))/N)
+    err_factors.append(factor)
+meanerr = n.mean(err_factors)
+err_factors = meanerr.repeat(n.array(err_factors).shape) # per k
+ 
 # Save some information
 cnt_full = stats[stats.keys()[0]]['cnt'][inds[stats.keys()[0]]]
 cnt_full = cnt_full[:, chans]
@@ -504,7 +531,7 @@ if INJECT_SIG > 0.:
     eij = n.tile(eij.flatten(), 3).reshape((3*nlst,nchan)) # add padding
     wij = n.ones(eij.shape, dtype=bool)
     eij_frf = fringe_rate_filter(aa, eij, wij, ij[0], ij[1], POL, bins, fir)
-    eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1], POL, bins, fir_conj)
+    eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1], POL, bins, fir_conj) # conjugated eor with conjugated FIR
     if opts.frf: # double frf eor
         eij_frf = fringe_rate_filter(aa, eij_frf, wij, ij[0], ij[1], POL, bins, fir)
         eij_conj_frf = fringe_rate_filter(aa, eij_conj_frf, wij, ij[0], ij[1], POL, bins, fir_conj)
@@ -516,7 +543,7 @@ if INJECT_SIG > 0.:
     data_dict_s = {}
     for key in data_dict_v:
         if conj_dict[key[1]] is True:
-            eorinject = n.conj(eor_conj)
+            eorinject = n.conj(eor_conj) # conjugate again, since when populating dse, the conj_dict knows whether it should be conjugated or not
         else:
             eorinject = eor
         # track eor in separate dict
@@ -546,7 +573,7 @@ if opts.changeC:
 gps = [bls_master[i::NGPS] for i in range(NGPS)] # used if grouping=True in make_PS
     # no repeated baselines between or within groups
 pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs = make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True)
-import IPython;IPython.embed()
+
 print '     Data:         pCv =', n.median(pCv.real),
 print 'pIv =', n.median(pIv.real)
 print '     EoR:          pCe =', n.median(pCe.real),
@@ -581,5 +608,5 @@ n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
         sep=sep_type, uvw=uvw,
         frf_inttime=frf_inttime, inttime=inttime,
         inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
-        cnt_eff=cnt_eff, nbls_eff=nbls_eff,
+        cnt_eff=cnt_eff, nbls_eff=nbls_eff, err_factors=err_factors,
         cmd=' '.join(sys.argv))
