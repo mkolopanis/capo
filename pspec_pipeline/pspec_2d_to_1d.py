@@ -70,6 +70,12 @@ pspecs['pCs-pCn'] = pspecs['pCs'] - pspecs['pCn']
 pspecs['pIr-pIv'] = pspecs['pIr'] - pspecs['pIv']
 pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 
+for key in pspecs:
+    if key[0] == 'p':
+        shape = pspecs[key].shape
+        indices = np.linspace(0, shape[2], Neff_lst, dtype='int', endpoint=False)
+        pspecs[key] = pspecs[key][:,:,indices] # down-selecting in time
+
 # compute Pk vs kpl vs bootstraps
 print "   Bootstrapping..."
 pk_pspecs, vals  = average_bootstraps(pspecs, Nt_eff=Neff_lst,
@@ -85,12 +91,10 @@ if args.frf:
     else:
         print '   Overwriting bootstrapped errors with non-FRF errors * correction factor...'
         file = np.load(args.nofrfpath)
-        factor = pspecs['err_factors']
-        factors_fold = pspecs['err_factors'][:11] # XXX
+        factor = pspecs['err_factor']
         for key in pk_pspecs.keys():
             if key[-3:] == 'err':
-                if key[-8:] == 'fold_err': pk_pspecs[key] = file[key] * factors_fold
-                else: pk_pspecs[key] = file[key] * factor
+                pk_pspecs[key] = file[key] * factor
 
 # Compute |k|
 bl_length = np.linalg.norm(pspecs['uvw'])
