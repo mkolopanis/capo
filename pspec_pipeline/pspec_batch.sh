@@ -3,6 +3,7 @@
 ### Sample Call ###
 #   $ pspec_batch.sh <path to LST-binned files> <directory name to save all outputs>
 
+
 #### Carina's PSA128 Options ###
 DATA=$1
 EVEN_FILES=${DATA}'/even/sep0,2/*I.uvGAL'
@@ -43,14 +44,9 @@ CHANGEC=''
 #LMODE='' #'--lmode=12'
 #CHANGEC='' #'--changeC'
 
+
 ### Carina's PSA64 Options ###
 
-#EVEN_FILES='/home/cacheng/capo/ctc/matt_data/lstbin_psa64_data_optimal/even/*uvGAL'
-#ODD_FILES='/home/cacheng/capo/ctc/matt_data/lstbin_psa64_data_optimal/odd/*uvGAL'
-#CALFILE='psa6240_v003'
-#CHAN='95_115'
-#SEP='0,1'
-#RA='.1_8.6'
 #-----------------------------------------------------------------
 
 # Make Power Spectrum Directory
