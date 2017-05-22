@@ -6,8 +6,8 @@
 
 seps='sep0,1 sep1,1 sep-1,1'
 cal=psa6240_v003
-out='/home/djacobs/psa64/lstbin_psa64_ali_optimal2/'
-appelation='uvGA'
+out='/home/djacobs/psa64/exp_vs_21cmsense/lstbin_psa64_Trcvr200_400s/'
+appelation='uvGAs'
 chan='101'
 
 scriptsdir=/home/djacobs/scripts
@@ -78,8 +78,10 @@ for path in $days; do
         else
             printf '%s/frf_filter.py -C %s   -a %s -c %s --bl_scale=%s --fr_width_scale=%s --outpath=%s/' $scriptsdir $cal ${ants[$sep]} $chan $bl_scale $fr_width ${out} 
             printf '%s\n' $path/$sep
-            "${scriptsdir}/frf_filter.py" -C $cal -a ${ants[$sep]}  --bl_scale $bl_scale \
-            --fr_width_scale=${fr_width} $files --outpath=${out} -c $chan  --maxfr=${maxfr} --pol=I
+ #           "${scriptsdir}/frf_filter.py" -C $cal -a ${ants[$sep]}  --bl_scale $bl_scale \
+#            --fr_width_scale=${fr_width} $files --outpath=${out} -c $chan  --maxfr=${maxfr} --pol=I
+             "${scriptsdir}/frf_filter.py" -C $cal -a ${ants[$sep]} -c $chan --outpath=${out} --pol=I --boxcar \
+             --teff=400 $files
 
         fi
     done
