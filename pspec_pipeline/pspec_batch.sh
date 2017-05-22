@@ -5,6 +5,8 @@
 
 
 #### Carina's PSA128 Options ###
+if True
+then
 DATA=$1
 EVEN_FILES=${DATA}'/even/sep0,2/*I.uvGAL'
 ODD_FILES=${DATA}'/odd/sep0,2/*I.uvGAL'
@@ -22,28 +24,28 @@ WINDOW='none'
 FRF='--frf'
 LMODE=''
 CHANGEC=''
-
+else
 ### psa64 Paths - enterprise ###
-#DATA=$1
-#EVEN_FILES=${DATA}'/even/sep0,1/*.uvGA'
-#ODD_FILES=${DATA}'/odd/sep0,1/*.uvGA'
-#DIRNAME=$2
+DATA=$1
+EVEN_FILES=${DATA}'/even/sep0,1/*.uvGA'
+ODD_FILES=${DATA}'/odd/sep0,1/*.uvGA'
+DIRNAME=$2
 
-### psa64 Options ###
-#RA='-0.1_8.6'
-#CALFILE='psa6240_v003'
-#EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
-#ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
-#SEP='0,1'
-#CHAN='95_115'
-#NBOOT=20
-#POL='I'
-#weight='I'
-#WINDOW='none'
-#FRF='--frf'
-#LMODE='' #'--lmode=12'
-#CHANGEC='' #'--changeC'
-
+## psa64 Options ###
+RA='-0.1_8.6'
+CALFILE='psa6240_v003'
+EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
+ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
+SEP='0,1'
+CHAN='95_115'
+NBOOT=20
+POL='I'
+weight='I'
+WINDOW='none'
+FRF='--frf'
+LMODE='' #'--lmode=12'
+CHANGEC='' #'--changeC'
+fi
 
 ### Carina's PSA64 Options ###
 
