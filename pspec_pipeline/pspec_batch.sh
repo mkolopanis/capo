@@ -3,13 +3,13 @@
 ### Sample Call ###
 #   $ pspec_batch.sh <path to LST-binned files> <directory name to save all outputs>
 
-#### My Paths ###
+#### psa128 Paths ###
 #DATA=$1
 #EVEN_FILES=${DATA}'/even/sep0,2/*I.uvGAL'
 #ODD_FILES=${DATA}'/odd/sep0,2/*I.uvGAL'
 #DIRNAME=$2
 #
-#### My Options ###
+#### psa128 Options ###
 #RA='1_10'
 #CALFILE='psa6622_v003'
 #EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
@@ -21,11 +21,13 @@
 #weight='L^-1'
 #WINDOW='none'
 #FRF='--frf'
+#LMODE='' #'--lmode=12'
+#CHANGEC='' #'--changeC'
 
 ### psa64 Paths - enterprise ###
 DATA=$1
-EVEN_FILES=${DATA}'/even/sep0,1/*.uvGA'
-ODD_FILES=${DATA}'/odd/sep0,1/*.uvGA'
+EVEN_FILES=${DATA}'/even/sep0,1/*.uvGAL'
+ODD_FILES=${DATA}'/odd/sep0,1/*.uvGAL'
 DIRNAME=$2
 
 ### psa64 Options ###
@@ -45,14 +47,7 @@ FRF='--frf'
 LMODE='' #'--lmode=12'
 CHANGEC='' #'--changeC'
 
-### PSA64 Options ###
 
-#EVEN_FILES='/home/cacheng/capo/ctc/matt_data/lstbin_psa64_data_optimal/even/*uvGAL'
-#ODD_FILES='/home/cacheng/capo/ctc/matt_data/lstbin_psa64_data_optimal/odd/*uvGAL'
-#CALFILE='psa6240_v003'
-#CHAN='95_115'
-#SEP='0,1'
-#RA='.1_8.6'
 #-----------------------------------------------------------------
 
 # Make Power Spectrum Directory
