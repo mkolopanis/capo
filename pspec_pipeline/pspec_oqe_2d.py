@@ -30,7 +30,9 @@ o.add_option('--sep', default='sep0,1', action='store',
 o.add_option('-i', '--inject', type='float', default=0.,
              help='EOR injection level.')
 o.add_option('--frf', action='store_true',
-             help='The data to be analyzed has been fringe-rate-filtered. Consequently, the injected EoR will be FRF twice and noise will be FRF once.')
+             help=('The data to be analyzed has been fringe-rate-filtered. '
+                   'Consequently, the injected EoR will be FRF twice '
+                   ' and noise will be FRF once.'))
 o.add_option('--output', type='string', default='',
              help='Output directory for pspec_boot files (default "")')
 o.add_option('--weight', type='string', default='L^-1',
@@ -43,20 +45,21 @@ o.add_option('--rmbls', dest='rmbls', type='string',
                    'to remove from the power spectrum analysis.'))
 o.add_option('--NGPS', type='int', default=5,
              help='Number of Groups used in bootstrapping (default 5)')
-o.add_option('--lmode',type='int', default=None,
-             help='Eigenvalue mode of C (in decreasing order) to be the minimum value used in C^-1')
+o.add_option('--lmode', type='int', default=None,
+             help=('Eigenvalue mode of C (in decreasing order) '
+                   'to be the minimum value used in C^-1'))
 o.add_option('--changeC', action='store_true',
-            help='Change covariance matrix C.')
+             help='Change covariance matrix C.')
 opts, args = o.parse_args(sys.argv[1:])
 
 # Basic parameters
-random.seed(0) # for oqe.py (eor generator)
-n.random.seed(0) # for noise generator
+random.seed(0)  # for oqe.py (eor generator)
+n.random.seed(0)  # for noise generator
 POL = opts.pol
 if POL == 'xx' or POL == 'yy': NPOL = 1
 else: NPOL = 2
 DELAY = False
-NGPS = opts.NGPS # number of groups to break the random sampled bls into
+NGPS = opts.NGPS  # number of groups to break the random sampled bls into
 PLOT = opts.plot
 INJECT_SIG = opts.inject
 LMODE = opts.lmode
@@ -85,21 +88,21 @@ def complex_noise(size, noiselev):
     return noise
 
 
-def make_noise(d, cnt, inttime, df): #, freqs, jy2T=None):
+def make_noise(d, cnt, inttime, df):  # , freqs, jy2T=None):
     """Create noise with T_rms matching data from T_rcvr and uv['cnt']."""
-    #if jy2T is None:
+    # if jy2T is None:
     #    jy2T = capo.pspec.jy2T(freqs)
     Tsys = 180. * n.power(afreqs/0.18, -2.55) + opts.Trcvr  # system temp in K
     Tsys *= 1e3  # system temp in mK
     Trms = Tsys/n.sqrt(df * 1e9 * inttime * cnt * NPOL)  # convert sdf to Hz
-                        # Bchan, inttime, counts (times 2 if even&odd), Npol
-    Vrms = Trms#/jy2T  # jy2T is in units of mK/Jy
+    # Bchan, inttime, counts (times 2 if even&odd), Npol
+    Vrms = Trms  # /jy2T  # jy2T is in units of mK/Jy
     # The following transposes are to create noise correlated in time not
     # frequency. Maybe there is a better way to do it?
     # The masking and filling is to be able to parallelize the noise draws
     # Setting the mask back later and filling zeros out where Vrms ~ inf or < 0
     size = Vrms.shape[0]
-    #if opts.frf: # triple size
+    # if opts.frf: # triple size
     #    Vrms = n.repeat(Vrms, 3, axis=0)
     Vrms = n.ma.masked_invalid(Vrms)
     Vrms.mask = n.ma.mask_or(Vrms.mask, Vrms.filled() < 0)
@@ -109,16 +112,19 @@ def make_noise(d, cnt, inttime, df): #, freqs, jy2T=None):
     noise.mask = Vrms.mask
     n.ma.set_fill_value(noise, 0 + 0j)
     noise = noise.filled()
-    #wij = n.ones(noise.shape, dtype=bool) # XXX flags are all true (times,freqs)
-    #if opts.frf: # FRF noise
+    # wij = n.ones(noise.shape, dtype=bool)
+    # XXX flags are all true (times,freqs)
+    # if opts.frf: # FRF noise
     #    noise = fringe_rate_filter(aa, noise, wij, ij[0], ij[1], POL, bins, fir)
-    #noise = noise[int(size):2*int(size),:]
-    #noise.shape = d.shape
+    # noise = noise[int(size):2*int(size),:]
+    # noise.shape = d.shape
     return noise
+
 
 def fringe_rate_filter(aa, dij, wij, i, j, pol, bins, fir):
     """ Apply frf."""
-    _d, _w, _, _ = fringe.apply_frf(aa, dij, wij, i, j, pol=pol, bins=bins, fir=fir)
+    _d, _w, _, _ = fringe.apply_frf(aa, dij, wij, i, j,
+                                    pol=pol, bins=bins, fir=fir)
     return _d
 
 
@@ -126,6 +132,7 @@ def make_eor(shape):  # Create and fringe rate filter noise
     """Generate White Noise and Apply FRF."""
     dij = oqe.noise(size=shape)
     return dij
+
 
 def make_PS(keys, ds, grouping=True):
     """Use OQE formalism to generate power spectrum.
@@ -144,7 +151,7 @@ def make_PS(keys, ds, grouping=True):
     qI = n.zeros((nchan, nlst), dtype=n.complex)
     qC = n.zeros((nchan, nlst), dtype=n.complex)
     for k, key1 in enumerate(newkeys):
-        #print '   ',k+1,'/',len(newkeys)
+        # print '   ',k+1,'/',len(newkeys)
         for key2 in newkeys[k:]:
             if key1[0] == key2[0] or key1[1] == key2[1]:
                 continue  # don't do even w/even or bl w/same bl
@@ -194,9 +201,12 @@ def make_PS(keys, ds, grouping=True):
 def change_C(keys, ds):
     newC = {}
     for key in keys:
-        newC[key] = ds.C(key) * n.identity(len(ds.C(key))) # identity multiplication
-        #newC[key] = ds.C(key) + n.identity(len(ds.C(key)))*10000.0 # identity addition
+        # identity multiplication
+        newC[key] = ds.C(key) * n.identity(len(ds.C(key)))
+        # identity addition
+        # newC[key] = ds.C(key) + n.identity(len(ds.C(key)))*10000.0
     return newC
+
 
 def cov(m):
     """Compute Complex Covariance.
@@ -300,8 +310,9 @@ sys.stdout.flush()
 antstr = 'cross'
 _, blconj, _ = zsa.grid2ij(aa.ant_layout)
 days = dsets.keys()
-s,d,f = capo.miriad.read_files([dsets[days[0]][0]], antstr=antstr, polstr=POL) # read first file
-ij = d.keys()[0] # use first baseline
+s, d, f = capo.miriad.read_files([dsets[days[0]][0]], antstr=antstr,
+                                 polstr=POL)  # read first file
+ij = d.keys()[0]  # use first baseline
 if blconj[a.miriad.ij2bl(ij[0], ij[1])]:
     # makes sure FRP will be the same whether bl is a conjugated one or not
     if ij[0] < ij[1]:
@@ -315,7 +326,7 @@ frp, bins = fringe.aa_to_fr_profile(aa, ij, len(afreqs) / 2, bins=bins)
 timebins, firs = fringe.frp_to_firs(frp, bins, aa.get_freqs(),
                                     fq0=aa.get_freqs()[len(afreqs) / 2])
 fir = {(ij[0], ij[1], POL): firs}
-fir_conj = {} # fir for conjugated baselines
+fir_conj = {}  # fir for conjugated baselines
 for key in fir:
     fir_conj[key] = n.conj(fir[key])
 
@@ -340,9 +351,9 @@ for k in days:
         print '\n'
     print 'Generating noise for day: ' + str(k)
     for bl in data[k]:
-        d = n.array(data[k][bl][POL])[:, chans] * jy2T # extract freq range
+        d = n.array(data[k][bl][POL])[:, chans] * jy2T  # extract freq range
         n_ = make_noise(d, stats[k]['cnt'][:, chans], inttime, sdf)
-        flg = n.array(flgs[k][bl][POL])[:, chans] # extract freq range
+        flg = n.array(flgs[k][bl][POL])[:, chans]  # extract freq range
         key = (k, bl, POL)
         data_dict_v[key] = d
         data_dict_n[key] = n_
@@ -378,15 +389,20 @@ if opts.frf:
     print 'Fringe-rate-filtering noise'
     for key in data_dict_n:
         size = data_dict_n[key].shape[0]
-        #nij = n.repeat(data_dict_n[key], 3, axis=0) #we shouldn't be doing this line, check that this still agrees
-        #if it doesn't agree it means we need to somehow incorporate lst samples from outside the input range.
+        # we shouldn't be doing this line, check that this still agrees
+        # nij = n.repeat(data_dict_n[key], 3, axis=0)
+        # if it doesn't agree it means we need to somehow incorporate
+        # lst samples from outside the input range.
         nij = data_dict_n[key].copy()
         wij = n.ones(nij.shape, dtype=bool)
-        if conj_dict[key[1]] is True: # apply frf using the conj of data and the conj fir
-            nij_frf = fringe_rate_filter(aa, n.conj(nij), wij, ij[0], ij[1], POL, bins, fir_conj)
+        if conj_dict[key[1]] is True:
+            # apply frf using the conj of data and the conj fir
+            nij_frf = fringe_rate_filter(aa, n.conj(nij), wij, ij[0], ij[1],
+                                         POL, bins, fir_conj)
         else:
-            nij_frf = fringe_rate_filter(aa, nij, wij, ij[0], ij[1], POL, bins, fir)
-        #data_dict_n[key] = nij_frf[size:2*size,:]
+            nij_frf = fringe_rate_filter(aa, nij, wij, ij[0], ij[1],
+                                         POL, bins, fir)
+        # data_dict_n[key] = nij_frf[size:2*size,:]
         data_dict_n[key] = nij_frf.copy()
 
 # Conjugate noise if needed
@@ -406,17 +422,16 @@ if opts.changeC:
     newCn = change_C(keys, dsn)
     dsn.set_C(newCn)
 
-"""
-n_to_save = {}
-v_to_save = {}
-for kk in data_dict_n:
-    n_to_save[str(kk)] = data_dict_n[kk]
-    v_to_save[str(kk)] = data_dict_v[kk]
-print 'Saving Noise_Dataset.npz and Data_Dataset.npz'
-n.savez('Noise_Dataset.npz', **n_to_save)
-n.savez('Data_Dataset.npz', **v_to_save)
-sys.exit()
-"""
+# n_to_save = {}
+# v_to_save = {}
+# for kk in data_dict_n:
+    # n_to_save[str(kk)] = data_dict_n[kk]
+    # v_to_save[str(kk)] = data_dict_v[kk]
+# print 'Saving Noise_Dataset.npz and Data_Dataset.npz'
+# n.savez('Noise_Dataset.npz', **n_to_save)
+# n.savez('Data_Dataset.npz', **v_to_save)
+# sys.exit()
+
 if PLOT and False:
     for key in keys:
         p.subplot(311)
@@ -455,16 +470,22 @@ for boot in xrange(opts.nboot):
         print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
         eij = make_eor((nlst*3, nchan))
         size = nlst
-        #eij = n.repeat(eij, 3, axis=0) #NB: This repeat is incorrect, correct thing is simulate 3x as much time in make_eor
+        # eij = n.repeat(eij, 3, axis=0)
+        # NB: This repeat is incorrect
+        # correct thing is simulate 3x as much time in make_eor
         wij = n.ones(eij.shape, dtype=bool)
-        eij_frf = fringe_rate_filter(aa, eij, wij, ij[0], ij[1], POL, bins, fir)
-        eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1], POL, bins, fir_conj)
-        if opts.frf: # double frf eor
-            eij_frf = fringe_rate_filter(aa, eij_frf, wij, ij[0], ij[1], POL, bins, fir)
-            eij_conj_frf = fringe_rate_filter(aa, eij_conj_frf, wij, ij[0], ij[1], POL, bins, fir_conj)
+        eij_frf = fringe_rate_filter(aa, eij, wij, ij[0], ij[1],
+                                     POL, bins, fir)
+        eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1],
+                                          POL, bins, fir_conj)
+        if opts.frf:  # double frf eor
+            eij_frf = fringe_rate_filter(aa, eij_frf, wij, ij[0], ij[1],
+                                         POL, bins, fir)
+            eij_conj_frf = fringe_rate_filter(aa, eij_conj_frf, wij, ij[0],
+                                              ij[1], POL, bins, fir_conj)
 
-        eor = eij_frf[size:2*size,:]*INJECT_SIG
-        eor_conj = eij_conj_frf[size:2*size,:]*INJECT_SIG
+        eor = eij_frf[size: 2*size, :]*INJECT_SIG
+        eor_conj = eij_conj_frf[size:2*size, :]*INJECT_SIG
         data_dict_r = {}
         data_dict_e = {}
         data_dict_s = {}
