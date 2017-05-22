@@ -380,6 +380,7 @@ if opts.frf:
         size = data_dict_n[key].shape[0]
         #nij = n.repeat(data_dict_n[key], 3, axis=0) #we shouldn't be doing this line, check that this still agrees
         #if it doesn't agree it means we need to somehow incorporate lst samples from outside the input range.
+        nij = data_dict_n[key].copy()
         wij = n.ones(nij.shape, dtype=bool)
         if conj_dict[key[1]] is True: # apply frf using the conj of data and the conj fir
             nij_frf = fringe_rate_filter(aa, n.conj(nij), wij, ij[0], ij[1], POL, bins, fir_conj)

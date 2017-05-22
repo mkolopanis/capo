@@ -56,7 +56,7 @@ pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 
 # compute Pk vs kpl vs bootstraps
 pk_pspecs, vals  = average_bootstraps(pspecs, Nt_eff=Neff_lst,
-                                     Nboots=args.nboots, avg_func=np.median)
+                                     Nboots=args.nboots, avg_func=np.mean)
 print 'Saving pspec_2d_to_1d.npz'  # save all values used in bootstrapping
 np.savez(args.output + 'pspec_2d_to_1d.npz', **vals)
 
