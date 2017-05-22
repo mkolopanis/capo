@@ -477,13 +477,15 @@ if opts.frf:
     print 'Fringe-rate-filtering noise'
     for key in data_dict_n:
         size = data_dict_n[key].shape[0]
-        nij = n.tile(data_dict_n[key].flatten(), 3).reshape((3*size,nchan)) # add padding
+        #nij = n.tile(data_dict_n[key].flatten(), 3).reshape((3*size,nchan)) # add padding
+        nij = data_dict_n[key].copy()
         wij = n.ones(nij.shape, dtype=bool)
         if conj_dict[key[1]] is True: # apply frf using the conj of data and the conj fir
             nij_frf = fringe_rate_filter(aa, n.conj(nij), wij, ij[0], ij[1], POL, bins, fir_conj)
         else:
             nij_frf = fringe_rate_filter(aa, nij, wij, ij[0], ij[1], POL, bins, fir)
-        data_dict_n[key] = nij_frf[size:2*size,:]
+        #data_dict_n[key] = nij_frf[size:2*size,:]
+        data_dict_n[key] = nij_frf.copy()
 
 # Conjugate noise if needed
 for key in data_dict_n:
@@ -536,9 +538,9 @@ if PLOT and False:
 # Create fake eor signal    
 if INJECT_SIG > 0.: 
     print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
-    eij = make_eor((nlst, nchan))
+    eij = make_eor((nlst*3, nchan))
     size = nlst
-    eij = n.tile(eij.flatten(), 3).reshape((3*nlst,nchan)) # add padding
+    #eij = n.tile(eij.flatten(), 3).reshape((3*nlst,nchan)) # add padding
     wij = n.ones(eij.shape, dtype=bool)
     eij_frf = fringe_rate_filter(aa, eij, wij, ij[0], ij[1], POL, bins, fir)
     eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1], POL, bins, fir_conj) # conjugated eor with conjugated FIR
