@@ -15,10 +15,12 @@ o.add_option('--plot',action='store_true',
             help='Show plots.')
 o.add_option('--skip_sigloss',action='store_true',
             help='Save values without correcting for signal loss.')
+o.add_option('--sep',default='0,2',
+            help='Separation to run script for.')
 opts,args = o.parse_args(sys.argv[1:])
 
 # read one pspec_pk_k3pk.npz file for data points
-file = n.load(glob.glob('inject_*')[0]+'/pspec_pk_k3pk.npz')
+file = n.load(glob.glob('inject_sep'+opts.sep+'*')[0]+'/pspec_pk_k3pk.npz')
 pCv = n.abs(file['pCv']); pCv_fold = n.abs(file['pCv_fold'])
 pCv_err = file['pCv_err']; pCv_fold_err = n.abs(file['pCv_fold_err'])
 pIv = n.abs(file['pIv']); pIv_fold = n.abs(file['pIv_fold'])
@@ -47,7 +49,7 @@ for count in range(2):
     pIs = {}; pIs_fold = {}
     alphas = {}; alphas_fold = {}
     alphas_I = {}; alphas_I_fold = {}
-    for inject in glob.glob('inject_*'):
+    for inject in glob.glob('inject_sep'+opts.sep+'*'):
         print 'Reading', inject
         file_2d = n.load(inject + '/pspec_2d_to_1d.npz')
         if count == 1: # noise case
@@ -318,8 +320,8 @@ for key in generator:
     meta_data[key] = [file[key]]
 """
 
-print '   Saving pspec_final.npz'  # XXX 2-sigma probability is hard-coded
-n.savez('pspec_final.npz', kpl=kpl, k=file['k'], freq=file['freq'],
+print '   Saving pspec_final_sep'+opts.sep+'.npz'  # XXX 2-sigma probability is hard-coded
+n.savez('pspec_final_sep'+opts.sep+'.npz', kpl=kpl, k=file['k'], freq=file['freq'],
         pC=pCv, pC_up=2 * pCv_err,
         pC_fold=pCv_fold, pC_fold_up=2 * pCv_fold_err,
         pI=pIv, pI_up=2 * pIv_err,
