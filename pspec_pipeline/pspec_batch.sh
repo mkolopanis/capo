@@ -5,7 +5,7 @@
 
 
 #### Carina's PSA128 Options ###
-if True
+if false
 then
 DATA=$1
 EVEN_FILES=${DATA}'/even/sep0,2/*I.uvGAL'
@@ -27,8 +27,8 @@ CHANGEC=''
 else
 ### psa64 Paths - enterprise ###
 DATA=$1
-EVEN_FILES=${DATA}'/even/sep0,1/*.uvGA'
-ODD_FILES=${DATA}'/odd/sep0,1/*.uvGA'
+EVEN_FILES=${DATA}'/even/sep0,1/*.uvGAL'
+ODD_FILES=${DATA}'/odd/sep0,1/*.uvGAL'
 DIRNAME=$2
 
 ## psa64 Options ###
