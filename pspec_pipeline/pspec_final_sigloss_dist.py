@@ -17,10 +17,15 @@ o.add_option('--skip_sigloss',action='store_true',
             help='Save values without correcting for signal loss.')
 o.add_option('--sep',default='0,2',
             help='Separation to run script for.')
+o.add_option('--final',action='store_true',
+            help='Read final files.')
 opts,args = o.parse_args(sys.argv[1:])
 
 # read one pspec_pk_k3pk.npz file for data points
-file = n.load(glob.glob('inject_sep'+opts.sep+'*')[0]+'/pspec_pk_k3pk.npz')
+if opts.final:
+    file = n.load(glob.glob('inject_sep'+opts.sep+'*')[0]+'/pspec_pk_k3pk_final.npz')
+else:
+    file = n.load(glob.glob('inject_sep'+opts.sep+'*')[0]+'/pspec_pk_k3pk.npz')
 pCv = n.abs(file['pCv']); pCv_fold = n.abs(file['pCv_fold'])
 pCv_err = file['pCv_err']; pCv_fold_err = n.abs(file['pCv_fold_err'])
 pIv = n.abs(file['pIv']); pIv_fold = n.abs(file['pIv_fold'])
@@ -51,7 +56,10 @@ for count in range(2):
     alphas_I = {}; alphas_I_fold = {}
     for inject in glob.glob('inject_sep'+opts.sep+'*'):
         print 'Reading', inject
-        file_2d = n.load(inject + '/pspec_2d_to_1d.npz')
+        if opts.final:
+            file_2d = n.load(inject + '/pspec_2d_to_1d_final.npz')
+        else:
+            file_2d = n.load(inject + '/pspec_2d_to_1d.npz')
         if count == 1: # noise case
             Pout = n.abs(file_2d['pCs-pCn']); Pout_fold = n.abs(file_2d['pCs-pCn_fold'])
             Pout_I = n.abs(file_2d['pIs-pIn']); Pout_I_fold = n.abs(file_2d['pIs-pIn_fold'])
@@ -323,8 +331,12 @@ for key in generator:
     meta_data[key] = [file[key]]
 """
 
-print '   Saving pspec_final_sep'+opts.sep+'.npz'  # XXX 2-sigma probability is hard-coded
-n.savez('pspec_final_sep'+opts.sep+'.npz', kpl=kpl, k=file['k'], freq=file['freq'],
+if opts.final:
+    outname = 'pspec_final_sep'+opts.sep+'_final.npz'
+else:
+    outname = 'pspec_final_sep'+opts.sep+'.npz'
+print '   Saving', outname # XXX 2-sigma probability is hard-coded
+n.savez(outname, kpl=kpl, k=file['k'], freq=file['freq'],
         pC=pCv, pC_up=2 * pCv_err,
         pC_fold=pCv_fold, pC_fold_up=2 * pCv_fold_err,
         pI=pIv, pI_up=2 * pIv_err,
@@ -339,6 +351,7 @@ n.savez('pspec_final_sep'+opts.sep+'.npz', kpl=kpl, k=file['k'], freq=file['freq
         alphaCv_fold=sigfactors_fold, alphaIv_fold=sigfactors_I_fold,
         alphaCn_fold=sigfactors_noise_fold,
         alphaIn_fold=sigfactors_noise_I_fold,
-        cnt_eff=file['cnt_eff'], nbls_eff=file['nbls_eff'], lsts=file['lsts'], 
-        frf_inttime=file['frf_inttime'], inttime=file['inttime'], afreqs=file['afreqs'],
+        cnt_eff=file['cnt_eff'], nbls_eff=file['nbls_eff'], nbls=file['nbls'], 
+        lsts=file['lsts'], afreqs=file['afreqs'],
+        frf_inttime=file['frf_inttime'], inttime=file['inttime'], 
         cmd=file['cmd'].item() + ' \n '+' '.join(sys.argv))
