@@ -226,7 +226,13 @@ for chan_range in args.chan:
                                for data in data_grouped[k]]
             # average over groups for easie
             # FFT fo k-space
-            power_grouped[k] = np.fft.ifft(np.conj(data_grouped[k]), axis=-1)
+            if False:
+                window = ap.dsp.gen_window(np.array(data_grouped[k]).shape[-1],window='blackman-harris')
+                norm = np.sqrt(np.mean(window**2)) #normalize the window so that power is conserved
+                window /= norm
+                power_grouped[k] = np.fft.ifft(np.conj(data_grouped[k]*window), axis=-1)
+            else:
+                power_grouped[k] = np.fft.ifft(np.conj(data_grouped[k]), axis=-1)
             power_grouped[k] = np.fft.ifftshift(power_grouped[k], axes=-1)
 
         count = 0
@@ -251,8 +257,8 @@ for chan_range in args.chan:
         # bl = np.random.choice(args.nboots, replace=True)
         # times = np.random.choice(Nt_eff, Nt_eff, replace=False)
         pos_neg = np.random.choice(1)
-        # median over times
-        tmp_pspec = np.median(power_specs[boot][::dlst], axis=0)
+        # avg over times
+        tmp_pspec = np.mean(power_specs[boot][::dlst], axis=0)
         averaged_pspecs.append(tmp_pspec)
         # split into pos and neg arrays, reverse the neg array so magnitude of
         # kpl increases
