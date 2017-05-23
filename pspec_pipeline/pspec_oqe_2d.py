@@ -148,17 +148,20 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True):
         dsIe, dsCe = dse, dse
         dsIr, dsCr = dsr, dsr
         dsIs, dsCs = dss, dss
-
     pCvs = []; pIvs = []
     pCns = []; pIns = []
     pCes = []; pIes = []
     pCrs = []; pIrs = []
     pCss = []; pIss = []
     for k, key1 in enumerate(newkeys):
-        print '   ',k+1,'/',len(newkeys)
+        if k == 1 and len(newkeys) == 2: # NGPS = 1 (skip 'odd' with 'even' if we already did 'even' with 'odd')
+            continue
+        #print '   ',k+1,'/',len(newkeys)
         for key2 in newkeys[k:]:
-            if key1[0] == key2[0] or key1[1] == key2[1]:
-                continue  # don't do even w/even or bl w/same bl
+            if len(newkeys) > 2 and (key1[0] == key2[0] or key1[1] == key2[1]): # NGPS > 1
+                continue  # don't do even w/even or bl w/same bl 
+            if key1[0] == key2[0]: # don't do 'even' with 'even', for example
+                continue
             else:
                 FCv = dsCv.get_F(key1, key2, cov_flagging=False)
                 FIv = dsIv.get_F(key1, key2, use_cov=False, cov_flagging=False)
@@ -214,7 +217,6 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True):
                 pIs = dsIs.p_hat(MIs, qIs, scalar=scalar)
                 pCss.append(pCs)
                 pIss.append(pIs)
-
     if PLOT:
         p.subplot(121)
         capo.arp.waterfall(FCv, drng=4)
@@ -423,7 +425,7 @@ data_dict_n = oqe.lst_align_data(inds, dsets=data_dict_n)[0]
 nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
 # but the lsts returned is one array
-
+"""
 # Save error bar correction factor R
 N = len(lsts[lsts.keys()[0]]) 
 filt_len = len(frp) 
@@ -458,6 +460,8 @@ for c1 in range(Rs.shape[0]):
             factor = n.sqrt(n.trace(n.dot(Rs[c1],n.dot(n.conj(Rs[c1]).T,n.dot(Rs[c2],n.conj(Rs[c2]).T))))/N)
             err_factors.append(factor)
 err_factor = n.sum(err_factors)/len(err_factors) # a single number
+"""
+err_factor = n.ones_like(chans)
 
 # Save some information
 cnt_full = stats[stats.keys()[0]]['cnt'][inds[stats.keys()[0]]]
@@ -471,6 +475,7 @@ if True: # grouping
     nbls_eff = N / n.sqrt(2) * n.sqrt(1. - 1./NGPS)
 else: # no grouping 
     nbls_eff = N * (n.sqrt((N**2 - N)/2.)/(n.sqrt(N**2))) 
+nbls = N/NGPS # rounds down to integer
 
 # Fringe-rate filter noise
 if opts.frf:
@@ -609,10 +614,16 @@ if PLOT:
     p.show()
 
 # Save Output
-if len(opts.output) > 0:
-    outpath = opts.output + '/pspec_oqe_2d.npz' 
+if opts.NGPS == 1:
+    if len(opts.output) > 0:
+        outpath = opts.output + '/pspec_oqe_2d_final.npz'
+    else:
+        outpath = 'pspec_oqe_2d_final.npz'
 else:
-    outpath = 'pspec_oqe_2d.npz' 
+    if len(opts.output) > 0:
+        outpath = opts.output + '/pspec_oqe_2d.npz' 
+    else:
+        outpath = 'pspec_oqe_2d.npz' 
 print '   Writing ' + outpath
 n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
         pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe,
@@ -620,5 +631,5 @@ n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
         sep=sep_type, uvw=uvw,
         frf_inttime=frf_inttime, inttime=inttime,
         inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
-        cnt_eff=cnt_eff, nbls_eff=nbls_eff, err_factor=err_factor.real,
-        cmd=' '.join(sys.argv))
+        cnt_eff=cnt_eff, nbls_eff=nbls_eff, nbls=nbls, 
+        err_factor=err_factor.real, cmd=' '.join(sys.argv))
