@@ -642,7 +642,12 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
             vals[outname] = Z.data #bboots.data
             # power spectrum is the mean and std dev over scramble dimension
             outdata[outname] = n.ma.average(Z, axis=0)
-            outdata[outname + '_err'] = n.std(Z, axis=0)
+            # === over-write errors by taking std across bl&time axes 
+            flat = indata[inname] 
+            flat = flat.swapaxes(0,1).reshape((flat.shape[1], flat.shape[0]*flat.shape[2]))
+            outdata[outname + '_err'] = n.std(flat, axis=1)
+            # ===
+            #outdata[outname + '_err'] = n.std(Z, axis=0)
             #outdata[outname + '_err'] = n.ma.array((n.percentile(Z, 95, axis=0))) / 2 # effective 1-sigma derived from 2-sigma 
             # also do the folded version
             outname += '_fold'
@@ -652,7 +657,10 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
             Z = scramble_avg_bootstrap_array_v3(X, func=avg_func, Nboots=Nboots)
             vals_fold[outname] = Z.data
             outdata[outname] = n.ma.average(Z, axis=0)
-            outdata[outname + '_err'] = n.std(Z, axis=0)
+            flat = X
+            flat = flat.swapaxes(0,1).reshape((flat.shape[1], flat.shape[0]*flat.shape[2]))
+            outdata[outname + '_err'] = n.std(flat, axis=1)
+            #outdata[outname + '_err'] = n.std(Z, axis=0)
             #outdata[outname + '_err'] = n.ma.array((n.percentile(Z, 95, axis=0))) / 2
             outdata['kpl_fold'] = kpl_fold
 
@@ -675,6 +683,7 @@ def scramble_avg_bootstrap_array(X, Nt_eff=10, Nboots=100, func=n.median):
     """
     bboots = []
     for i in xrange(Nboots):
+        n.random.seed(i) # seeded by boot index
         times_i = n.random.choice(X.shape[-1], Nt_eff, replace=True)
         bs_i = n.random.choice(X.shape[0], Nt_eff, replace=True)
         bboots.append(X[bs_i, :, times_i].squeeze().T)
@@ -689,6 +698,7 @@ def scramble_avg_bootstrap_array_v2(X, func=n.median):
     """
     bboots = []
     for j in range(X.shape[0]):
+        n.random.seed(j) # seeded by boot index
         times_i = n.random.choice(X.shape[-1], 1000, replace=True) #XXX 1000 is chosen arbitrarily, but any large number should converge on the same answer
         if func == n.median: bboots.append(pspec_median(X[j, :, times_i], axis=0))
         else: bboots.append(func(X[j, :, times_i], axis=0))
@@ -701,6 +711,7 @@ def scramble_avg_bootstrap_array_v3(X, func=n.median, Nboots=100):
     bboots = []
     X = X.swapaxes(0,1).reshape((X.shape[1], X.shape[0]*X.shape[2])) # reshape to (k, bl*time)
     for i in range(Nboots):
+        n.random.seed(i) # seeded by boot index
         choice = n.random.choice(X.shape[1], X.shape[1], replace=True)
         if func == n.median: bboots.append(pspec_median(X[:, choice], axis=1))
         else: bboots.append(func(X[:, choice], axis=1))

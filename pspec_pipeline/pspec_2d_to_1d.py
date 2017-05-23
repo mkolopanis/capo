@@ -80,9 +80,14 @@ pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 print "   Bootstrapping..."
 pk_pspecs, vals  = average_bootstraps(pspecs, Nt_eff=Neff_lst,
                                      Nboots=args.nboots, avg_func=np.mean)
-print '   Saving pspec_2d_to_1d.npz'  # save all values used in bootstrapping
-np.savez(args.output + 'pspec_2d_to_1d.npz', **vals)
+if args.files[0][-9:] == 'final.npz':
+    outname = 'pspec_2d_to_1d_final.npz'
+else: 
+    outname = 'pspec_2d_to_1d.npz'
+print '   Saving', outname  # save all values used in bootstrapping
+np.savez(args.output + outname, **vals)
 
+"""
 # correct errors in FRF case
 if args.frf:
     if args.nofrfpath == None:
@@ -95,7 +100,7 @@ if args.frf:
         for key in pk_pspecs.keys():
             if key[-3:] == 'err':
                 pk_pspecs[key] = file[key] * factor
-
+"""
 # Compute |k|
 bl_length = np.linalg.norm(pspecs['uvw'])
 wavelength = cosmo_units.c / (pspecs['freq'] * 1e9)
@@ -110,6 +115,9 @@ for key in pk_pspecs.keys():
     if isinstance(pk_pspecs[key], np.ma.MaskedArray):
         pk_pspecs[key].fill_value = 0  # fills invalid values with 0's
         pk_pspecs[key] = pk_pspecs[key].filled()  # returns corrected array
-
-print '   Saving', args.output + 'pspec_pk_k3pk.npz'
-np.savez(args.output + 'pspec_pk_k3pk.npz', **pk_pspecs)
+if args.files[0][-9:] == 'final.npz':
+    filename = args.output + 'pspec_pk_k3pk_final.npz'
+else:
+    filename = args.output + 'pspec_pk_k3pk.npz'
+print '   Saving', filename
+np.savez(filename, **pk_pspecs)
