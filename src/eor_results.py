@@ -56,8 +56,7 @@ def load_andre_models():
 
 
 def all_and(arrays):
-    """Input list or array, return arrays added together.
-    """
+    """Input list or array, return arrays added together."""
     if len(arrays) == 1:
         return arrays
     out = arrays[0]
@@ -208,20 +207,21 @@ def MWA_128_all():
 
     return results
 
-def MWA_128_beards():
-    """MWA_128 data from Beardsley 2016.
 
-def z_slice(redshift, pspec_data):
-    """
+def MWA_128_beards():
+    """MWA_128 data from Beardsley 2016."""
     MWA_beards = {}
     MWA_beards[7.1] = n.array([[0.27, 0, 2.7e4, 0]])
     MWA_beards[6.8] = n.array([[0.24, 0, 3.02e4, 0]])
     MWA_beards[6.5] = n.array([[0.24, 0, 3.22e4, 0]])
     return MWA_beards
 
-def z_slice(redshift,pspec_data):
+
+def z_slice(redshift, pspec_data):
     """
-    input a power spectrum data dict output of MWA_32T_all() or GMRT_2014_all()
+    Cut power spectrum along redshift.
+
+    Input a power spectrum data dict output of MWA_32T_all() or GMRT_2014_all()
     returns a slice along k for the input redshift
     example
     z,pspec[k,k3pK] = z_slice(MWA_32T_all())
@@ -586,8 +586,9 @@ def read_bootstraps_dcj(filenames, verbose=False):
             except(KeyError):
                 accumulated_power_spectra[thing] = [F[thing]]
     power_spectrum_channels = ['pC', 'pI', 'err', 'pCv', 'var', 'pIv',
-                               'pCe', 'pIe', 'pIr', 'pCr', 'pCr-pCv', 'pIr-pIv',
-                               'pCn', 'pIn', 'pCs', 'pIs', 'pCs-pCn', 'pIs-pIn']
+                               'pCe', 'pIe', 'pIr', 'pCr', 'pCr-pCv',
+                               'pIr-pIv', 'pCn', 'pIn', 'pCs', 'pIs',
+                               'pCs-pCn', 'pIs-pIn']
     # stack up the various power spectrum channels
     for key in accumulated_power_spectra:
         if key in power_spectrum_channels:
@@ -628,7 +629,7 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
                       'pIs-pIn': 'pIs-pIn',
                       'pIr-pIv': 'pIr-pIv'}
     outdata = {}
-    vals = {} # for all values  
+    vals = {}  # for all values
     vals_fold = {}
     for inname in indata:
         if inname in pspec_channels.keys():
@@ -636,24 +637,25 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
             # scramble the times and bootstraps.
             # Average over new time dimension
             # only draw as many times as we have independent lsts (Nt_eff)
-            #Z = scramble_avg_bootstrap_array(indata[inname], Nt_eff=Nt_eff,
+            # Z = scramble_avg_bootstrap_array(indata[inname], Nt_eff=Nt_eff,
             #                                 func=avg_func, Nboots=Nboots)
             Z = scramble_avg_bootstrap_array_v2(indata[inname], func=avg_func)
-            vals[outname] = Z.data #bboots.data
+            vals[outname] = Z.data  # bboots.data
             # power spectrum is the mean and std dev over scramble dimension
             outdata[outname] = n.ma.average(Z, axis=0)
             outdata[outname + '_err'] = n.std(Z, axis=0)
-            #outdata[outname + '_err'] = n.ma.array((n.percentile(Z, 95, axis=0))) / 2 # effective 1-sigma derived from 2-sigma 
-            # also do the folded version
+            # outdata[outname + '_err'] = n.ma.array((n.percentile(Z, 95, axis=0))) / 2 # effective 1-sigma derived from 2-sigma
+
+            # Repeat Scramble and averaging for folded data
             outname += '_fold'
             kpl_fold, X = split_stack_kpl(indata[inname], indata['kpl'])
-            #Z = scramble_avg_bootstrap_array(X, Nt_eff=Nt_eff, func=avg_func,
+            # Z = scramble_avg_bootstrap_array(X, Nt_eff=Nt_eff, func=avg_func,
             #                                 Nboots=Nboots)
             Z = scramble_avg_bootstrap_array_v2(X, func=avg_func)
             vals_fold[outname] = Z.data
             outdata[outname] = n.ma.average(Z, axis=0)
             outdata[outname + '_err'] = n.std(Z, axis=0)
-            #outdata[outname + '_err'] = n.ma.array((n.percentile(Z, 95, axis=0))) / 2
+            # outdata[outname + '_err'] = n.ma.array((n.percentile(Z, 95, axis=0))) / 2
             outdata['kpl_fold'] = kpl_fold
 
         else:
@@ -661,9 +663,12 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
     vals.update(vals_fold)
     return outdata, vals
 
+
 def pspec_median(X, axis=0):
-    factor = 1/n.log(2) # median correction factor
+    """Take median and correct with 1/log(2) factor."""
+    factor = 1/n.log(2)  # median correction factor
     return n.median(X*factor, axis=axis)
+
 
 def scramble_avg_bootstrap_array(X, Nt_eff=10, Nboots=100, func=n.median):
     """Perform scramble accumulation of times and bootstraps.
@@ -682,18 +687,25 @@ def scramble_avg_bootstrap_array(X, Nt_eff=10, Nboots=100, func=n.median):
     if func == n.median: return pspec_median(bboots, axis=-1)
     else: return func(bboots, axis=-1)
 
+
 def scramble_avg_bootstrap_array_v2(X, func=n.median):
-    """For every bootstrap file, choose random times and 
+    """
+    Random average only over time.
+
+    For every bootstrap file, choose random times and
     apply func to the result (default is numpy.median)
     Assumes input array dimensions (nbootstraps,nks,ntimes)
     """
     bboots = []
     for j in range(X.shape[0]):
-        times_i = n.random.choice(X.shape[-1], 1000, replace=True) #XXX 1000 is chosen arbitrarily, but any large number should converge on the same answer
+        times_i = n.random.choice(X.shape[-1], 1000, replace=True)
+        # XXX 1000 is chosen arbitrarily
+        # but any large number should converge on the same answer
         if func == n.median: bboots.append(pspec_median(X[j, :, times_i], axis=0))
         else: bboots.append(func(X[j, :, times_i], axis=0))
     bboots = n.ma.masked_invalid(n.array(bboots))
     return bboots
+
 
 def split_stack_kpl(X, kpl):
     """Split input array at kpl=0 and fold.

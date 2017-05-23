@@ -24,12 +24,13 @@ parser.add_argument('--output', type=str, default='./',
 parser.add_argument('--nboots', type=int, default=100,
                     help='Number of Bootstraps (averages) default=100')
 parser.add_argument('--Neff_lst', default=None,
-                    help='Number of effective LSTs. If none (default), it is calculated using Nlstbins and t_eff.')
+                    help=('Number of effective LSTs. If none (default), '
+                          'it is calculated using Nlstbins and t_eff.'))
 args = parser.parse_args()
 
 np.random.seed(0)
 pspecs = read_bootstraps_dcj(args.files)
-if args.Neff_lst == None:
+if args.Neff_lst is None:
     Nlstbins = np.shape(pspecs['pCr'])[-1]
     # get the number of lst integrations in the dataset
     t_eff = pspecs['frf_inttime'] / pspecs['inttime']
@@ -55,7 +56,7 @@ pspecs['pIr-pIv'] = pspecs['pIr'] - pspecs['pIv']
 pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 
 # compute Pk vs kpl vs bootstraps
-pk_pspecs, vals  = average_bootstraps(pspecs, Nt_eff=Neff_lst,
+pk_pspecs, vals = average_bootstraps(pspecs, Nt_eff=Neff_lst,
                                      Nboots=args.nboots, avg_func=np.mean)
 print 'Saving pspec_2d_to_1d.npz'  # save all values used in bootstrapping
 np.savez(args.output + 'pspec_2d_to_1d.npz', **vals)
