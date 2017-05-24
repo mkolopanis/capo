@@ -4,7 +4,7 @@
 #   $ pspec_batch.sh <path to LST-binned files> <directory name to save all outputs>
 
 #PSA64
-if true
+if false
 then
 CALFILE='psa6240_v003'
 RA='.1_8.6'
@@ -28,16 +28,16 @@ CHANGEC='' #'--changeC'
 
 else
 ### My Options ###
-CALFILE='psa6622_v003'
-RA='4_10'
-SEP='0,2'
-DATA=$1
-EVEN_FILES=${DATA}'/even/sep'${SEP}'/*I.uvGA'
-ODD_FILES=${DATA}'/odd/sep'${SEP}'/*I.uvGA'
-DIRNAME=$2
-EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
-ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
-CHAN='110_130'
+#CALFILE='psa6622_v003'
+#RA='4_10'
+#SEP='0,2'
+#DATA=$1
+#EVEN_FILES=${DATA}'/even/sep'${SEP}'/*I.uvGA'
+#ODD_FILES=${DATA}'/odd/sep'${SEP}'/*I.uvGA'
+#DIRNAME=$2
+#EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
+#ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
+#CHAN='110_130'
 #NBOOT=20
 POL='I'
 weight='L^-1'
@@ -45,7 +45,7 @@ WINDOW='none'
 FRF='--frf'
 NOFRFPATH='' #'--nofrfpath pspec128_uvGA/inject_sep'${SEP}'_0.01/pspec_pk_k3pk.npz' # path to one pspec_2d_to_1d.py output for NONFRF case
 LMODE='' #'--lmode=12'
-CHANGEC='' #'--changeC'
+CHANGEC='--changeC'
 
 ### PSA64 Options ###
 
