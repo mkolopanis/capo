@@ -641,10 +641,11 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
             Z = scramble_avg_bootstrap_array_v3(indata[inname], func=avg_func, Nboots=Nboots)
             vals[outname] = Z.data #bboots.data
             # power spectrum is the mean and std dev over scramble dimension
-            outdata[outname] = n.ma.average(Z, axis=0)
+            #outdata[outname] = n.ma.average(Z, axis=0)
             # === over-write errors by taking std across bl&time axes 
             flat = indata[inname] 
             flat = flat.swapaxes(0,1).reshape((flat.shape[1], flat.shape[0]*flat.shape[2]))
+            outdata[outname] = n.ma.average(flat, axis=1)
             outdata[outname + '_err'] = n.std(flat, axis=1)
             # ===
             #outdata[outname + '_err'] = n.std(Z, axis=0)
@@ -656,9 +657,10 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
             #                                 Nboots=Nboots)
             Z = scramble_avg_bootstrap_array_v3(X, func=avg_func, Nboots=Nboots)
             vals_fold[outname] = Z.data
-            outdata[outname] = n.ma.average(Z, axis=0)
+            #outdata[outname] = n.ma.average(Z, axis=0)
             flat = X
             flat = flat.swapaxes(0,1).reshape((flat.shape[1], flat.shape[0]*flat.shape[2]))
+            outdata[outname] = n.ma.average(flat, axis=1)
             outdata[outname + '_err'] = n.std(flat, axis=1)
             #outdata[outname + '_err'] = n.std(Z, axis=0)
             #outdata[outname + '_err'] = n.ma.array((n.percentile(Z, 95, axis=0))) / 2

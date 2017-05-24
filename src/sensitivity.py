@@ -35,11 +35,11 @@ class Sense(object):
         self.P_N = self.X2Y * self.Omega_eff * self.Tsys**2
         self.P_N /=(self.t_int * self.Ndays * self.bl_eff * self.Npols * np.sqrt(self.Nlstbins))
         self.P_N /= np.sqrt(2) #factor of 1/sqrt(2) for variance of complex variance and taking real
-        self.P_N /= np.sqrt(self.Nkparfold) #fold in k//
         self.P_N /= np.sqrt(self.Nseps)
     def Delta2_N(self,k):
         if self.P_N is None: print("noise undefined until first Sense.calc()"); return 0
-        return self.P_N * k**3/(2*np.pi**2)
+        P_N = self.P_N / np.sqrt(self.Nkparfold) #fold in k// 
+        return P_N * k**3/(2*np.pi**2)
 if __name__ == "__main__":
     #an example set up for psa64 - ali et al
     S_FRF = Sense()
