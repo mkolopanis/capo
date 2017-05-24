@@ -318,7 +318,7 @@ for chan_range in args.chan:
     pk_noise = pk_sense.P_N
     k3noise = pk_sense.Delta2_N(ks)
     print '\tNbls eff:', pk_sense.bl_eff
-    print '\tNlst bins:', pk_sense.Nblgroups
+    print '\tNlst bins:', pk_sense.Nlstbins
     print '\tNdays eff:', cnt_eff
     print '\tPk noise [mK^2]: {0:.3e}'.format(pk_noise)
     if args.analytic:
