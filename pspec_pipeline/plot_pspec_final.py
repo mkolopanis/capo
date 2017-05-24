@@ -143,7 +143,6 @@ for filename in args.files:
             nseps = 1  #number of seps used
             folding = 2 # XXX 2 for delta^2
             nmodes = (nlsts*nseps*folding)**.5
-            nmodes_err = (nlsts*nseps*folding)**.5
             pol = 2
             real = np.sqrt(2)
             sdf = .1/203
@@ -159,7 +158,6 @@ for filename in args.files:
             #error bars minimum width. Consider them flat for P(k). Factor of 2 at the end is due to folding of kpl (root(2)) and root(2) in radiometer equation.
             #pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (2*inttime*pol*real*nbls*ndays*nmodes) ) #this 2-sigma curve should encompass 95% of the points
             pk_noise = 2*scalar*( (tsys)**2 / (inttime*pol*real*nbls*cnt*nmodes) ) # this 2-sigma curve should line up with pI
-            pk_noise_err = 2*scalar*( (tsys)**2 / (inttime*pol*real*nbls_err*cnt*nmodes_err) ) # this 2-sigma curve should line up with pI
             # Plot analytical noise curve on plots
             ax1[gs_ind].plot(pspec_dict['k'],pk_noise*pspec_dict['k']**3/(2*np.pi**2),'g-',label='Analytical 2-sigma')
             ax2[gs_ind].axhline(pk_noise,color='g',marker='_',label='Analytical 2-sigma')
