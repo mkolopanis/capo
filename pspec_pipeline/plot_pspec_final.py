@@ -195,76 +195,116 @@ for filename in args.files:
     marker = markers[marker_count[gs_ind]]
     marker_count[gs_ind] += 1
 
-    pos_ind = np.where(pspec_dict['pC'] >= 0)[0]
-    pos_ind_noise = np.where(pspec_dict['pCn'] >= 0)[0]
-    pos_ind_fold = np.where(pspec_dict['pC_fold'] >= 0)[0]
-    pos_ind_noise_fold = np.where(pspec_dict['pCn_fold'] >= 0)[0]
-    neg_ind = np.where(pspec_dict['pC'] < 0)[0]
-    neg_ind_noise = np.where(pspec_dict['pCn'] < 0)[0]
-    neg_ind_fold = np.where(pspec_dict['pC_fold'] < 0)[0]
-    neg_ind_noise_fold = np.where(pspec_dict['pCn_fold'] < 0)[0]
+    try: # find from signal loss results
+        pCv = pspec_dict['pC']
+        pIv = pspec_dict['pI']
+        pCn = pspec_dict['pCn']
+        pIn = pspec_dict['pIn']
+        pCv_fold = pspec_dict['pC_fold']
+        pIv_fold = pspec_dict['pI_fold']
+        pCn_fold = pspec_dict['pCn_fold']
+        pIn_fold = pspec_dict['pIn_fold']
+        pCv_up = pspec_dict['pC_up']
+        pIv_up = pspec_dict['pI_up']
+        pCv_fold_up = pspec_dict['pC_fold_up']
+        pIv_fold_up = pspec_dict['pI_fold_up']
+        pCn_up = pspec_dict['pCn_up']
+        pIn_up = pspec_dict['pIn_up']
+        pCn_fold_up = pspec_dict['pCn_fold_up']
+        pIn_fold_up = pspec_dict['pIn_fold_up']
+        prob = pspec_dict['prob']*100
+    except: # find from pspec_2d_to_1d results
+        fold_factor = pspec_dict['k']**3/(2*np.pi**2)
+        pCv = pspec_dict['pCv']
+        pIv = pspec_dict['pIv']
+        pCv_fold = pspec_dict['pCv_fold']*fold_factor
+        pIv_fold = pspec_dict['pIv_fold']*fold_factor
+        pCn = pspec_dict['pCn']
+        pIn = pspec_dict['pIn']
+        pCn_fold = pspec_dict['pCn_fold']*fold_factor
+        pIn_fold = pspec_dict['pIn_fold']*fold_factor
+        pCv_up = pspec_dict['pCv_err']*2
+        pIv_up = pspec_dict['pIv_err']*2
+        pCv_fold_up = pspec_dict['pCv_fold_err']*2*fold_factor
+        pIv_fold_up = pspec_dict['pIv_fold_err']*2*fold_factor
+        pCn_up = pspec_dict['pCn_err']*2
+        pIn_up = pspec_dict['pIn_err']*2
+        pCn_fold_up = pspec_dict['pCn_fold_err']*2*fold_factor
+        pIn_fold_up = pspec_dict['pIn_fold_err']*2*fold_factor
+        prob = 95
+
+    pos_ind = np.where(pCv >= 0)[0]
+    pos_ind_noise = np.where(pCn >= 0)[0]
+    pos_ind_fold = np.where(pCv_fold >= 0)[0]
+    pos_ind_noise_fold = np.where(pCn_fold >= 0)[0]
+    neg_ind = np.where(pCv < 0)[0]
+    neg_ind_noise = np.where(pCn < 0)[0]
+    neg_ind_fold = np.where(pCv_fold < 0)[0]
+    neg_ind_noise_fold = np.where(pCn_fold < 0)[0]
 
     ax1[gs_ind].plot(pspec_dict['k'],
-                     np.abs(pspec_dict['pI_fold']) + pspec_dict['pI_fold_up'], '--',
-                     label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)))
+                     np.abs(pIv_fold) + pIv_fold_up, '--',
+                     label='pI {0:02d}%'.format(int(prob)))
     #ax1[gs_ind].errorbar(pspec_dict['k'],
-    #                pspec_dict['pI_fold'], pspec_dict['pI_fold_up'],
-    #                label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)),
+    #                pIv_fold, pIv_fold_up,
+    #                label='pI {0:02d}%'.format(int(prob)),
     #                linestyle='',marker=marker,color='blue')
     ax1[gs_ind].errorbar(pspec_dict['k'][pos_ind_fold],
-                         pspec_dict['pC_fold'][pos_ind_fold],
-                         pspec_dict['pC_fold_up'][pos_ind_fold],
-                         label='pC {0:02d}%'.format(int(pspec_dict['prob']*100)),
+                         pCv_fold[pos_ind_fold],
+                         pCv_fold_up[pos_ind_fold],
+                         label='pC {0:02d}%'.format(int(prob)),
                          linestyle='', marker=marker, color='black')
     ax1[gs_ind].errorbar(pspec_dict['k'][neg_ind_fold],
-                         -pspec_dict['pC_fold'][neg_ind_fold],
-                         pspec_dict['pC_fold_up'][neg_ind_fold],
+                         -pCv_fold[neg_ind_fold],
+                         pCv_fold_up[neg_ind_fold],
                          linestyle='',marker=marker, color='0.5')
     ax2[gs_ind].plot(pspec_dict['kpl'],
-                     np.abs(pspec_dict['pI']) + pspec_dict['pI_up'], '--',
-                     label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)))
+                     np.abs(pIv) + pIv_up, '--',
+                     label='pI {0:02d}%'.format(int(prob)))
     #ax2[gs_ind].errorbar(pspec_dict['kpl'],
-    #                pspec_dict['pI'], pspec_dict['pI_up'],
-    #                label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)),
+    #                pIv, pIv_up,
+    #                label='pI {0:02d}%'.format(int(prob)),
     #                linestyle='',marker=marker,color='blue')
-    ax2[gs_ind].errorbar(pspec_dict['kpl'][pos_ind], pspec_dict['pC'][pos_ind],
-                         pspec_dict['pC_up'][pos_ind],
-                         label='pC {0:02d}%'.format(int(pspec_dict['prob']*100)),
+    ax2[gs_ind].errorbar(pspec_dict['kpl'][pos_ind], 
+                         pCv[pos_ind],
+                         pCv_up[pos_ind],
+                         label='pC {0:02d}%'.format(int(prob)),
                          linestyle='', marker=marker, color='black')
-    ax2[gs_ind].errorbar(pspec_dict['kpl'][neg_ind], -pspec_dict['pC'][neg_ind],
-                         pspec_dict['pC_up'][neg_ind],
+    ax2[gs_ind].errorbar(pspec_dict['kpl'][neg_ind], 
+                         -pCv[neg_ind],
+                         pCv_up[neg_ind],
                          linestyle='', marker=marker, color='0.5')
     ax3[gs_ind].plot(pspec_dict['k'],
-                     np.abs(pspec_dict['pIn_fold']) + pspec_dict['pIn_fold_up'], '--',
-                     label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)))
+                     np.abs(pIn_fold) + pIn_fold_up, '--',
+                     label='pIn {0:02d}%'.format(int(prob)))
     #ax3[gs_ind].errorbar(pspec_dict['k'],
-    #                    pspec_dict['pIn_fold'], pspec_dict['pIn_fold_up'],
-    #                    label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)),
+    #                    pIn_fold, pIn_fold_up,
+    #                    label='pIn {0:02d}%'.format(int(prob)),
     #                    linestyle='', marker=marker, color='blue')
     ax3[gs_ind].errorbar(pspec_dict['k'][pos_ind_noise_fold],
-                         pspec_dict['pCn_fold'][pos_ind_noise_fold],
-                         pspec_dict['pCn_fold_up'][pos_ind_noise_fold],
-                         label='pCn {0:02d}%'.format(int(pspec_dict['prob']*100)),
+                         pCn_fold[pos_ind_noise_fold],
+                         pCn_fold_up[pos_ind_noise_fold],
+                         label='pCn {0:02d}%'.format(int(prob)),
                          linestyle='', marker=marker, color='black')
     ax3[gs_ind].errorbar(pspec_dict['k'][neg_ind_noise_fold],
-                         -pspec_dict['pCn_fold'][neg_ind_noise_fold],
-                         pspec_dict['pCn_fold_up'][neg_ind_noise_fold],
+                         -pCn_fold[neg_ind_noise_fold],
+                         pCn_fold_up[neg_ind_noise_fold],
                          linestyle='', marker=marker, color='0.5')
     ax4[gs_ind].plot(pspec_dict['kpl'],
-                     np.abs(pspec_dict['pIn']) + pspec_dict['pIn_up'], '--',
-                     label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)))
+                     np.abs(pIn) + pIn_up, '--',
+                     label='pIn {0:02d}%'.format(int(prob)))
     #ax4[gs_ind].errorbar(pspec_dict['kpl'],
-    #                pspec_dict['pIn'], pspec_dict['pIn_up'],
-    #                label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)),
+    #                pIn, pIn_up
+    #                label='pIn {0:02d}%'.format(int(prob)),
     #                linestyle='', marker=marker, color='blue')
     ax4[gs_ind].errorbar(pspec_dict['kpl'][pos_ind_noise],
-                         pspec_dict['pCn'][pos_ind_noise],
-                         pspec_dict['pCn_up'][pos_ind_noise],
-                         label='pCn {0:02d}%'.format(int(pspec_dict['prob']*100)),
+                         pCn[pos_ind_noise],
+                         pCn_up[pos_ind_noise],
+                         label='pCn {0:02d}%'.format(int(prob)),
                          linestyle='', marker=marker, color='black')
     ax4[gs_ind].errorbar(pspec_dict['kpl'][neg_ind_noise],
-                         -pspec_dict['pCn'][neg_ind_noise],
-                         pspec_dict['pCn_up'][neg_ind_noise],
+                         -pCn[neg_ind_noise],
+                         pCn_up[neg_ind_noise],
                          linestyle='', marker=marker, color='0.5')
     """
     ax1[gs_ind].errorbar(pspec_dict['k'][pos_ind_fold], 
@@ -300,14 +340,14 @@ for filename in args.files:
                         S.P_N*2,
                         linestyle='', marker=marker, color='0.5')
     """ 
-    ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pspec_dict['pC_up']),
-                    '--', color='black', label='pC {0:02}%'.format(int(pspec_dict['prob']*100))) 
-    ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pspec_dict['pI_up']),
-                    '--', color='blue', label='pI {0:02}%'.format(int(pspec_dict['prob']*100)))
-    ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pspec_dict['pCn_up']),
-                    '--', color='black', label='pCn {0:02}%'.format(int(pspec_dict['prob']*100))) 
-    ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pspec_dict['pIn_up']),
-                    '--', color='blue', label='pIn {0:02}%'.format(int(pspec_dict['prob']*100)))
+    ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pCv_up),
+                    '--', color='black', label='pC {0:02}%'.format(int(prob))) 
+    ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pIv_up),
+                    '--', color='blue', label='pI {0:02}%'.format(int(prob)))
+    ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pCn_up),
+                    '--', color='black', label='pCn {0:02}%'.format(int(prob))) 
+    ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pIn_up),
+                    '--', color='blue', label='pIn {0:02}%'.format(int(prob)))
 
 # set up some parameters to make the figures pretty
 for gs_ind in xrange(Nzs):
