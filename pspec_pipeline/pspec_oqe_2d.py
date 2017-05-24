@@ -424,44 +424,6 @@ data_dict_v, flg_dict, lsts = oqe.lst_align_data(inds, dsets=data_dict_v,
 data_dict_n = oqe.lst_align_data(inds, dsets=data_dict_n)[0]
 nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
-# but the lsts returned is one array
-"""
-# Save error bar correction factor R
-N = len(lsts[lsts.keys()[0]]) 
-filt_len = len(frp) 
-err_factors = []
-Rs = []
-for f,chan in enumerate(chans):
-    Rtop = n.zeros((N, N+filt_len-1), dtype='complex')
-    for i in range(N):
-        for j in range(N+filt_len-1):
-            index = j-i
-            if index > filt_len-1 or index < 0:
-                Rtop[i,j] = 0.
-            else:
-                Rtop[i,j] = fir[fir.keys()[0]][chan,:][index]
-    Rtop = Rtop[:, (filt_len-1)/2:-(filt_len-1)/2].T
-    try: weights = flg_dict[(flg_dict.keys()[0][0],(fir.keys()[0][0],fir.keys()[0][1]),fir.keys()[0][2])][:,f] # use same baseline that FIR was built off of for weights
-    except: weights = flg_dict[(flg_dict.keys()[0][0],(fir.keys()[0][1],fir.keys()[0][0]),fir.keys()[0][2])][:,f]
-    Rbottom = n.convolve(weights, n.abs(fir[fir.keys()[0]][chan,:]), mode='same')
-    Rbot = n.zeros_like(Rtop)
-    for k in range(N):
-        Rbot[k,k] = 1./Rbottom[k]
-    Rfinal = n.dot(Rbot, Rtop)
-    Rs.append(Rfinal)
-    #factor = n.sqrt(n.trace(n.dot(Rfinal,n.dot(n.conj(Rfinal).T,n.dot(Rfinal,n.conj(Rfinal).T))))/N)
-    #err_factors.append(factor)
-#meanerr = n.mean(err_factors)
-#err_factors = meanerr.repeat(n.array(err_factors).shape) # per k
-Rs = n.array(Rs)
-for c1 in range(Rs.shape[0]):
-    for c2 in range(Rs.shape[0]):
-        if c2 >= c1:
-            factor = n.sqrt(n.trace(n.dot(Rs[c1],n.dot(n.conj(Rs[c1]).T,n.dot(Rs[c2],n.conj(Rs[c2]).T))))/N)
-            err_factors.append(factor)
-err_factor = n.sum(err_factors)/len(err_factors) # a single number
-"""
-err_factor = n.ones_like(chans)
 
 # Save some information
 cnt_full = stats[stats.keys()[0]]['cnt'][inds[stats.keys()[0]]]
@@ -471,10 +433,6 @@ lsts = lsts[lsts.keys()[0]]
 cnt_eff = 1./n.sqrt(n.ma.masked_invalid(1./cnt_full**2).mean())
 # calculate the effective number of baselines given grouping:
 N = len(bls_master)
-if True: # grouping
-    nbls_eff = N / n.sqrt(2) * n.sqrt(1. - 1./NGPS)
-else: # no grouping 
-    nbls_eff = N * (n.sqrt((N**2 - N)/2.)/(n.sqrt(N**2))) 
 nbls = N/NGPS # rounds down to integer
 
 # Fringe-rate filter noise
@@ -631,5 +589,5 @@ n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
         sep=sep_type, uvw=uvw,
         frf_inttime=frf_inttime, inttime=inttime,
         inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
-        cnt_eff=cnt_eff, nbls_eff=nbls_eff, nbls=nbls, 
-        err_factor=err_factor.real, cmd=' '.join(sys.argv))
+        cnt_eff=cnt_eff, nbls=nbls, ngps=NGPS,
+        cmd=' '.join(sys.argv))
