@@ -22,13 +22,13 @@ parser.add_argument('files', metavar='<FILE>', type=str, nargs='+',
 parser.add_argument('--output', type=str, default='./',
                     help='Specifically specify out directory.')
 parser.add_argument('--nboots', type=int, default=100,
-                    help='Number of Bootstraps (averages) default=100')
+                    help='Number of Bootstraps (averages) default=100 if using bootstrap versions 1 or 2.')
 parser.add_argument('--Neff_lst', default=None,
-                    help='Number of effective LSTs. If none (default), it is calculated using Nlstbins and t_eff.')
-parser.add_argument('--frf', action='store_true',
-                    help='Specify whether data is FRF, in which case the error bar correction factor is used.')
-parser.add_argument('--nofrfpath', type=str, default=None,
-                    help='Path to non-FRF pspec_pk_k3pk.npz file (ex: <path>/pspec_pk_k3pk.npz).')
+                    help='Number of effective LSTs (if using bootstrap versions 1 or 2). If none (default), it is calculated using Nlstbins and t_eff.')
+parser.add_argument('--avg_func', default=np.mean,
+                    help='Average function to use (default = np.mean).')
+parser.add_argument('-v', '--version', default=4,
+                    help='Version of bootstrapping method. Existing versions are 1,2, or 4.')
 args = parser.parse_args()
 
 np.random.seed(0)
@@ -70,16 +70,11 @@ pspecs['pCs-pCn'] = pspecs['pCs'] - pspecs['pCn']
 pspecs['pIr-pIv'] = pspecs['pIr'] - pspecs['pIv']
 pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 
-#for key in pspecs:
-#    if key[0] == 'p':
-#        shape = pspecs[key].shape
-#        indices = np.linspace(0, shape[2], Neff_lst, dtype='int', endpoint=False)
-#        pspecs[key] = pspecs[key][:,:,indices] # down-selecting in time
-
 # compute Pk vs kpl vs bootstraps
 print "   Bootstrapping..."
 pk_pspecs, vals  = average_bootstraps(pspecs, Nt_eff=Neff_lst,
-                                     Nboots=args.nboots, avg_func=np.mean)
+                                     Nboots=args.nboots, avg_func=args.avg_func,
+                                        version=args.version)
 if args.files[0][-9:] == 'final.npz':
     outname = 'pspec_2d_to_1d_final.npz'
 else: 
@@ -87,20 +82,6 @@ else:
 print '   Saving', outname  # save all values used in bootstrapping
 np.savez(args.output + outname, **vals)
 
-"""
-# correct errors in FRF case
-if args.frf:
-    if args.nofrfpath == None:
-        print 'Must provide path to non-FRF pspec_pk_k3pk.npz file.'
-        sys.exit()
-    else:
-        print '   Overwriting bootstrapped errors with non-FRF errors * correction factor...'
-        file = np.load(args.nofrfpath)
-        factor = pspecs['err_factor']
-        for key in pk_pspecs.keys():
-            if key[-3:] == 'err':
-                pk_pspecs[key] = file[key] * factor
-"""
 # Compute |k|
 bl_length = np.linalg.norm(pspecs['uvw'])
 wavelength = cosmo_units.c / (pspecs['freq'] * 1e9)
