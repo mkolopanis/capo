@@ -600,7 +600,7 @@ def read_bootstraps_dcj(filenames, verbose=False):
     return accumulated_power_spectra
 
 
-def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
+def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100, version=4):
     """
     "Scramble average" the various power spectrum channels across time.
 
@@ -629,46 +629,45 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100):
                       'pIr-pIv': 'pIr-pIv'}
     outdata = {}
     vals = {} # for all values  
-    vals_fold = {}
     for inname in indata:
         if inname in pspec_channels.keys():
             outname = pspec_channels[inname]
-            # scramble the times and bootstraps.
-            # Average over new time dimension
-            # only draw as many times as we have independent lsts (Nt_eff)
-            #Z = scramble_avg_bootstrap_array(indata[inname], Nt_eff=Nt_eff,
-            #                                 func=avg_func, Nboots=Nboots)
-            Z = scramble_avg_bootstrap_array_v3(indata[inname], func=avg_func, Nboots=Nboots)
-            vals[outname] = Z.data #bboots.data
-            # power spectrum is the mean and std dev over scramble dimension
-            #outdata[outname] = n.ma.average(Z, axis=0)
-            # === over-write errors by taking std across bl&time axes 
-            flat = indata[inname] 
-            flat = flat.swapaxes(0,1).reshape((flat.shape[1], flat.shape[0]*flat.shape[2]))
-            outdata[outname] = n.ma.average(flat, axis=1)
-            outdata[outname + '_err'] = n.std(flat, axis=1)
-            # ===
-            #outdata[outname + '_err'] = n.std(Z, axis=0)
-            #outdata[outname + '_err'] = n.ma.array((n.percentile(Z, 95, axis=0))) / 2 # effective 1-sigma derived from 2-sigma 
-            # also do the folded version
-            outname += '_fold'
-            kpl_fold, X = split_stack_kpl(indata[inname], indata['kpl'])
-            #Z = scramble_avg_bootstrap_array(X, Nt_eff=Nt_eff, func=avg_func,
-            #                                 Nboots=Nboots)
-            Z = scramble_avg_bootstrap_array_v3(X, func=avg_func, Nboots=Nboots)
-            vals_fold[outname] = Z.data
-            #outdata[outname] = n.ma.average(Z, axis=0)
-            flat = X
-            flat = flat.swapaxes(0,1).reshape((flat.shape[1], flat.shape[0]*flat.shape[2]))
-            outdata[outname] = n.ma.average(flat, axis=1)
-            outdata[outname + '_err'] = n.std(flat, axis=1)
-            #outdata[outname + '_err'] = n.std(Z, axis=0)
-            #outdata[outname + '_err'] = n.ma.array((n.percentile(Z, 95, axis=0))) / 2
+            outname_fold = outname + '_fold'
+            kpl_fold, X = split_stack_kpl(indata[inname], indata['kpl']) 
             outdata['kpl_fold'] = kpl_fold
-
+            if version == 1:
+                # scramble the times and bootstraps
+                # draw random samples (as many as we have independent lsts (Nt_eff)
+                # average over the samples, and do it Nboots times
+                Z = scramble_avg_bootstrap_array(indata[inname], Nt_eff=Nt_eff,
+                                             func=avg_func, Nboots=Nboots)
+                Z_fold = scramble_avg_bootstrap_array(X, Nt_eff=Nt_eff,
+                                             func=avg_func, Nboots=Nboots)
+            if version == 2:
+                # for each baseline bootstrap, draw random samples in time only
+                # average over time
+                Z = scramble_avg_bootstrap_array_v2(indata[inname], func=avg_func, Nboots=Nboots)
+                Z_fold = scramble_avg_bootstrap_array_v2(X, func=avg_func, Nboots=Nboots)
+            if version == 3:
+                # flatten array in time and baseline
+                # draw samples from the flattened array, average them, and do it Nboots times
+                Z = scramble_avg_bootstrap_array_v3(indata[inname], func=avg_func, Nboots=Nboots)
+                Z_fold = scramble_avg_bootstrap_array_v3(X, func=avg_func, Nboots=Nboots)
+            if version == 4:
+                # flatten array in time and baseline
+                # no boots
+                Z = scramble_avg_bootstrap_array_v4(indata[inname], func=avg_func)
+                Z_fold = scramble_avg_bootstrap_array_v4(X, func=avg_func)
+            vals[outname] = Z.data
+            vals[outname_fold] = Z_fold.data
+            # power spectrum is the mean and std dev over scramble dimension
+            outdata[outname] = n.ma.average(Z, axis=0)
+            outdata[outname + '_err'] = n.std(Z, axis=0)
+            outdata[outname_fold] = n.ma.average(Z_fold, axis=0)
+            outdata[outname_fold + '_err'] = n.std(Z_fold, axis=0)
+            #outdata[outname + '_err'] = n.ma.array((n.percentile(Z, 95, axis=0))) / 2 # effective 1-sigma derived from 2-sigma 
         else:
             outdata[inname] = indata[inname]
-    vals.update(vals_fold)
     return outdata, vals
 
 def pspec_median(X, axis=0):
@@ -719,6 +718,12 @@ def scramble_avg_bootstrap_array_v3(X, func=n.median, Nboots=100):
         else: bboots.append(func(X[:, choice], axis=1))
     bboots = n.ma.masked_invalid(n.array(bboots))
     return bboots
+
+def scramble_avg_bootstrap_array_v4(X, func=n.median):
+    """Collapse (baseline, k, time) array in baseline and time. No bootstrapping."""
+    X = X.swapaxes(0,1).reshape((X.shape[1], X.shape[0]*X.shape[2])) # reshape to (k, bl*time)
+    return X.T
+
 
 def split_stack_kpl(X, kpl):
     """Split input array at kpl=0 and fold.
