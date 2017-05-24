@@ -5,7 +5,7 @@
 
 
 #### Carina's PSA128 Options ###
-if True
+if false
 then
 DATA=$1
 EVEN_FILES=${DATA}'/even/sep0,2/*I.uvGAL'
@@ -27,8 +27,8 @@ CHANGEC=''
 else
 ### psa64 Paths - enterprise ###
 DATA=$1
-EVEN_FILES=${DATA}'/even/sep0,1/*.uvGA'
-ODD_FILES=${DATA}'/odd/sep0,1/*.uvGA'
+EVEN_FILES=${DATA}'/even/sep0,1/*.uvGAL'
+ODD_FILES=${DATA}'/odd/sep0,1/*.uvGAL'
 DIRNAME=$2
 
 ## psa64 Options ###
@@ -37,7 +37,7 @@ CALFILE='psa6240_v003'
 EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
 SEP='0,1'
-CHAN='95_115'
+CHAN='30_50'
 NBOOT=20
 POL='I'
 weight='I'
@@ -64,4 +64,4 @@ for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-
     # Stage 2: pspec_2d_to_1d.py
     ~/capo/pspec_pipeline/pspec_2d_to_1d.py --output ${DIRNAME}/inject_sep${SEP}_${inject}/ ${DIRNAME}/inject_sep${SEP}_${inject}/*boot*
 done
-#~/src/capo/pspec_pipeline/pspec_final_confidence.py ${DIRNAME}/inject_sep*/*npz
+python ~/src/capo/pspec_pipeline/pspec_final_confidence.py ${DIRNAME}/inject_*/pspec_pk_k3pk.npz  --outfile=${DIRNAME}

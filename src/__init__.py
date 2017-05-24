@@ -3,6 +3,7 @@ import fringe as frf_conv # for backward compatibility
 import oqe
 import warnings
 import eor_results
+import sensitivity
 #try: import omni, uCal, wyl
 #except(ImportError,NameError):
 #    warnings.warn("Warning: omnical not installed, not importing capo.omni")

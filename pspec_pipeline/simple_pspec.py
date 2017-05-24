@@ -57,7 +57,9 @@ parser.add_argument('--analytic', action='store_true',
 parser.add_argument('--Trcvr', type=float, default=200,
                     help='Receiver Temperature in Kelvin')
 args = parser.parse_args()
-
+if len(sys.argv) == 1:
+    parser.print_help()
+    sys.exit()
 
 def calc_beam(cal, nside, inttime, freq):
     """Calculate Effective Omega from Beam integral."""
@@ -226,7 +228,17 @@ for chan_range in args.chan:
                                for data in data_grouped[k]]
             # average over groups for easie
             # FFT fo k-space
-            power_grouped[k] = np.fft.ifft(np.conj(data_grouped[k]), axis=-1)
+            if False:
+                window = ap.dsp.gen_window(np.array(data_grouped[k]).shape[-1],
+                                           window='blackman-harris')
+                # normalize the window so that power is conserved
+                norm = np.sqrt(np.mean(window**2))
+                window /= norm
+                power_grouped[k] = np.fft.ifft(np.conj(data_grouped[k]*window),
+                                               axis=-1)
+            else:
+                power_grouped[k] = np.fft.ifft(np.conj(data_grouped[k]),
+                                               axis=-1)
             power_grouped[k] = np.fft.ifftshift(power_grouped[k], axes=-1)
 
         count = 0
@@ -235,13 +247,20 @@ for chan_range in args.chan:
             for k2 in data_dict.keys()[cnt+1:]:
                 if k1 == k2:
                     continue
-                for i in xrange(args.NGPS-1):
-                    for j in xrange(i+1, args.NGPS):
-                        p1 = (power_grouped[k1][i].conj()
-                              * power_grouped[k2][j]).conj().real
-                        # p1 = p1[::dlst]  # down select to independent modes
-                        power += p1
-                        count += 1
+                if args.NGPS == 1:
+                    p1 = (power_grouped[k1][0].conj()
+                          * power_grouped[k2][0]).conj().real
+                    count += 1
+                    power += p1
+                else:
+                    for i in xrange(args.NGPS-1):
+                        for j in xrange(i+1, args.NGPS):
+                            p1 = (power_grouped[k1][i].conj()
+                                  * power_grouped[k2][j]).conj().real
+                            # p1 = p1[::dlst]
+                            # down select to independent modes
+                            count += 1
+                            power += p1
         power_specs[boot] = (power_specs.get(boot, 0)
                              + power / count * X2Y / omega_pp
                              * sdf * afreqs.size)
@@ -251,8 +270,8 @@ for chan_range in args.chan:
         # bl = np.random.choice(args.nboots, replace=True)
         # times = np.random.choice(Nt_eff, Nt_eff, replace=False)
         pos_neg = np.random.choice(1)
-        # median over times
-        tmp_pspec = np.median(power_specs[boot][::dlst], axis=0)
+        # avg over times
+        tmp_pspec = np.mean(power_specs[boot][::dlst], axis=0)
         averaged_pspecs.append(tmp_pspec)
         # split into pos and neg arrays, reverse the neg array so magnitude of
         # kpl increases
@@ -279,22 +298,27 @@ for chan_range in args.chan:
     plt.yscale('log')
     plt.ylim([1e1, None])
 
+    pk_sense = capo.sensitivity.Sense()
     Tsys = 180 * (fq/.18)**-2.55 + args.Trcvr
     Tsys *= 1e3
-    Npol = 2
-    Nreal = 2
-    folding = 2
-    Nlst = len(lsts) * inttime / frf_inttime
-    Nbls = len(bls_master) / np.sqrt(2) * np.sqrt(1. - 1./args.NGPS)
+    pk_sense.Tsys = Tsys
+    pk_sense.z = z
+    pk_sense.t_int = frf_inttime
+    pk_sense.Npol = 2
+    pk_sense.Nlstbins = len(lsts) * inttime / frf_inttime
+    pk_sense.Nbls = len(bls_master)
+    pk_sense.Nblgroups = args.NGPS
+    pk_sense.Nseps = 1
+    pk_sense.omega_eff = omega_p**2/omega_pp
 
     # calculate the effective counts in the data, this is like ndays
     cnt_eff = 1./np.sqrt(np.ma.masked_invalid(1./cnts**2).mean())
-    pk_noise = X2Y * omega_p**2/omega_pp * Tsys**2
-    pk_noise /= frf_inttime * Npol * Nbls * cnt_eff
-    pk_noise /= np.sqrt(Nlst * folding * Nreal)
-    k3noise = ks**3/(2*np.pi**2) * pk_noise
-    print '\tNbls eff:', Nbls
-    print '\tNlst bins:', Nlst
+    pk_sense.Ndays = cnt_eff
+    pk_sense.calc()
+    pk_noise = pk_sense.P_N
+    k3noise = pk_sense.Delta2_N(ks)
+    print '\tNbls eff:', pk_sense.bl_eff
+    print '\tNlst bins:', pk_sense.Nblgroups
     print '\tNdays eff:', cnt_eff
     print '\tPk noise [mK^2]: {0:.3e}'.format(pk_noise)
     if args.analytic:
