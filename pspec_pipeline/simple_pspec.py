@@ -237,13 +237,20 @@ for chan_range in args.chan:
             for k2 in data_dict.keys()[cnt+1:]:
                 if k1 == k2:
                     continue
-                for i in xrange(args.NGPS-1):
-                    for j in xrange(i+1, args.NGPS):
-                        p1 = (power_grouped[k1][i].conj()
-                              * power_grouped[k2][j]).conj().real
-                        # p1 = p1[::dlst]  # down select to independent modes
-                        power += p1
-                        count += 1
+                if args.NGPS == 1:
+                    p1 = (power_grouped[k1][0].conj()
+                          * power_grouped[k2][0]).conj().real
+                    count += 1
+                    power += p1
+                else:
+                    for i in xrange(args.NGPS-1):
+                        for j in xrange(i+1, args.NGPS):
+                            p1 = (power_grouped[k1][i].conj()
+                                  * power_grouped[k2][j]).conj().real
+                            # p1 = p1[::dlst]
+                            # down select to independent modes
+                            count += 1
+                            power += p1
         power_specs[boot] = (power_specs.get(boot, 0)
                              + power / count * X2Y / omega_pp
                              * sdf * afreqs.size)
