@@ -433,7 +433,8 @@ lsts = lsts[lsts.keys()[0]]
 cnt_eff = 1./n.sqrt(n.ma.masked_invalid(1./cnt_full**2).mean())
 # calculate the effective number of baselines given grouping:
 N = len(bls_master)
-nbls = N/NGPS # rounds down to integer
+nblg = N/NGPS # rounds down to integer
+nbls = N
 
 # Fringe-rate filter noise
 if opts.frf:
@@ -572,16 +573,10 @@ if PLOT:
     p.show()
 
 # Save Output
-if opts.NGPS == 1:
-    if len(opts.output) > 0:
-        outpath = opts.output + '/pspec_oqe_2d_final.npz'
-    else:
-        outpath = 'pspec_oqe_2d_final.npz'
+if len(opts.output) > 0:
+    outpath = opts.output + '/pspec_oqe_2d.npz' 
 else:
-    if len(opts.output) > 0:
-        outpath = opts.output + '/pspec_oqe_2d.npz' 
-    else:
-        outpath = 'pspec_oqe_2d.npz' 
+    outpath = 'pspec_oqe_2d.npz' 
 print '   Writing ' + outpath
 n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
         pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe,
@@ -589,5 +584,5 @@ n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
         sep=sep_type, uvw=uvw,
         frf_inttime=frf_inttime, inttime=inttime,
         inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
-        cnt_eff=cnt_eff, nbls=nbls, ngps=NGPS,
+        cnt_eff=cnt_eff, nbls=nbls, ngps=NGPS, nblg=nblg,
         cmd=' '.join(sys.argv))

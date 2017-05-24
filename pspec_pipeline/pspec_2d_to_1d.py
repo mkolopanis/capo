@@ -75,10 +75,7 @@ print "   Bootstrapping..."
 pk_pspecs, vals  = average_bootstraps(pspecs, Nt_eff=Neff_lst,
                                      Nboots=args.nboots, avg_func=args.avg_func,
                                         version=args.version)
-if args.files[0][-9:] == 'final.npz':
-    outname = 'pspec_2d_to_1d_final.npz'
-else: 
-    outname = 'pspec_2d_to_1d.npz'
+outname = 'pspec_2d_to_1d.npz'
 print '   Saving', outname  # save all values used in bootstrapping
 np.savez(args.output + outname, **vals)
 
@@ -96,9 +93,6 @@ for key in pk_pspecs.keys():
     if isinstance(pk_pspecs[key], np.ma.MaskedArray):
         pk_pspecs[key].fill_value = 0  # fills invalid values with 0's
         pk_pspecs[key] = pk_pspecs[key].filled()  # returns corrected array
-if args.files[0][-9:] == 'final.npz':
-    filename = args.output + 'pspec_pk_k3pk_final.npz'
-else:
-    filename = args.output + 'pspec_pk_k3pk.npz'
+filename = args.output + 'pspec_pk_k3pk.npz'
 print '   Saving', filename
 np.savez(filename, **pk_pspecs)
