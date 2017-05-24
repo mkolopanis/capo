@@ -112,7 +112,6 @@ k_par_max = 0
 print 'Using these parameters for the Analytic Model:'
 for filename in args.files:
     pspec_dict = np.load(filename)
-    pspec_dict_err = np.load(filename[:-10]+'.npz')
     if np.max(pspec_dict['k']) > k_max:
         k_max = np.max(pspec_dict['k'])
 
@@ -124,9 +123,9 @@ for filename in args.files:
     
     if args.analytical:
         inttime = pspec_dict['frf_inttime']
-        nbls = pspec_dict['nbls'] #pspec_dict['nbls_eff']
-        nbls_err = pspec_dict_err['nbls']
+        nblg = pspec_dict['nblg'] #pspec_dict['nbls_eff']
         cnt = pspec_dict['cnt_eff']
+        nblg = pspec_dict['nblg']
         nlsts = len(pspec_dict['lsts']) * pspec_dict['inttime']
         nlsts /= pspec_dict['frf_inttime']
         if pspec_dict['frf_inttime'] == pspec_dict['inttime']:
@@ -135,7 +134,7 @@ for filename in args.files:
             omega_eff = .74**2/.24
         print 'Redshift:', redshift
         print '\tT_int:', inttime
-        print '\tNbls:', nbls
+        print '\tNblg:', nblg
         print '\tNdays:', cnt
         print '\tNlsts:', nlsts
         if old_analytical:
@@ -182,20 +181,12 @@ for filename in args.files:
             S.Nblgroups = 1 #groups are already folded into the calculation of nbls_eff
             S.Omega_eff = omega_eff #use the FRF weighted beams listed in T1 of Parsons etal beam sculpting paper
             k = pspec_dict['k']
-            
-            # Calculate analytic for subset of data
-            S.Nbls = nbls_err
-            S.Nlstbins = 1.0
-            S.calc()
-            print "capo.sensitivity Pk_noise for subset = ",S.P_N
-            ax5[gs_ind].axhline(S.P_N*2,color='g',marker='_',label='Analytical 2-sigma')
-            ax6[gs_ind].axhline(S.P_N*2,color='g',marker='_',label='Analytical 2-sigma')
-            
-            # Calculate analytic for all data
-            S.Nbls = nbls
-            S.Nlstbins = nlsts
+            S.Nbls = nblg
+            S.Nlstbins = 1.0 # XXX not averaging over LSTs !!
             S.calc()
             print "capo.sensitivity Pk_noise = ",S.P_N
+            ax5[gs_ind].axhline(S.P_N*2,color='g',marker='_',label='Analytical 2-sigma')
+            ax6[gs_ind].axhline(S.P_N*2,color='g',marker='_',label='Analytical 2-sigma')
             ax1[gs_ind].plot(k,S.Delta2_N(k)*2,'g-',label='Analytical 2-sigma')
             ax2[gs_ind].axhline(S.P_N*2,color='g',marker='_',label='Analytical 2-sigma')
             ax3[gs_ind].plot(k,S.Delta2_N(k)*2,'g-',label='Analytical 2-sigma')
@@ -213,7 +204,6 @@ for filename in args.files:
     neg_ind_fold = np.where(pspec_dict['pC_fold'] < 0)[0]
     neg_ind_noise_fold = np.where(pspec_dict['pCn_fold'] < 0)[0]
 
-    """
     ax1[gs_ind].plot(pspec_dict['k'],
                      np.abs(pspec_dict['pI_fold']) + pspec_dict['pI_fold_up'], '--',
                      label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)))
@@ -263,18 +253,10 @@ for filename in args.files:
     ax4[gs_ind].plot(pspec_dict['kpl'],
                      np.abs(pspec_dict['pIn']) + pspec_dict['pIn_up'], '--',
                      label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)))
-    #ax4[gs_ind].plot(pspec_dict['kpl'], 
-    #                np.abs(pspec_dict['pIn_up']), '--', color='blue')
-    #ax4[gs_ind].plot(pspec_dict['kpl'],
-    #                np.abs(pspec_dict['pCn_up']), '--', color='black')           
     #ax4[gs_ind].errorbar(pspec_dict['kpl'],
     #                pspec_dict['pIn'], pspec_dict['pIn_up'],
     #                label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)),
     #                linestyle='', marker=marker, color='blue')
-    #ax4[gs_ind].errorbar(pspec_dict['kpl'],
-    #                pspec_dict['pCn'], pspec_dict['pCn_up'],
-    #                label='pCn {0:02d}%'.format(int(pspec_dict['prob']*100)),
-    #                linestyle='', marker=marker, color='black')
     ax4[gs_ind].errorbar(pspec_dict['kpl'][pos_ind_noise],
                          pspec_dict['pCn'][pos_ind_noise],
                          pspec_dict['pCn_up'][pos_ind_noise],
@@ -317,14 +299,14 @@ for filename in args.files:
                         -pspec_dict['pCn'][neg_ind_noise], 
                         S.P_N*2,
                         linestyle='', marker=marker, color='0.5')
-                        
-    ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pspec_dict_err['pC_up']),
+    """ 
+    ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pspec_dict['pC_up']),
                     '--', color='black', label='pC {0:02}%'.format(int(pspec_dict['prob']*100))) 
-    ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pspec_dict_err['pI_up']),
+    ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pspec_dict['pI_up']),
                     '--', color='blue', label='pI {0:02}%'.format(int(pspec_dict['prob']*100)))
-    ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pspec_dict_err['pCn_up']),
+    ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pspec_dict['pCn_up']),
                     '--', color='black', label='pCn {0:02}%'.format(int(pspec_dict['prob']*100))) 
-    ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pspec_dict_err['pIn_up']),
+    ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pspec_dict['pIn_up']),
                     '--', color='blue', label='pIn {0:02}%'.format(int(pspec_dict['prob']*100)))
 
 # set up some parameters to make the figures pretty
