@@ -229,12 +229,16 @@ for chan_range in args.chan:
             # average over groups for easie
             # FFT fo k-space
             if False:
-                window = ap.dsp.gen_window(np.array(data_grouped[k]).shape[-1],window='blackman-harris')
-                norm = np.sqrt(np.mean(window**2)) #normalize the window so that power is conserved
+                window = ap.dsp.gen_window(np.array(data_grouped[k]).shape[-1],
+                                           window='blackman-harris')
+                # normalize the window so that power is conserved
+                norm = np.sqrt(np.mean(window**2))
                 window /= norm
-                power_grouped[k] = np.fft.ifft(np.conj(data_grouped[k]*window), axis=-1)
+                power_grouped[k] = np.fft.ifft(np.conj(data_grouped[k]*window),
+                                               axis=-1)
             else:
-                power_grouped[k] = np.fft.ifft(np.conj(data_grouped[k]), axis=-1)
+                power_grouped[k] = np.fft.ifft(np.conj(data_grouped[k]),
+                                               axis=-1)
             power_grouped[k] = np.fft.ifftshift(power_grouped[k], axes=-1)
 
         count = 0
