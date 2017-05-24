@@ -41,17 +41,17 @@ def load_andre_models():
                                       parms[7][-3:],  # alphaX
                                       parms[8][5:],  # Mmin
                                       parms[9][5:]]))
-        D = np.loadtxt(filename)
+        D = n.loadtxt(filename)
         k_array.append(D[:, 0])
         delta2_array.append(D[:, 1])
         delta2_err_array.append(D[:, 2])
-    parm_array = np.array(parm_array)
+    parm_array = n.array(parm_array)
     raw_parm_array = parm_array.copy()
-    k_array = np.ma.array(k_array)
+    k_array = n.ma.array(k_array)
     raw_k_array = k_array.copy()
-    delta2_array = np.ma.masked_invalid(delta2_array)
+    delta2_array = n.ma.masked_invalid(delta2_array)
     raw_delta2_array = delta2_array.copy()
-    delta2_err_array = np.ma.array(delta2_err_array)
+    delta2_err_array = n.ma.array(delta2_err_array)
     return parm_array, k_array, delta2_array, delta2_err_array
 
 
@@ -61,7 +61,7 @@ def all_and(arrays):
         return arrays
     out = arrays[0]
     for arr in arrays[1:]:
-        out = np.logical_and(out, arr)
+        out = n.logical_and(out, arr)
     return out
 
 
