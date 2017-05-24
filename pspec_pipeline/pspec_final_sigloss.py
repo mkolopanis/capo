@@ -11,8 +11,6 @@ import sys
 
 o = optparse.OptionParser()
 o.set_description(__doc__)
-o.add_option('--final',action='store_true',
-            help='Read final files.')
 opts,args = o.parse_args(sys.argv[1:])
 
 
@@ -25,10 +23,7 @@ Pout_points = {}
 Pout_noise_points = {}
 
 # read first inject file only
-if opts.final:
-    file = n.load(glob.glob('inject_*')[0] + '/pspec_pk_k3pk_final.npz')
-else:
-    file = n.load(glob.glob('inject_*')[0]+'/pspec_pk_k3pk.npz')
+file = n.load(glob.glob('inject_*')[0]+'/pspec_pk_k3pk.npz')
 pCv = n.abs(file['pCv'])
 pCv_err = file['pCv_err']
 pIv = n.abs(file['pIv'])
@@ -42,10 +37,7 @@ pIn_err = file['pIn_err']
 
 for inject in glob.glob('inject_*'):
     print 'Reading', inject
-    if opts.final:
-        file = n.load(inject + '/pspec_pk_k3pk_final.npz')
-    else:
-        file = n.load(inject + '/pspec_pk_k3pk.npz') 
+    file = n.load(inject + '/pspec_pk_k3pk.npz') 
     kpl = file['kpl']
     Pout = n.abs(file['pCr-pCv'])
     Pout_err = n.abs(file['pCr-pCv_err'])
@@ -211,10 +203,7 @@ for key in generator:
     meta_data[key] = file[key]
 
 
-if opts.final:
-    outname = 'pspec_final_median_final.npz'
-else:
-    outname = 'pspec_final_median.npz'
+outname = 'pspec_final_median.npz'
 print '   Saving', outname  # XXX 2-sigma probability is hard-coded
 n.savez(outname, kpl=kpl, k=file['k'], freq=file['freq'],
         pC=pCv, pC_up=2 * pCv_err,
