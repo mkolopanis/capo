@@ -656,6 +656,7 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100, version=4)
             if version == 4:
                 # flatten array in time and baseline
                 # no boots
+                X = n.mean(X, axis=0, keepdims=True) # average over split stack 
                 Z = scramble_avg_bootstrap_array_v4(indata[inname], func=avg_func)
                 Z_fold = scramble_avg_bootstrap_array_v4(X, func=avg_func)
             vals[outname] = Z.data
