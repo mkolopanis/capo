@@ -734,6 +734,7 @@ def split_stack_kpl(X, kpl):
     """
     # make sure that kpl matches the kpl axis
     # if theres an odd number of kpls, then there better be a zero value
+    Xfinal = []
     assert(X.shape[1] == len(kpl))
     assert(len(kpl) % 2 == 0 or n.abs(kpl).min() == 0)
     if n.abs(kpl).min() == 0:
@@ -749,8 +750,10 @@ def split_stack_kpl(X, kpl):
         X_kpos = X[:, kpl0_split_index:, :]
         # select and flip simultaneously
         X_kneg = X[:, kpl0_split_index - 1::-1, :]
-    return kpl[kpl0_split_index:], n.concatenate([X_kpos, X_kneg], axis=0)
-
+    #return kpl[kpl0_split_index:], n.concatenate([X_kpos, X_kneg], axis=0) 
+    Xfinal.append(X_kpos)
+    Xfinal.append(X_kneg)
+    return kpl[kpl0_split_index:], n.average(Xfinal, axis=0) # average along stacked dimension
 
 # Matt's power spectrum bits
 def read_bootstraps(files=None, verbose=False):

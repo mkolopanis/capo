@@ -123,9 +123,8 @@ for filename in args.files:
     
     if args.analytical:
         inttime = pspec_dict['frf_inttime']
-        nblg = pspec_dict['nblg'] #pspec_dict['nbls_eff']
         cnt = pspec_dict['cnt_eff']
-        nblg = pspec_dict['nblg']
+        nbls_g = pspec_dict['nbls_g']
         nlsts = len(pspec_dict['lsts']) * pspec_dict['inttime']
         nlsts /= pspec_dict['frf_inttime']
         nlsts_g = pspec_dict['nlsts_g']
@@ -135,10 +134,11 @@ for filename in args.files:
             omega_eff = .74**2/.24
         print 'Redshift:', redshift
         print '\tT_int:', inttime
-        print '\tNblg:', nblg
+        print '\tNbls_g:', nbls_g
         print '\tNdays:', cnt
         print '\tNlsts:', nlsts
-        if old_analytical:
+        print '\tNlsts_g:', nlsts_g
+        if old_analytical: # XXX might not work anymore, since we should use nlsts_g and nbls_g
             tsys = 500e3  #mK
             nseps = 1  #number of seps used
             folding = 2 # XXX 2 for delta^2
@@ -182,7 +182,7 @@ for filename in args.files:
             S.Nblgroups = 1 #groups are already folded into the calculation of nbls_eff
             S.Omega_eff = omega_eff #use the FRF weighted beams listed in T1 of Parsons etal beam sculpting paper
             k = pspec_dict['k']
-            S.Nbls = nblg
+            S.Nbls = nbls_g
             S.Nlstbins = nlsts_g
             S.calc()
             print "capo.sensitivity Pk_noise = ",S.P_N
