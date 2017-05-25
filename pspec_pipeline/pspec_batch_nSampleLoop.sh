@@ -60,9 +60,9 @@ SEP='0,1'
 RA='.1_8.6'
 EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
-DIRNAME='/home/saulkohn/pspec_test'
+DIRNAME='/home/saulkohn/pspec_test_large/'
 NBLG_MIN=2
-NBLG_MAX=4
+NBLG_MAX=24
 NLSTG_MIN=1
 NLSTG_MAX=10
 fi
@@ -79,7 +79,8 @@ for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-
         mkdir ${DIRNAME}/nblg${NBLG}
         mkdir ${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}
         echo SIGNAL_LEVEL=${inject}
-
+        
+        # Stage 1: pspec_oqe_2d.py
         ${PATH2CAPO}/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} \
         -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject} \
         ${EVEN_FILES} ${ODD_FILES} --NGPS=${NBLG} 
@@ -99,6 +100,9 @@ for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-
             ${PATH2CAPO}/pspec_pipeline/pspec_2d_to_1d.py --nlstg=1 --output=${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/ \
             ${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/pspec_oqe_2d.npz
         fi
-        # Stage 3: plot things
     done
 done
+
+# Stage 3: Plot things
+${PATH2CAPO}/pspec_pipeline/nGroupPlots.py --path2data=${DIRNAME} --nblg_min=${NBLG_MIN} --nblg_max=${NBLG_MAX} --nlst_min=${NLSTG_MIN} --nlstmax=${NLSTG_MAX} --plotAll
+
