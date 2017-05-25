@@ -74,7 +74,7 @@ pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 
 # average LSTs within groups
 for pspec in pspecs:
-    if pspec[0] == 'p' and args.nlstg > 1: # don't do this for 1 LST group 
+    if pspec[0] == 'p':  
         temp_pspec = []
         indices = np.linspace(0, pspecs[pspec].shape[2], args.nlstg+1, endpoint=True, dtype='int')
         for i,index in enumerate(range(len(indices)-1)):
