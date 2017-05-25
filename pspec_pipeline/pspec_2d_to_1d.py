@@ -112,7 +112,8 @@ print "      nbls in a group = ", pk_pspecs['nbls_g']
 print "   Total number of lsts = ", Neff_lst
 print "      number of lst groups = ", args.nlstg
 print "      nlsts in a group = ", pk_pspecs['nlsts_g']
-scaling = 1. + (1. / np.sqrt(2*(pk_pspecs['nPS']-1)))
+if pk_pspecs['nPS'] != 1: scaling = 1. + (1. / np.sqrt(2*(pk_pspecs['nPS']-1)))
+else: scaling = 1
 for key in pk_pspecs:
     if key[0] == 'p':
         pk_pspecs[key] = pk_pspecs[key] * scaling
