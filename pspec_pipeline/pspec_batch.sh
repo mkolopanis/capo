@@ -46,7 +46,8 @@ FRF='--frf'
 NOFRFPATH='' #'--nofrfpath pspec128_uvGA/inject_sep'${SEP}'_0.01/pspec_pk_k3pk.npz' # path to one pspec_2d_to_1d.py output for NONFRF case
 LMODE='' #'--lmode=12'
 CHANGEC='--changeC'
-NGPS=5
+NGPS=2
+NLSTG=2
 
 ### PSA64 Options ###
 
@@ -77,6 +78,6 @@ for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-
 
     # Stage 2: pspec_2d_to_1d.py
     ~/capo/pspec_pipeline/pspec_2d_to_1d.py \
-    --output=${DIRNAME}/inject_sep${SEP}_${inject}/ ${DIRNAME}/inject_sep${SEP}_${inject}/pspec_oqe_2d.npz
+    --output=${DIRNAME}/inject_sep${SEP}_${inject}/ --nlstg=${NLSTG} ${DIRNAME}/inject_sep${SEP}_${inject}/pspec_oqe_2d.npz
     
 done

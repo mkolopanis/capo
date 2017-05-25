@@ -29,6 +29,8 @@ parser.add_argument('--avg_func', default=np.mean,
                     help='Average function to use (default = np.mean).')
 parser.add_argument('-v', '--version', default=4,
                     help='Version of bootstrapping method. Existing versions are 1,2, or 4.')
+parser.add_argument('--nlstg', default=1, type=int,
+                    help='Number of total LST groups to average.')
 args = parser.parse_args()
 
 np.random.seed(0)
@@ -70,6 +72,17 @@ pspecs['pCs-pCn'] = pspecs['pCs'] - pspecs['pCn']
 pspecs['pIr-pIv'] = pspecs['pIr'] - pspecs['pIv']
 pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 
+# average LSTs within groups
+for pspec in pspecs:
+    if pspec[0] == 'p' and args.nlstg > 1: # don't do this for 1 LST group 
+        temp_pspec = []
+        indices = np.linspace(0, pspecs[pspec].shape[2], args.nlstg+1, endpoint=True, dtype='int')
+        for i,index in enumerate(range(len(indices)-1)):
+            temp = pspecs[pspec][:,:,indices[i]:indices[i+1]]
+            temp_pspec.append(np.mean(temp,axis=2))
+        avg_pspec = np.array(temp_pspec).swapaxes(0,2).swapaxes(0,1)
+        pspecs[pspec] = avg_pspec
+
 # compute Pk vs kpl vs bootstraps
 print "   Bootstrapping..."
 pk_pspecs, vals  = average_bootstraps(pspecs, Nt_eff=Neff_lst,
@@ -89,6 +102,8 @@ print "   kperp = ", kperp
 pk_pspecs['k'] = np.sqrt(kperp**2 + pk_pspecs['kpl_fold']**2)
 pk_pspecs['kperp'] = np.ma.masked_invalid(kperp)
 pk_pspecs['cmd'] = pk_pspecs['cmd'].item() + ' \n ' + ' '.join(sys.argv)
+pk_pspecs['nlsts_g'] = Neff_lst/args.nlstg # number of lsts in one group
+pk_pspecs['nPS'] = pspecs['pCv'].shape[0]*pspecs['pCv'].shape[2] 
 for key in pk_pspecs.keys():
     if isinstance(pk_pspecs[key], np.ma.MaskedArray):
         pk_pspecs[key].fill_value = 0  # fills invalid values with 0's
