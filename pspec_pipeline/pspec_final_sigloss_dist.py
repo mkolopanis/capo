@@ -340,7 +340,7 @@ n.savez(outname, kpl=kpl, k=file['k'], freq=file['freq'],
         alphaCv_fold=sigfactors_fold, alphaIv_fold=sigfactors_I_fold,
         alphaCn_fold=sigfactors_noise_fold,
         alphaIn_fold=sigfactors_noise_I_fold,
-        ngps=file['ngps'], nbls=file['nbls'], nblg=file['nblg'],
+        ngps=file['ngps'], nbls=file['nbls'], nbls_g=file['nbls_g'],
         lsts=file['lsts'], afreqs=file['afreqs'], cnt_eff=file['cnt_eff'],
         frf_inttime=file['frf_inttime'], inttime=file['inttime'], 
         cmd=file['cmd'].item() + ' \n '+' '.join(sys.argv))
