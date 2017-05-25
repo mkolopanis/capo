@@ -20,11 +20,11 @@ CHAN='30_50,95_115'
 POL='I'
 weight='I'
 WINDOW='none'
-FRF=''
-#NOFRFPATH='--nofrfpath pspec128_uvGA/inject_sep'${SEP}'_0.01/pspec_pk_k3pk.npz' # path to one pspec_2d_to_1d.py output for NONFRF case
-NOFRFPATH=''
+FRF='--frf'
 LMODE='' #'--lmode=12'
-CHANGEC='' #'--changeC'
+CHANGEC='--changeC' #throw out off diagonal terms of covariance.
+NGPS=1
+NLSTG=2
 
 else
 ### PSA128 options ###
@@ -43,18 +43,24 @@ POL='I'
 weight='L^-1'
 WINDOW='none'
 FRF='--frf'
-NOFRFPATH='--nofrfpath pspec128_uvGA/inject_sep'${SEP}'_0.01/pspec_pk_k3pk.npz' # path to one pspec_2d_to_1d.py output for NONFRF case
+NOFRFPATH='' #'--nofrfpath pspec128_uvGA/inject_sep'${SEP}'_0.01/pspec_pk_k3pk.npz' # path to one pspec_2d_to_1d.py output for NONFRF case
 LMODE='' #'--lmode=12'
-CHANGEC='' #'--changeC'
-fi
+CHANGEC='--changeC'
+NGPS=2
+NLSTG=2
+
 ### PSA64 Options ###
 
-#EVEN_FILES='/home/cacheng/capo/ctc/matt_data/lstbin_psa64_data_optimal/even/*uvGAL'
-#ODD_FILES='/home/cacheng/capo/ctc/matt_data/lstbin_psa64_data_optimal/odd/*uvGAL'
-#CALFILE='psa6240_v003'
-#CHAN='95_115'
-#SEP='0,1'
-#RA='.1_8.6'
+EVEN_FILES='/home/cacheng/capo/ctc/matt_data/even/*uvGAL'
+ODD_FILES='/home/cacheng/capo/ctc/matt_data/odd/*uvGAL'
+CALFILE='psa6240_v003'
+CHAN='95_115'
+SEP='0,1'
+RA='.1_8.6'
+EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
+ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
+DIRNAME=$2
+fi
 #-----------------------------------------------------------------
 
 # Make Power Spectrum Directory
@@ -66,23 +72,12 @@ for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-
     mkdir ${DIRNAME}/inject_sep${SEP}_${inject}
     echo SIGNAL_LEVEL=${inject}
 
-    #calculate error bars across 5 groups (the SUBSET)
     ~/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} \
     -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/inject_sep${SEP}_${inject} \
-    ${EVEN_FILES} ${ODD_FILES} --NGPS=5
-
-    #get the deepest power spectrum (the FULL)
-    ~/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} \
-    -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/inject_sep${SEP}_${inject} \
-    ${EVEN_FILES} ${ODD_FILES} --NGPS=1
+    ${EVEN_FILES} ${ODD_FILES} --NGPS=${NGPS}
 
     # Stage 2: pspec_2d_to_1d.py
-    #(variance across the subset)
-    ~/capo/pspec_pipeline/pspec_2d_to_1d.py ${FRF} ${NOFRFPATH} \
-    --output=${DIRNAME}/inject_sep${SEP}_${inject}/ ${DIRNAME}/inject_sep${SEP}_${inject}/pspec_oqe_2d.npz
+    ~/capo/pspec_pipeline/pspec_2d_to_1d.py \
+    --output=${DIRNAME}/inject_sep${SEP}_${inject}/ --nlstg=${NLSTG} ${DIRNAME}/inject_sep${SEP}_${inject}/pspec_oqe_2d.npz
     
-    #average over bls and lsts (todo: remove unnecessary bootstrap)
-    ~/capo/pspec_pipeline/pspec_2d_to_1d.py ${FRF} ${NOFRFPATH} \
-    --output=${DIRNAME}/inject_sep${SEP}_${inject}/ ${DIRNAME}/inject_sep${SEP}_${inject}/pspec_oqe_2d_final.npz
-
 done

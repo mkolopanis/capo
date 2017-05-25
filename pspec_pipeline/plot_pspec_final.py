@@ -112,7 +112,6 @@ k_par_max = 0
 print 'Using these parameters for the Analytic Model:'
 for filename in args.files:
     pspec_dict = np.load(filename)
-    pspec_dict_err = np.load(filename[:-10]+'.npz')
     if np.max(pspec_dict['k']) > k_max:
         k_max = np.max(pspec_dict['k'])
 
@@ -124,26 +123,26 @@ for filename in args.files:
     
     if args.analytical:
         inttime = pspec_dict['frf_inttime']
-        nbls = pspec_dict['nbls'] #pspec_dict['nbls_eff']
-        nbls_err = pspec_dict_err['nbls']
         cnt = pspec_dict['cnt_eff']
+        nbls_g = pspec_dict['nbls_g']
         nlsts = len(pspec_dict['lsts']) * pspec_dict['inttime']
         nlsts /= pspec_dict['frf_inttime']
+        nlsts_g = pspec_dict['nlsts_g']
         if pspec_dict['frf_inttime'] == pspec_dict['inttime']:
             omega_eff = .74**2/.32 # for capo analytical; from T1 of Parsons FRF paper
         else:
             omega_eff = .74**2/.24
         print 'Redshift:', redshift
         print '\tT_int:', inttime
-        print '\tNbls:', nbls
+        print '\tNbls_g:', nbls_g
         print '\tNdays:', cnt
         print '\tNlsts:', nlsts
-        if old_analytical:
+        print '\tNlsts_g:', nlsts_g
+        if old_analytical: # XXX might not work anymore, since we should use nlsts_g and nbls_g
             tsys = 500e3  #mK
             nseps = 1  #number of seps used
             folding = 2 # XXX 2 for delta^2
             nmodes = (nlsts*nseps*folding)**.5
-            nmodes_err = (nlsts*nseps*folding)**.5
             pol = 2
             real = np.sqrt(2)
             sdf = .1/203
@@ -159,7 +158,6 @@ for filename in args.files:
             #error bars minimum width. Consider them flat for P(k). Factor of 2 at the end is due to folding of kpl (root(2)) and root(2) in radiometer equation.
             #pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (2*inttime*pol*real*nbls*ndays*nmodes) ) #this 2-sigma curve should encompass 95% of the points
             pk_noise = 2*scalar*( (tsys)**2 / (inttime*pol*real*nbls*cnt*nmodes) ) # this 2-sigma curve should line up with pI
-            pk_noise_err = 2*scalar*( (tsys)**2 / (inttime*pol*real*nbls_err*cnt*nmodes_err) ) # this 2-sigma curve should line up with pI
             # Plot analytical noise curve on plots
             ax1[gs_ind].plot(pspec_dict['k'],pk_noise*pspec_dict['k']**3/(2*np.pi**2),'g-',label='Analytical 2-sigma')
             ax2[gs_ind].axhline(pk_noise,color='g',marker='_',label='Analytical 2-sigma')
@@ -184,20 +182,12 @@ for filename in args.files:
             S.Nblgroups = 1 #groups are already folded into the calculation of nbls_eff
             S.Omega_eff = omega_eff #use the FRF weighted beams listed in T1 of Parsons etal beam sculpting paper
             k = pspec_dict['k']
-            
-            # Calculate analytic for subset of data
-            S.Nbls = nbls_err
-            S.Nlstbins = 1.0
-            S.calc()
-            print "capo.sensitivity Pk_noise for subset = ",S.P_N
-            ax5[gs_ind].axhline(S.P_N*2,color='g',marker='_',label='Analytical 2-sigma')
-            ax6[gs_ind].axhline(S.P_N*2,color='g',marker='_',label='Analytical 2-sigma')
-            
-            # Calculate analytic for all data
-            S.Nbls = nbls
-            S.Nlstbins = nlsts
+            S.Nbls = nbls_g
+            S.Nlstbins = nlsts_g
             S.calc()
             print "capo.sensitivity Pk_noise = ",S.P_N
+            ax5[gs_ind].axhline(S.P_N*2,color='g',marker='_',label='Analytical 2-sigma')
+            ax6[gs_ind].axhline(S.P_N*2,color='g',marker='_',label='Analytical 2-sigma')
             ax1[gs_ind].plot(k,S.Delta2_N(k)*2,'g-',label='Analytical 2-sigma')
             ax2[gs_ind].axhline(S.P_N*2,color='g',marker='_',label='Analytical 2-sigma')
             ax3[gs_ind].plot(k,S.Delta2_N(k)*2,'g-',label='Analytical 2-sigma')
@@ -206,85 +196,116 @@ for filename in args.files:
     marker = markers[marker_count[gs_ind]]
     marker_count[gs_ind] += 1
 
-    pos_ind = np.where(pspec_dict['pC'] >= 0)[0]
-    pos_ind_noise = np.where(pspec_dict['pCn'] >= 0)[0]
-    pos_ind_fold = np.where(pspec_dict['pC_fold'] >= 0)[0]
-    pos_ind_noise_fold = np.where(pspec_dict['pCn_fold'] >= 0)[0]
-    neg_ind = np.where(pspec_dict['pC'] < 0)[0]
-    neg_ind_noise = np.where(pspec_dict['pCn'] < 0)[0]
-    neg_ind_fold = np.where(pspec_dict['pC_fold'] < 0)[0]
-    neg_ind_noise_fold = np.where(pspec_dict['pCn_fold'] < 0)[0]
+    try: # find from signal loss results
+        pCv = pspec_dict['pC']
+        pIv = pspec_dict['pI']
+        pCn = pspec_dict['pCn']
+        pIn = pspec_dict['pIn']
+        pCv_fold = pspec_dict['pC_fold']
+        pIv_fold = pspec_dict['pI_fold']
+        pCn_fold = pspec_dict['pCn_fold']
+        pIn_fold = pspec_dict['pIn_fold']
+        pCv_up = pspec_dict['pC_up']
+        pIv_up = pspec_dict['pI_up']
+        pCv_fold_up = pspec_dict['pC_fold_up']
+        pIv_fold_up = pspec_dict['pI_fold_up']
+        pCn_up = pspec_dict['pCn_up']
+        pIn_up = pspec_dict['pIn_up']
+        pCn_fold_up = pspec_dict['pCn_fold_up']
+        pIn_fold_up = pspec_dict['pIn_fold_up']
+        prob = pspec_dict['prob']*100
+    except: # find from pspec_2d_to_1d results
+        fold_factor = pspec_dict['k']**3/(2*np.pi**2)
+        pCv = pspec_dict['pCv']
+        pIv = pspec_dict['pIv']
+        pCv_fold = pspec_dict['pCv_fold']*fold_factor
+        pIv_fold = pspec_dict['pIv_fold']*fold_factor
+        pCn = pspec_dict['pCn']
+        pIn = pspec_dict['pIn']
+        pCn_fold = pspec_dict['pCn_fold']*fold_factor
+        pIn_fold = pspec_dict['pIn_fold']*fold_factor
+        pCv_up = pspec_dict['pCv_err']*2
+        pIv_up = pspec_dict['pIv_err']*2
+        pCv_fold_up = pspec_dict['pCv_fold_err']*2*fold_factor
+        pIv_fold_up = pspec_dict['pIv_fold_err']*2*fold_factor
+        pCn_up = pspec_dict['pCn_err']*2
+        pIn_up = pspec_dict['pIn_err']*2
+        pCn_fold_up = pspec_dict['pCn_fold_err']*2*fold_factor
+        pIn_fold_up = pspec_dict['pIn_fold_err']*2*fold_factor
+        prob = 95
+    
+    pos_ind = np.where(pCv >= 0)[0]
+    pos_ind_noise = np.where(pCn >= 0)[0]
+    pos_ind_fold = np.where(pCv_fold >= 0)[0]
+    pos_ind_noise_fold = np.where(pCn_fold >= 0)[0]
+    neg_ind = np.where(pCv < 0)[0]
+    neg_ind_noise = np.where(pCn < 0)[0]
+    neg_ind_fold = np.where(pCv_fold < 0)[0]
+    neg_ind_noise_fold = np.where(pCn_fold < 0)[0]
 
-    """
     ax1[gs_ind].plot(pspec_dict['k'],
-                     np.abs(pspec_dict['pI_fold']) + pspec_dict['pI_fold_up'], '--',
-                     label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)))
+                     np.abs(pIv_fold) + pIv_fold_up, '--',
+                     label='pI {0:02d}%'.format(int(prob)))
     #ax1[gs_ind].errorbar(pspec_dict['k'],
-    #                pspec_dict['pI_fold'], pspec_dict['pI_fold_up'],
-    #                label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)),
+    #                pIv_fold, pIv_fold_up,
+    #                label='pI {0:02d}%'.format(int(prob)),
     #                linestyle='',marker=marker,color='blue')
     ax1[gs_ind].errorbar(pspec_dict['k'][pos_ind_fold],
-                         pspec_dict['pC_fold'][pos_ind_fold],
-                         pspec_dict['pC_fold_up'][pos_ind_fold],
-                         label='pC {0:02d}%'.format(int(pspec_dict['prob']*100)),
+                         pCv_fold[pos_ind_fold],
+                         pCv_fold_up[pos_ind_fold],
+                         label='pC {0:02d}%'.format(int(prob)),
                          linestyle='', marker=marker, color='black')
     ax1[gs_ind].errorbar(pspec_dict['k'][neg_ind_fold],
-                         -pspec_dict['pC_fold'][neg_ind_fold],
-                         pspec_dict['pC_fold_up'][neg_ind_fold],
+                         -pCv_fold[neg_ind_fold],
+                         pCv_fold_up[neg_ind_fold],
                          linestyle='',marker=marker, color='0.5')
     ax2[gs_ind].plot(pspec_dict['kpl'],
-                     np.abs(pspec_dict['pI']) + pspec_dict['pI_up'], '--',
-                     label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)))
+                     np.abs(pIv) + pIv_up, '--',
+                     label='pI {0:02d}%'.format(int(prob)))
     #ax2[gs_ind].errorbar(pspec_dict['kpl'],
-    #                pspec_dict['pI'], pspec_dict['pI_up'],
-    #                label='pI {0:02d}%'.format(int(pspec_dict['prob']*100)),
+    #                pIv, pIv_up,
+    #                label='pI {0:02d}%'.format(int(prob)),
     #                linestyle='',marker=marker,color='blue')
-    ax2[gs_ind].errorbar(pspec_dict['kpl'][pos_ind], pspec_dict['pC'][pos_ind],
-                         pspec_dict['pC_up'][pos_ind],
-                         label='pC {0:02d}%'.format(int(pspec_dict['prob']*100)),
+    ax2[gs_ind].errorbar(pspec_dict['kpl'][pos_ind], 
+                         pCv[pos_ind],
+                         pCv_up[pos_ind],
+                         label='pC {0:02d}%'.format(int(prob)),
                          linestyle='', marker=marker, color='black')
-    ax2[gs_ind].errorbar(pspec_dict['kpl'][neg_ind], -pspec_dict['pC'][neg_ind],
-                         pspec_dict['pC_up'][neg_ind],
+    ax2[gs_ind].errorbar(pspec_dict['kpl'][neg_ind], 
+                         -pCv[neg_ind],
+                         pCv_up[neg_ind],
                          linestyle='', marker=marker, color='0.5')
     ax3[gs_ind].plot(pspec_dict['k'],
-                     np.abs(pspec_dict['pIn_fold']) + pspec_dict['pIn_fold_up'], '--',
-                     label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)))
+                     np.abs(pIn_fold) + pIn_fold_up, '--',
+                     label='pIn {0:02d}%'.format(int(prob)))
     #ax3[gs_ind].errorbar(pspec_dict['k'],
-    #                    pspec_dict['pIn_fold'], pspec_dict['pIn_fold_up'],
-    #                    label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)),
+    #                    pIn_fold, pIn_fold_up,
+    #                    label='pIn {0:02d}%'.format(int(prob)),
     #                    linestyle='', marker=marker, color='blue')
     ax3[gs_ind].errorbar(pspec_dict['k'][pos_ind_noise_fold],
-                         pspec_dict['pCn_fold'][pos_ind_noise_fold],
-                         pspec_dict['pCn_fold_up'][pos_ind_noise_fold],
-                         label='pCn {0:02d}%'.format(int(pspec_dict['prob']*100)),
+                         pCn_fold[pos_ind_noise_fold],
+                         pCn_fold_up[pos_ind_noise_fold],
+                         label='pCn {0:02d}%'.format(int(prob)),
                          linestyle='', marker=marker, color='black')
     ax3[gs_ind].errorbar(pspec_dict['k'][neg_ind_noise_fold],
-                         -pspec_dict['pCn_fold'][neg_ind_noise_fold],
-                         pspec_dict['pCn_fold_up'][neg_ind_noise_fold],
+                         -pCn_fold[neg_ind_noise_fold],
+                         pCn_fold_up[neg_ind_noise_fold],
                          linestyle='', marker=marker, color='0.5')
     ax4[gs_ind].plot(pspec_dict['kpl'],
-                     np.abs(pspec_dict['pIn']) + pspec_dict['pIn_up'], '--',
-                     label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)))
-    #ax4[gs_ind].plot(pspec_dict['kpl'], 
-    #                np.abs(pspec_dict['pIn_up']), '--', color='blue')
-    #ax4[gs_ind].plot(pspec_dict['kpl'],
-    #                np.abs(pspec_dict['pCn_up']), '--', color='black')           
+                     np.abs(pIn) + pIn_up, '--',
+                     label='pIn {0:02d}%'.format(int(prob)))
     #ax4[gs_ind].errorbar(pspec_dict['kpl'],
-    #                pspec_dict['pIn'], pspec_dict['pIn_up'],
-    #                label='pIn {0:02d}%'.format(int(pspec_dict['prob']*100)),
+    #                pIn, pIn_up
+    #                label='pIn {0:02d}%'.format(int(prob)),
     #                linestyle='', marker=marker, color='blue')
-    #ax4[gs_ind].errorbar(pspec_dict['kpl'],
-    #                pspec_dict['pCn'], pspec_dict['pCn_up'],
-    #                label='pCn {0:02d}%'.format(int(pspec_dict['prob']*100)),
-    #                linestyle='', marker=marker, color='black')
     ax4[gs_ind].errorbar(pspec_dict['kpl'][pos_ind_noise],
-                         pspec_dict['pCn'][pos_ind_noise],
-                         pspec_dict['pCn_up'][pos_ind_noise],
-                         label='pCn {0:02d}%'.format(int(pspec_dict['prob']*100)),
+                         pCn[pos_ind_noise],
+                         pCn_up[pos_ind_noise],
+                         label='pCn {0:02d}%'.format(int(prob)),
                          linestyle='', marker=marker, color='black')
     ax4[gs_ind].errorbar(pspec_dict['kpl'][neg_ind_noise],
-                         -pspec_dict['pCn'][neg_ind_noise],
-                         pspec_dict['pCn_up'][neg_ind_noise],
+                         -pCn[neg_ind_noise],
+                         pCn_up[neg_ind_noise],
                          linestyle='', marker=marker, color='0.5')
     """
     ax1[gs_ind].errorbar(pspec_dict['k'][pos_ind_fold], 
@@ -319,15 +340,15 @@ for filename in args.files:
                         -pspec_dict['pCn'][neg_ind_noise], 
                         S.P_N*2,
                         linestyle='', marker=marker, color='0.5')
-                        
-    ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pspec_dict_err['pC_up']),
-                    '--', color='black', label='pC {0:02}%'.format(int(pspec_dict['prob']*100))) 
-    ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pspec_dict_err['pI_up']),
-                    '--', color='blue', label='pI {0:02}%'.format(int(pspec_dict['prob']*100)))
-    ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pspec_dict_err['pCn_up']),
-                    '--', color='black', label='pCn {0:02}%'.format(int(pspec_dict['prob']*100))) 
-    ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pspec_dict_err['pIn_up']),
-                    '--', color='blue', label='pIn {0:02}%'.format(int(pspec_dict['prob']*100)))
+    """ 
+    ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pCv_up),
+                    '--', color='black', label='pC {0:02}%'.format(int(prob))) 
+    ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pIv_up),
+                    '--', color='blue', label='pI {0:02}%'.format(int(prob)))
+    ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pCn_up),
+                    '--', color='black', label='pCn {0:02}%'.format(int(prob))) 
+    ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pIn_up),
+                    '--', color='blue', label='pIn {0:02}%'.format(int(prob)))
 
 # set up some parameters to make the figures pretty
 for gs_ind in xrange(Nzs):

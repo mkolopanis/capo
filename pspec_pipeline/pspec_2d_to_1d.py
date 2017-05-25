@@ -22,13 +22,15 @@ parser.add_argument('files', metavar='<FILE>', type=str, nargs='+',
 parser.add_argument('--output', type=str, default='./',
                     help='Specifically specify out directory.')
 parser.add_argument('--nboots', type=int, default=100,
-                    help='Number of Bootstraps (averages) default=100')
+                    help='Number of Bootstraps (averages) default=100 if using bootstrap versions 1 or 2.')
 parser.add_argument('--Neff_lst', default=None,
-                    help='Number of effective LSTs. If none (default), it is calculated using Nlstbins and t_eff.')
-parser.add_argument('--frf', action='store_true',
-                    help='Specify whether data is FRF, in which case the error bar correction factor is used.')
-parser.add_argument('--nofrfpath', type=str, default=None,
-                    help='Path to non-FRF pspec_pk_k3pk.npz file (ex: <path>/pspec_pk_k3pk.npz).')
+                    help='Number of effective LSTs (if using bootstrap versions 1 or 2). If none (default), it is calculated using Nlstbins and t_eff.')
+parser.add_argument('--avg_func', default=np.mean,
+                    help='Average function to use (default = np.mean).')
+parser.add_argument('-v', '--version', default=4,
+                    help='Version of bootstrapping method. Existing versions are 1,2, or 4.')
+parser.add_argument('--nlstg', default=1, type=int,
+                    help='Number of total LST groups to average.')
 args = parser.parse_args()
 
 np.random.seed(0)
@@ -70,37 +72,26 @@ pspecs['pCs-pCn'] = pspecs['pCs'] - pspecs['pCn']
 pspecs['pIr-pIv'] = pspecs['pIr'] - pspecs['pIv']
 pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 
-#for key in pspecs:
-#    if key[0] == 'p':
-#        shape = pspecs[key].shape
-#        indices = np.linspace(0, shape[2], Neff_lst, dtype='int', endpoint=False)
-#        pspecs[key] = pspecs[key][:,:,indices] # down-selecting in time
+# average LSTs within groups
+for pspec in pspecs:
+    if pspec[0] == 'p':  
+        temp_pspec = []
+        indices = np.linspace(0, pspecs[pspec].shape[2], args.nlstg+1, endpoint=True, dtype='int')
+        for i,index in enumerate(range(len(indices)-1)):
+            temp = pspecs[pspec][:,:,indices[i]:indices[i+1]]
+            temp_pspec.append(np.mean(temp,axis=2))
+        avg_pspec = np.array(temp_pspec).swapaxes(0,2).swapaxes(0,1)
+        pspecs[pspec] = avg_pspec
 
 # compute Pk vs kpl vs bootstraps
 print "   Bootstrapping..."
 pk_pspecs, vals  = average_bootstraps(pspecs, Nt_eff=Neff_lst,
-                                     Nboots=args.nboots, avg_func=np.mean)
-if args.files[0][-9:] == 'final.npz':
-    outname = 'pspec_2d_to_1d_final.npz'
-else: 
-    outname = 'pspec_2d_to_1d.npz'
+                                     Nboots=args.nboots, avg_func=args.avg_func,
+                                        version=args.version)
+outname = 'pspec_2d_to_1d.npz'
 print '   Saving', outname  # save all values used in bootstrapping
 np.savez(args.output + outname, **vals)
 
-"""
-# correct errors in FRF case
-if args.frf:
-    if args.nofrfpath == None:
-        print 'Must provide path to non-FRF pspec_pk_k3pk.npz file.'
-        sys.exit()
-    else:
-        print '   Overwriting bootstrapped errors with non-FRF errors * correction factor...'
-        file = np.load(args.nofrfpath)
-        factor = pspecs['err_factor']
-        for key in pk_pspecs.keys():
-            if key[-3:] == 'err':
-                pk_pspecs[key] = file[key] * factor
-"""
 # Compute |k|
 bl_length = np.linalg.norm(pspecs['uvw'])
 wavelength = cosmo_units.c / (pspecs['freq'] * 1e9)
@@ -111,13 +102,29 @@ print "   kperp = ", kperp
 pk_pspecs['k'] = np.sqrt(kperp**2 + pk_pspecs['kpl_fold']**2)
 pk_pspecs['kperp'] = np.ma.masked_invalid(kperp)
 pk_pspecs['cmd'] = pk_pspecs['cmd'].item() + ' \n ' + ' '.join(sys.argv)
+pk_pspecs['nlsts_g'] = Neff_lst/args.nlstg # number of lsts in one group
+pk_pspecs['nPS'] = pspecs['pCv'].shape[0]*pspecs['pCv'].shape[2] 
+
+# Scale for error on error
+print "   Total number of bls = ", pk_pspecs['nbls']
+print "      number of bl groups = ", pk_pspecs['ngps']
+print "      nbls in a group = ", pk_pspecs['nbls_g']
+print "   Total number of lsts = ", Neff_lst
+print "      number of lst groups = ", args.nlstg
+print "      nlsts in a group = ", pk_pspecs['nlsts_g']
+if pk_pspecs['nPS'] != 1: scaling = 1. + (1. / np.sqrt(2*(pk_pspecs['nPS']-1)))
+else: 
+    scaling = 1
+    print '   !!! Warning: Scaling blows up since there is only one independent sample. Not applying correction factor !!!'
+for key in pk_pspecs:
+    if key[0] == 'p':
+        pk_pspecs[key] = pk_pspecs[key] * scaling
+print '   We have', pk_pspecs['nPS'], 'independent samples...'
+print '   ... Therefore, we correct for error on error using factor =', scaling
 for key in pk_pspecs.keys():
     if isinstance(pk_pspecs[key], np.ma.MaskedArray):
         pk_pspecs[key].fill_value = 0  # fills invalid values with 0's
         pk_pspecs[key] = pk_pspecs[key].filled()  # returns corrected array
-if args.files[0][-9:] == 'final.npz':
-    filename = args.output + 'pspec_pk_k3pk_final.npz'
-else:
-    filename = args.output + 'pspec_pk_k3pk.npz'
+filename = args.output + 'pspec_pk_k3pk.npz'
 print '   Saving', filename
 np.savez(filename, **pk_pspecs)
