@@ -103,7 +103,7 @@ pk_pspecs['k'] = np.sqrt(kperp**2 + pk_pspecs['kpl_fold']**2)
 pk_pspecs['kperp'] = np.ma.masked_invalid(kperp)
 pk_pspecs['cmd'] = pk_pspecs['cmd'].item() + ' \n ' + ' '.join(sys.argv)
 pk_pspecs['nlsts_g'] = Neff_lst/args.nlstg # number of lsts in one group
-pk_pspecs['nPS'] = pspecs['pCv'].shape[0]*pspecs['pCv'].shape[2] 
+pk_pspecs['nPS'] = pspecs['pCv'].shape[0]+pspecs['pCv'].shape[2] 
 
 # Scale for error on error
 print "   Total number of bls = ", pk_pspecs['nbls']
