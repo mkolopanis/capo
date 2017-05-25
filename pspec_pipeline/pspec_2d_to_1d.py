@@ -106,6 +106,12 @@ pk_pspecs['nlsts_g'] = Neff_lst/args.nlstg # number of lsts in one group
 pk_pspecs['nPS'] = pspecs['pCv'].shape[0]*pspecs['pCv'].shape[2] 
 
 # Scale for error on error
+print "   Total number of bls = ", pk_pspecs['nbls']
+print "      number of bl groups = ", pk_pspecs['ngps']
+print "      nbls in a group = ", pk_pspecs['nbls_g']
+print "   Total number of lsts = ", Neff_lst
+print "      number of lst groups = ", args.nlstg
+print "      nlsts in a group = ", pk_pspecs['nlsts_g']
 scaling = 1. + (1. / np.sqrt(2*(pk_pspecs['nPS']-1)))
 for key in pk_pspecs:
     if key[0] == 'p':

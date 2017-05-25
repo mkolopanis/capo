@@ -433,7 +433,7 @@ lsts = lsts[lsts.keys()[0]]
 cnt_eff = 1./n.sqrt(n.ma.masked_invalid(1./cnt_full**2).mean())
 # calculate the effective number of baselines given grouping:
 N = len(bls_master)
-nblg = N/NGPS # rounds down to integer
+nbls_g = N/NGPS # rounds down to integer
 nbls = N
 
 # Fringe-rate filter noise
@@ -584,5 +584,5 @@ n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
         sep=sep_type, uvw=uvw,
         frf_inttime=frf_inttime, inttime=inttime,
         inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
-        cnt_eff=cnt_eff, nbls=nbls, ngps=NGPS, nblg=nblg,
+        cnt_eff=cnt_eff, nbls=nbls, ngps=NGPS, nbls_g=nbls_g,
         cmd=' '.join(sys.argv))
