@@ -196,9 +196,6 @@ for filename in args.files:
     marker = markers[marker_count[gs_ind]]
     marker_count[gs_ind] += 1
 
-    # error on the error
-    scaling = 1. + (1. / np.sqrt(2*(pspec_dict['nPS']-1)))
-    
     try: # find from signal loss results
         pCv = pspec_dict['pC']
         pIv = pspec_dict['pI']
@@ -208,14 +205,14 @@ for filename in args.files:
         pIv_fold = pspec_dict['pI_fold']
         pCn_fold = pspec_dict['pCn_fold']
         pIn_fold = pspec_dict['pIn_fold']
-        pCv_up = pspec_dict['pC_up']*scaling
-        pIv_up = pspec_dict['pI_up']*scaling
-        pCv_fold_up = pspec_dict['pC_fold_up']*scaling
-        pIv_fold_up = pspec_dict['pI_fold_up']*scaling
-        pCn_up = pspec_dict['pCn_up']*scaling
-        pIn_up = pspec_dict['pIn_up']*scaling
-        pCn_fold_up = pspec_dict['pCn_fold_up']*scaling
-        pIn_fold_up = pspec_dict['pIn_fold_up']*scaling
+        pCv_up = pspec_dict['pC_up']
+        pIv_up = pspec_dict['pI_up']
+        pCv_fold_up = pspec_dict['pC_fold_up']
+        pIv_fold_up = pspec_dict['pI_fold_up']
+        pCn_up = pspec_dict['pCn_up']
+        pIn_up = pspec_dict['pIn_up']
+        pCn_fold_up = pspec_dict['pCn_fold_up']
+        pIn_fold_up = pspec_dict['pIn_fold_up']
         prob = pspec_dict['prob']*100
     except: # find from pspec_2d_to_1d results
         fold_factor = pspec_dict['k']**3/(2*np.pi**2)
@@ -227,14 +224,14 @@ for filename in args.files:
         pIn = pspec_dict['pIn']
         pCn_fold = pspec_dict['pCn_fold']*fold_factor
         pIn_fold = pspec_dict['pIn_fold']*fold_factor
-        pCv_up = pspec_dict['pCv_err']*2*scaling
-        pIv_up = pspec_dict['pIv_err']*2*scaling
-        pCv_fold_up = pspec_dict['pCv_fold_err']*2*fold_factor*scaling
-        pIv_fold_up = pspec_dict['pIv_fold_err']*2*fold_factor*scaling
-        pCn_up = pspec_dict['pCn_err']*2*scaling
-        pIn_up = pspec_dict['pIn_err']*2*scaling
-        pCn_fold_up = pspec_dict['pCn_fold_err']*2*fold_factor*scaling
-        pIn_fold_up = pspec_dict['pIn_fold_err']*2*fold_factor*scaling
+        pCv_up = pspec_dict['pCv_err']*2
+        pIv_up = pspec_dict['pIv_err']*2
+        pCv_fold_up = pspec_dict['pCv_fold_err']*2*fold_factor
+        pIv_fold_up = pspec_dict['pIv_fold_err']*2*fold_factor
+        pCn_up = pspec_dict['pCn_err']*2
+        pIn_up = pspec_dict['pIn_err']*2
+        pCn_fold_up = pspec_dict['pCn_fold_err']*2*fold_factor
+        pIn_fold_up = pspec_dict['pIn_fold_err']*2*fold_factor
         prob = 95
     
     pos_ind = np.where(pCv >= 0)[0]

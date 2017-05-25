@@ -104,6 +104,15 @@ pk_pspecs['kperp'] = np.ma.masked_invalid(kperp)
 pk_pspecs['cmd'] = pk_pspecs['cmd'].item() + ' \n ' + ' '.join(sys.argv)
 pk_pspecs['nlsts_g'] = Neff_lst/args.nlstg # number of lsts in one group
 pk_pspecs['nPS'] = pspecs['pCv'].shape[0]*pspecs['pCv'].shape[2] 
+
+# Scale for error on error
+scaling = 1. + (1. / np.sqrt(2*(pk_pspecs['nPS']-1)))
+for key in pk_pspecs:
+    if key[0] == 'p':
+        pk_pspecs[key] = pk_pspecs[key] * scaling
+print '   We have', pk_pspecs['nPS'], 'independent samples...'
+print '   ... Therefore, we correct for error on error using factor =', scaling
+
 for key in pk_pspecs.keys():
     if isinstance(pk_pspecs[key], np.ma.MaskedArray):
         pk_pspecs[key].fill_value = 0  # fills invalid values with 0's
