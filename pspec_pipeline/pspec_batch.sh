@@ -10,12 +10,12 @@ CALFILE='psa6240_v003'
 RA='.1_8.6'
 SEP='0,1'
 DATA=$1
-EVEN_FILES=${DATA}'/even/sep'${SEP}'/*.uvGA'
-ODD_FILES=${DATA}'/odd/sep'${SEP}'/*.uvGA'
+EVEN_FILES=${DATA}'/even/sep'${SEP}'/*.uvGAL'
+ODD_FILES=${DATA}'/odd/sep'${SEP}'/*.uvGAL'
 DIRNAME=$2
 EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
-CHAN='95_115'
+CHAN='30_50,95_115'
 #NBOOT=20
 POL='I'
 weight='I'
@@ -27,7 +27,7 @@ LMODE='' #'--lmode=12'
 CHANGEC='' #'--changeC'
 
 else
-### My Options ###
+### PSA128 options ###
 CALFILE='psa6622_v003'
 RA='4_10'
 SEP='0,2'
