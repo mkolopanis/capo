@@ -337,7 +337,7 @@ etas = n.fft.fftshift(capo.pspec.f2eta(afreqs))
 # create etas (fourier dual to frequency)
 kpl = etas * capo.pspec.dk_deta(z)
 if True:
-    bm = n.polyval(capo.pspec.DEFAULT_BEAM_POLY, fq) * 2.35
+    bm = n.polyval(capo.pspec.PAPER_BEAM_POLY, fq) * 2.35
     if opts.frf: bm *= 1.3 # correction factor for FRF omega_pp = .32/.24 = 1.3
     # correction for beam^2
     scalar = capo.pspec.X2Y(z) * bm * B
