@@ -20,7 +20,7 @@ parser.add_argument('--odd_files', metavar='<ODD_FILE>', type=str, nargs='+',
 parser.add_argument('--output', type=str, default='./',
                     help='Specifically specify out directory.')
 parser.add_argument('-b', '--nboots', type=int, default=60,
-                    help='Number of Bootstraps (averages)')
+                    help='Number of Bootstraps (averages) default=60')
 parser.add_argument('-a', '--ant', dest='ant', default='cross',
                     help=('Select ant_pol/baselines to include. '
                           'Examples: all (all baselines) '

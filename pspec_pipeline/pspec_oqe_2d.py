@@ -290,7 +290,6 @@ def get_Q(mode, n_k):
 
 # --------------------------------------------------------------------
 
-
 # Read even&odd data
 if 'even' in args[0] or 'odd' in args[0]:
     dsets = {'even': [x for x in args if 'even' in x],
@@ -536,7 +535,6 @@ dse = oqe.DataSet(lmode=LMODE)  # just eor
 dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
 dss = oqe.DataSet(lmode=LMODE)  # noise + eor
 dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)
-
 if opts.changeC:
     newCr = change_C(keys, dsr)
     dsr.set_C(newCr)
