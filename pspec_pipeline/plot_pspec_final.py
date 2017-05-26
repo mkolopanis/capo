@@ -295,7 +295,7 @@ for filename in args.files:
                      np.abs(pIn) + pIn_up, '--',
                      label='pIn {0:02d}%'.format(int(prob)))
     #ax4[gs_ind].errorbar(pspec_dict['kpl'],
-    #                pIn, pIn_up
+    #                pIn, pIn_up,
     #                label='pIn {0:02d}%'.format(int(prob)),
     #                linestyle='', marker=marker, color='blue')
     ax4[gs_ind].errorbar(pspec_dict['kpl'][pos_ind_noise],
