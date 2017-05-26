@@ -7,7 +7,7 @@ o.add_option('--nblg_min',default=2,help='Minimum number of baseline groups used
 o.add_option('--nblg_max',default=23,help='Maximum number of baseline groups used')
 o.add_option('--nlst_min',default=1,help='Minimum number of LST groups used')
 o.add_option('--nlst_max',default=10,help='Maximum number of LST groups used')
-
+o.add_option('--polyOrder',default=None,help='Order of polynomial to fit')
 o.add_option('--plotSingleVsNblg', action='store_true', help='Plot error w.r.t. N_bl-groups for a single k_parallel bin')
 o.add_option('--plot3d', action='store_true', help='Plot error w.r.t. N_bl-groups for all k_parallel bins')
 o.add_option('--plotAvgVsNblg', action='store_true', help='Plot error w.r.t N_bl-groups for the average of the outer k_parallel bins (first and last 5 bins)')
@@ -51,17 +51,33 @@ pIv_bl_avg = 0.5*(np.mean(pIv_bl[:,:5],axis=1)+np.mean(pIv_bl[:,16:],axis=1))
 pIn_lst_avg = 0.5*(np.mean(pIn_lst[:,:5],axis=1)+np.mean(pIn_lst[:,16:],axis=1))
 pIv_lst_avg = 0.5*(np.mean(pIv_lst[:,:5],axis=1)+np.mean(pIv_lst[:,16:],axis=1))
 
-# Fitting routines
-coeffs_nbl = np.polyfit(np.log10(nbl_g),np.log10(pIv_bl_avg),deg=3)
-coeffs_nlst= np.polyfit(np.log10(nlst_g),np.log10(pIv_lst_avg),deg=3)
+if not opts.polyOrder is None:
+    order = int(opts.polyOrder)
+    # Fitting routines
+    coeffs_nbl = np.polyfit(np.log10(nbl_g),np.log10(pIv_bl_avg),deg=order)
+    coeffs_nlst= np.polyfit(np.log10(nlst_g),np.log10(pIv_lst_avg),deg=order)
+    print 'Coeffs for log10(nbl_g) vs log10(pIv_bl_avg): ',coeffs_nbl
+    print 'Coeffs for log10(nlst_g) vs log10(pIv_lst_avg): ',coeffs_nlst
+    poly_nbl = np.poly1d(coeffs_nbl)
+    poly_nlst= np.poly1d(coeffs_nlst)
+        
+    f,axarr = plt.subplots(1,2,sharey=True)
+    axarr[0].plot(np.log10(nbl_g),np.log10(pIn_bl_avg[-1]*nbl_g[-1]/nbl_g),'k--',label='analytic')
+    axarr[0].plot(np.log10(nbl_g),np.log10(pIv_bl_avg),'b-',label='pIv_bl_err avg')
+    axarr[0].plot(np.log10(nbl_g),np.log10(pIn_bl_avg),'g-',label='pIn_bl_err avg')
+    axarr[0].plot(np.log10(nbl_g),poly_nbl(np.log10(nbl_g)),'c:',label='order %i fit'%order)
+    axarr[0].set_xlabel('Nbls/group')
+    axarr[0].set_ylabel('log10(P(k))')
+    axarr[0].legend()
 
-print 'Coeffs for log10(nbl_g) vs log10(pIv_bl_avg): ',coeffs_nbl
-print 'Coeffs for log10(nlst_g) vs log10(pIv_lst_avg): ',coeffs_nlst
-
-poly_nbl = np.poly1d(coeffs_nbl)
-yfit = lambda x: np.exp(poly_nbl(np.log(x)))
-print np.log10(pIv_bl_avg)[0],np.log10(pIv_bl_avg)[-1],yfit(51)
-
+    axarr[1].plot(np.log10(nlst_g),np.log10(pIn_lst_avg[-1]*np.sqrt(nlst_g[-1]/nlst_g)),'k--',label='analytic')
+    axarr[1].plot(np.log10(nlst_g),np.log10(pIv_lst_avg),'b-',label='pIv_lst_err avg')
+    axarr[1].plot(np.log10(nlst_g),np.log10(pIn_lst_avg),'g-',label='pIn_lst_err avg')
+    axarr[1].plot(np.log10(nlst_g),poly_nlst(np.log10(nlst_g)),'c:',label='order %i fit'%order)
+    axarr[1].set_xlabel('Nlsts/group')
+    axarr[1].legend()
+    
+    plt.show()
 # Plotting
 if opts.plotSingleVsNblg or opts.plotAll:
     plt.loglog(nbl_g,pIn_bl[:,kbin][-1]*nbl_g[-1]/nbl_g,'k--',label='analytic')
@@ -115,4 +131,5 @@ if opts.plotConcat or opts.plotAll:
     axarr[1].loglog(nlst_g,pIn_lst_avg,'g-',label='pIn_lst_err avg')
     axarr[1].set_xlabel('Nlsts/group')
     axarr[1].legend()
+    
     plt.show()
