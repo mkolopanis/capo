@@ -29,7 +29,7 @@ parser.add_argument('--avg_func', default='np.mean', type=str,
                     help='Average function to use (default = np.mean).')
 parser.add_argument('-v', '--version', default=4, type=int,
                     help='Version of bootstrapping method. Existing versions are 1,2, or 4.')
-parser.add_argument('--nlstg', default=0, type=int,
+parser.add_argument('--NGPS_LST', default=0, type=int,
                     help='Number of total LST groups to average.')
 args = parser.parse_args()
 
@@ -55,8 +55,8 @@ if args.Neff_lst == None:
 else:
     Neff_lst = int(float(args.Neff_lst))
 
-if args.nlstg == 0: nlstg = Neff_lst
-else: nlstg = args.nlstg
+if args.NGPS_LST == 0: NGPS_LST = Neff_lst
+else: NGPS_LST = args.NGPS_LST
 
 # compute the effective number of LST bins
 # print Neff_lst
@@ -86,7 +86,7 @@ pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 for pspec in pspecs:
     if pspec[0] == 'p':  
         temp_pspec = []
-        indices = np.linspace(0, pspecs[pspec].shape[2], nlstg+1, endpoint=True, dtype='int')
+        indices = np.linspace(0, pspecs[pspec].shape[2], NGPS_LST+1, endpoint=True, dtype='int')
         for i,index in enumerate(range(len(indices)-1)):
             temp = pspecs[pspec][:,:,indices[i]:indices[i+1]]
             temp_pspec.append(np.ma.average(temp,axis=2))
@@ -112,7 +112,7 @@ print "   kperp = ", kperp
 pk_pspecs['k'] = np.sqrt(kperp**2 + pk_pspecs['kpl_fold']**2)
 pk_pspecs['kperp'] = np.ma.masked_invalid(kperp)
 pk_pspecs['cmd'] = pk_pspecs['cmd'].item() + ' \n ' + ' '.join(sys.argv)
-pk_pspecs['nlsts_g'] = Neff_lst/nlstg # number of lsts in one group
+pk_pspecs['nlsts_g'] = Neff_lst/NGPS_LST # number of lsts in one group
 pk_pspecs['nPS'] = pspecs['pCv'].shape[0]*pspecs['pCv'].shape[2] 
 
 # Scale for error on error
@@ -120,7 +120,7 @@ print "   Total number of bls = ", pk_pspecs['nbls']
 print "      number of bl groups = ", pk_pspecs['ngps']
 print "      nbls in a group = ", pk_pspecs['nbls_g']
 print "   Total number of lsts = ", Neff_lst
-print "      number of lst groups = ", nlstg
+print "      number of lst groups = ", NGPS_LST
 print "      nlsts in a group = ", pk_pspecs['nlsts_g']
 if pk_pspecs['nPS'] != 1: scaling = 1. + (1. / np.sqrt(2*(pk_pspecs['nPS']-1)))
 else: 
