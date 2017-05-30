@@ -20,7 +20,8 @@ parser.add_argument('--outfile', type=str, default='pspec_final.npz',
 args = parser.parse_args()
 
 
-def perform_sum(dsum=None, weights=None, kpl=None, values=None, errors=None,vsum=None):
+def perform_sum(dsum=None, weights=None, kpl=None, values=None,
+                errors=None, vsum=None):
     """Perform inverser variance sum.
 
     Store answer in dictionaries dsum and weights, with kpl as keys.
@@ -35,11 +36,11 @@ def perform_sum(dsum=None, weights=None, kpl=None, values=None, errors=None,vsum
         vsum = {}
 
     for k, d, err in zip(kpl, values, errors):
-        dsum[k] = dsum.get(k, 0) + d #/ err**2
-        weights[k] = weights.get(k, 0) + 1.# / err**2
-        vsum[k] = vsum.get(k,0) + err**2
+        dsum[k] = dsum.get(k, 0) + d  # / err**2
+        weights[k] = weights.get(k, 0) + 1.  # / err**2
+        vsum[k] = vsum.get(k, 0) + err**2
 
-    return dsum, weights,vsum
+    return dsum, weights, vsum
 
 
 print 'Averaging Separations'
@@ -59,7 +60,7 @@ summed_pspec = {key: {} for key in np.concatenate([flat_power_spectra,
 summed_weights = {key: {} for key in np.concatenate([flat_errors,
                                                      folded_errors])}
 summed_vars = {key: {} for key in np.concatenate([flat_errors,
-                                                     folded_errors])}
+                                                  folded_errors])}
 print summed_vars.keys()
 single_keys = np.concatenate([['kpl', 'k'], flat_power_spectra, flat_errors,
                               folded_power_spectra, folded_errors])
@@ -87,16 +88,17 @@ for filename in args.files:
     # specified by the k or kpl values
     for key1, key2 in zip(flat_power_spectra, flat_errors):
         try:
-            temp_sum, temp_weight,temp_var = perform_sum(kpl=f['kpl'], values=f[key1],
-                                                errors=f[key2])
+            temp_sum, temp_weight, temp_var = perform_sum(kpl=f['kpl'],
+                                                          values=f[key1],
+                                                          errors=f[key2])
 
             for _k in f['kpl']:
                 summed_pspec[key1][_k] = (summed_pspec[key1].get(_k, 0)
                                           + temp_sum[_k])
                 summed_weights[key2][_k] = (summed_weights[key2].get(_k, 0)
                                             + temp_weight[_k])
-                summed_vars[key2][_k] = (summed_vars[key2].get(_k,0)
-                                            + temp_var[_k])
+                summed_vars[key2][_k] = (summed_vars[key2].get(_k, 0)
+                                         + temp_var[_k])
         except(KeyError):
             print 'Cannot find at least one of the',
             print ' keys in your pspec data:', key1, key2
@@ -105,15 +107,16 @@ for filename in args.files:
     for key1, key2 in zip(folded_power_spectra, folded_errors):
 
         try:
-            temp_sum, temp_weight,temp_var = perform_sum(kpl=f['k'], values=f[key1],
-                                                errors=f[key2])
+            temp_sum, temp_weight, temp_var = perform_sum(kpl=f['k'],
+                                                          values=f[key1],
+                                                          errors=f[key2])
             for _k in f['k']:
                 summed_pspec[key1][_k] = (summed_pspec[key1].get(_k, 0)
                                           + temp_sum[_k])
                 summed_weights[key2][_k] = (summed_weights[key2].get(_k, 0)
                                             + temp_weight[_k])
-                summed_vars[key2][_k] = (summed_vars[key2].get(_k,0)
-                                            + temp_var[_k])
+                summed_vars[key2][_k] = (summed_vars[key2].get(_k, 0)
+                                         + temp_var[_k])
         except(KeyError):
             print 'Cannot find at least one of the',
             print ' keys in your pspec data:', key1, key2
@@ -154,27 +157,28 @@ for key1, key2 in zip(folded_power_spectra, folded_errors):
 #    out_dict[key2] = np.array([1. / np.sqrt(summed_weights[key2][_k])
 #                               for _k in k])
     out_dict[key2] = np.array([np.sqrt(summed_vars[key2][_k]) for _k in k])
-    
+
 
 # take smallest to for the bins
-#WTF IS HAPPENING HERE???
+# WTF IS HAPPENING HERE???
 if True:
     ks = np.sqrt(np.min(out_dict['kperp'])**2 + out_dict['kpl_fold']**2)
     digitized = np.digitize(out_dict['k'], ks)
-    
+
     for key1, key2 in zip(folded_power_spectra, folded_errors):
         out_dict[key1] = np.array([np.mean(out_dict[key1][digitized == _k]
-                                   #/ out_dict[key2][digitized == _k]**2)
-                                   for _k in xrange(1, len(ks)+1))])
-    
-        out_dict[key2] = np.array([np.sqrt(np.mean(out_dict[key2][digitized == _k]**2)
+                                   # / out_dict[key2][digitized == _k]**2)
+                                  for _k in xrange(1, len(ks)+1))])
+
+        out_dict[key2] = np.array([np.sqrt(
+                                   np.mean(out_dict[key2][digitized == _k]**2)
                                    for _k in xrange(1, len(ks) + 1))])
         # renormalized summed pspec values and uncertainties
-        #out_dict[key1] = out_dict[key1]/out_dict[key2]
-        #out_dict[key2] = np.sqrt(1./out_dict[key2])
+        # out_dict[key1] = out_dict[key1]/out_dict[key2]
+        # out_dict[key2] = np.sqrt(1./out_dict[key2])
     # set output k values to mean over kperp
     out_dict['k'] = np.sqrt(np.mean(out_dict['kperp'])**2
-                        + out_dict['kpl_fold']**2)
+                            + out_dict['kpl_fold']**2)
 gen = (x for x in out_dict if x not in np.concatenate([single_keys,
                                                        ['cmd', 'afreqs', 'k',
                                                         'kpl', 'kpl_fold']]))
