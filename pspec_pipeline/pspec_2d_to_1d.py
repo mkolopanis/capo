@@ -92,10 +92,10 @@ pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 for pspec in pspecs:
     if pspec[0] == 'p':
         temp_pspec = []
-        indices = np.linspace(0, pspecs[pspec].shape[2], NGPS_LST+1,
+        indices = np.linspace(0, pspecs[pspec].shape[2], NGPS_LST + 1,
                               endpoint=True, dtype='int')
-        for i, index in enumerate(range(len(indices)-1)):
-            temp = pspecs[pspec][:, :, indices[i]:indices[i+1]]
+        for i, index in enumerate(range(len(indices) - 1)):
+            temp = pspecs[pspec][:, :, indices[i]:indices[i + 1]]
             temp_pspec.append(np.ma.average(temp, axis=2))
         avg_pspec = np.ma.array(temp_pspec).swapaxes(0, 2).swapaxes(0, 1)
         pspecs[pspec] = avg_pspec
@@ -120,8 +120,8 @@ print "   kperp = ", kperp
 pk_pspecs['k'] = np.sqrt(kperp**2 + pk_pspecs['kpl_fold']**2)
 pk_pspecs['kperp'] = np.ma.masked_invalid(kperp)
 pk_pspecs['cmd'] = pk_pspecs['cmd'].item() + ' \n ' + ' '.join(sys.argv)
-pk_pspecs['nlsts_g'] = Neff_lst/NGPS_LST  # number of lsts in one group
-pk_pspecs['nPS'] = pspecs['pCv'].shape[0]*pspecs['pCv'].shape[2]
+pk_pspecs['nlsts_g'] = Neff_lst / NGPS_LST  # number of lsts in one group
+pk_pspecs['nPS'] = pspecs['pCv'].shape[0] * pspecs['pCv'].shape[2]
 
 # Scale for error on error
 print "   Total number of bls = ", pk_pspecs['nbls']
@@ -130,7 +130,8 @@ print "      nbls in a group = ", pk_pspecs['nbls_g']
 print "   Total number of lsts = ", Neff_lst
 print "      number of lst groups = ", NGPS_LST
 print "      nlsts in a group = ", pk_pspecs['nlsts_g']
-if pk_pspecs['nPS'] != 1: scaling = 1. + (1. / np.sqrt(2*(pk_pspecs['nPS']-1)))
+if pk_pspecs['nPS'] != 1:
+    scaling = 1. + (1. / np.sqrt(2 * (pk_pspecs['nPS'] - 1)))
 else:
     scaling = 1
     print ('   !!! Warning: Scaling blows up '
