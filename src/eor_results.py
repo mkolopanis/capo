@@ -747,7 +747,7 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100, version=4)
                 Z = scramble_avg_bootstrap_array_v4(indata[inname])
                 Z_fold = scramble_avg_bootstrap_array_v4(X)
             vals[outname] = Z.data
-            vals[outname_fold] = Z_fold.data
+            vals[outname_fold] = Z_fold
             # power spectrum is the mean and std dev over scramble dimension
             outdata[outname] = n.ma.average(Z, axis=0)
             outdata[outname + '_err'] = n.std(Z, axis=0)
