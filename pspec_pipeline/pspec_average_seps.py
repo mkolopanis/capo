@@ -163,12 +163,11 @@ if True:
     digitized = np.digitize(out_dict['k'], ks)
     
     for key1, key2 in zip(folded_power_spectra, folded_errors):
-        out_dict[key1] = np.array([np.mean(out_dict[key1][digitized == _k]
-                                   #/ out_dict[key2][digitized == _k]**2)
-                                   for _k in xrange(1, len(ks)+1))])
+        out_dict[key1] = np.array([np.mean(out_dict[key1][digitized == _k])
+                                   for _k in xrange(1, len(ks)+1)])
     
-        out_dict[key2] = np.array([np.sqrt(np.mean(out_dict[key2][digitized == _k]**2)
-                                   for _k in xrange(1, len(ks) + 1))])
+        out_dict[key2] = np.array([np.sqrt(np.mean(out_dict[key2][digitized == _k]**2))
+                                   for _k in xrange(1, len(ks) + 1)])
         # renormalized summed pspec values and uncertainties
         #out_dict[key1] = out_dict[key1]/out_dict[key2]
         #out_dict[key2] = np.sqrt(1./out_dict[key2])
