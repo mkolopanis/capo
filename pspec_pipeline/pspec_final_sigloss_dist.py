@@ -194,8 +194,8 @@ for count in range(2):
 
     # bin Pout, Pout_I, pCv, pIv
     #nbins = Pouts[key].shape[0] / Pout.shape[0] # number of injections
-    nbins = 25
-    nbins_I = 25
+    nbins = 10
+    nbins_I = 10
     sigloss_final = {}; sigloss_final_fold = {}
     sigloss_final_I = {}; sigloss_final_I_fold = {}
 
@@ -322,7 +322,6 @@ generator = (x for x in file.keys()
 for key in generator:
     meta_data[key] = [file[key]]
 """
-
 outname = 'pspec_final_sep'+opts.sep+'.npz'
 print '   Saving', outname # XXX 2-sigma probability is hard-coded
 n.savez(outname, kpl=kpl, k=file['k'], freq=file['freq'],
@@ -340,7 +339,7 @@ n.savez(outname, kpl=kpl, k=file['k'], freq=file['freq'],
         alphaCv_fold=sigfactors_fold, alphaIv_fold=sigfactors_I_fold,
         alphaCn_fold=sigfactors_noise_fold,
         alphaIn_fold=sigfactors_noise_I_fold,
-        ngps=file['ngps'], nbls=file['nbls'], nbls_g=file['nbls_g'],
+        ngps=file['ngps'], nbls=file['nbls'], nbls_g=file['nbls_g'], nlsts_g=file['nlsts_g'],
         lsts=file['lsts'], afreqs=file['afreqs'], cnt_eff=file['cnt_eff'],
         frf_inttime=file['frf_inttime'], inttime=file['inttime'], 
         cmd=file['cmd'].item() + ' \n '+' '.join(sys.argv))

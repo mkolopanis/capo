@@ -22,32 +22,37 @@ parser.add_argument('files', metavar='<FILE>', type=str, nargs='+',
 parser.add_argument('--output', type=str, default='./',
                     help='Specifically specify out directory.')
 parser.add_argument('--nboots', type=int, default=100,
-                    help='Number of Bootstraps (averages) default=100 if using bootstrap versions 1 or 2.')
+                    help=('Number of Bootstraps (averages) default=100 '
+                          'if using bootstrap versions 1 or 2.'))
 parser.add_argument('--Neff_lst', default=None,
-                    help='Number of effective LSTs (if using bootstrap versions 1 or 2). If none (default), it is calculated using Nlstbins and t_eff.')
+                    help=('Number of effective LSTs '
+                          '(if using bootstrap versions 1 or 2). '
+                          'If none (default), '
+                          'it is calculated using Nlstbins and t_eff.'))
 parser.add_argument('--avg_func', default='np.mean', type=str,
                     help='Average function to use (default = np.mean).')
 parser.add_argument('-v', '--version', default=4, type=int,
-                    help='Version of bootstrapping method. Existing versions are 1,2, or 4.')
+                    help=('Version of bootstrapping method. '
+                          'Existing versions are 1,2, or 4.'))
 parser.add_argument('--NGPS_LST', default=0, type=int,
                     help='Number of total LST groups to average.')
 args = parser.parse_args()
 
 np.random.seed(0)
-print 'Reading', args.files[0] # only one file from pspec_oqe_2d
+print 'Reading', args.files[0]  # only one file from pspec_oqe_2d
 power_spectrum_channels = ['pC', 'pI', 'err', 'pCv', 'var', 'pIv',
-                               'pCe', 'pIe', 'pIr', 'pCr', 'pCr-pCv', 'pIr-pIv',
-                               'pCn', 'pIn', 'pCs', 'pIs', 'pCs-pCn', 'pIs-pIn']
+                           'pCe', 'pIe', 'pIr', 'pCr', 'pCr-pCv', 'pIr-pIv',
+                           'pCn', 'pIn', 'pCs', 'pIs', 'pCs-pCn', 'pIs-pIn']
 file = np.load(args.files[0])
 pspecs = {}
 for key in file:
     if key in power_spectrum_channels:
-        pspecs[key] = np.real(file[key]) # take real part
+        pspecs[key] = np.real(file[key])  # take real part
     else:
-        pspecs[key] = file[key] # keys not in power_spectrum_channels
+        pspecs[key] = file[key]  # keys not in power_spectrum_channels
 
-#pspecs = read_bootstraps_dcj(args.files)
-if args.Neff_lst == None:
+# pspecs = read_bootstraps_dcj(args.files)
+if args.Neff_lst is None:
     Nlstbins = np.shape(pspecs['pCr'])[-1]
     # get the number of lst integrations in the dataset
     t_eff = pspecs['frf_inttime'] / pspecs['inttime']
@@ -76,28 +81,31 @@ pspecs['pIr-pIv'] = pspecs['pIr'] - pspecs['pIv']
 pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 
 # decimate data in time
-#for key in pspecs:
+# for key in pspecs:
 #    if key[0] == 'p':
 #        shape = pspecs[key].shape
-#        indices = np.linspace(0, shape[2], Neff_lst, dtype='int', endpoint=False)
+#        indices = np.linspace(0, shape[2], Neff_lst,
+#                              dtype='int', endpoint=False)
 #        pspecs[key] = pspecs[key][:,:,indices] # down-selecting in time
 
 # average LSTs within groups
 for pspec in pspecs:
-    if pspec[0] == 'p':  
+    if pspec[0] == 'p':
         temp_pspec = []
-        indices = np.linspace(0, pspecs[pspec].shape[2], NGPS_LST+1, endpoint=True, dtype='int')
-        for i,index in enumerate(range(len(indices)-1)):
-            temp = pspecs[pspec][:,:,indices[i]:indices[i+1]]
-            temp_pspec.append(np.ma.average(temp,axis=2))
-        avg_pspec = np.ma.array(temp_pspec).swapaxes(0,2).swapaxes(0,1)
+        indices = np.linspace(0, pspecs[pspec].shape[2], NGPS_LST + 1,
+                              endpoint=True, dtype='int')
+        for i, index in enumerate(range(len(indices) - 1)):
+            temp = pspecs[pspec][:, :, indices[i]:indices[i + 1]]
+            temp_pspec.append(np.ma.average(temp, axis=2))
+        avg_pspec = np.ma.array(temp_pspec).swapaxes(0, 2).swapaxes(0, 1)
         pspecs[pspec] = avg_pspec
 
 # compute Pk vs kpl vs bootstraps
 print "   Bootstrapping..."
-pk_pspecs, vals  = average_bootstraps(pspecs, Nt_eff=Neff_lst,
-                                     Nboots=args.nboots, avg_func=eval(args.avg_func),
-                                        version=args.version)
+pk_pspecs, vals = average_bootstraps(pspecs, Nt_eff=Neff_lst,
+                                     Nboots=args.nboots,
+                                     avg_func=eval(args.avg_func),
+                                     version=args.version)
 outname = 'pspec_2d_to_1d.npz'
 print '   Saving', outname  # save all values used in bootstrapping
 np.savez(args.output + outname, **vals)
@@ -112,8 +120,8 @@ print "   kperp = ", kperp
 pk_pspecs['k'] = np.sqrt(kperp**2 + pk_pspecs['kpl_fold']**2)
 pk_pspecs['kperp'] = np.ma.masked_invalid(kperp)
 pk_pspecs['cmd'] = pk_pspecs['cmd'].item() + ' \n ' + ' '.join(sys.argv)
-pk_pspecs['nlsts_g'] = Neff_lst/NGPS_LST # number of lsts in one group
-pk_pspecs['nPS'] = pspecs['pCv'].shape[0]*pspecs['pCv'].shape[2] 
+pk_pspecs['nlsts_g'] = Neff_lst / NGPS_LST  # number of lsts in one group
+pk_pspecs['nPS'] = pspecs['pCv'].shape[0] * pspecs['pCv'].shape[2]
 
 # Scale for error on error
 print "   Total number of bls = ", pk_pspecs['nbls']
@@ -122,10 +130,13 @@ print "      nbls in a group = ", pk_pspecs['nbls_g']
 print "   Total number of lsts = ", Neff_lst
 print "      number of lst groups = ", NGPS_LST
 print "      nlsts in a group = ", pk_pspecs['nlsts_g']
-if pk_pspecs['nPS'] != 1: scaling = 1. + (1. / np.sqrt(2*(pk_pspecs['nPS']-1)))
-else: 
+if pk_pspecs['nPS'] != 1:
+    scaling = 1. + (1. / np.sqrt(2 * (pk_pspecs['nPS'] - 1)))
+else:
     scaling = 1
-    print '   !!! Warning: Scaling blows up since there is only one independent sample. Not applying correction factor !!!'
+    print ('   !!! Warning: Scaling blows up '
+           'since there is only one independent sample. '
+           'Not applying correction factor !!!')
 for key in pk_pspecs:
     if key[0] == 'p':
         pk_pspecs[key] = pk_pspecs[key] * scaling
