@@ -441,7 +441,7 @@ ax6[-1].legend(handles, labels, loc='lower right', numpoints=1)
 fig.savefig(args.outfile+'.png', format='png')
 fig2.savefig(args.outfile+'_pk.png', format='png')
 fig3.savefig(args.outfile+'_noise.png', format='png')
-fig3.savefig(args.outfile+'_pk_noise.png', format='png')
+fig4.savefig(args.outfile+'_pk_noise.png', format='png')
 
 if args.plot:
     plt.show()
