@@ -52,36 +52,42 @@ fig = plt.figure(figsize=figsize)
 gs = gridspec.GridSpec(1, Nzs)
 gs.update(hspace=0.0, wspace=0.2)
 ax1 = [plt.subplot(gs[:, i]) for i in range(Nzs)]
+plt.subplots_adjust(left=0.2)
 
 # Create figure and prep subplots for P(k)
 fig2 = plt.figure(figsize=figsize)
 gs = gridspec.GridSpec(1, Nzs)
 gs.update(hspace=0.0, wspace=0.2)
 ax2 = [plt.subplot(gs[:, i]) for i in range(Nzs)]
+plt.subplots_adjust(left=0.2)
 
 # Create figure and prep subplot sizes for Delta^2 Noise
 fig3 = plt.figure(figsize=figsize)
 gs = gridspec.GridSpec(1, Nzs)
 gs.update(hspace=0.0, wspace=0.2)
 ax3 = [plt.subplot(gs[:, i]) for i in range(Nzs)]
+plt.subplots_adjust(left=0.2)
 
 # Create figure and prep subplot sizes for P(k) Noise
 fig4 = plt.figure(figsize=figsize)
 gs = gridspec.GridSpec(1, Nzs)
 gs.update(hspace=0.0, wspace=0.2)
 ax4 = [plt.subplot(gs[:, i]) for i in range(Nzs)]
+plt.subplots_adjust(left=0.2)
 
 # Create figure and prep subplot sizes for P(k) Noise
 fig5 = plt.figure(figsize=figsize)
 gs = gridspec.GridSpec(1, Nzs)
 gs.update(hspace=0.0, wspace=0.2)
 ax5 = [plt.subplot(gs[:, i]) for i in range(Nzs)]
+plt.subplots_adjust(left=0.2)
 
 # Create figure and prep subplot sizes for P(k) Noise
 fig6 = plt.figure(figsize=figsize)
 gs = gridspec.GridSpec(1, Nzs)
 gs.update(hspace=0.0, wspace=0.2)
 ax6 = [plt.subplot(gs[:, i]) for i in range(Nzs)]
+plt.subplots_adjust(left=0.2)
 
 if args.noisefiles:
     noise_freqs, noise_ks, noises = py21cm.load_noise_files(
@@ -367,7 +373,7 @@ for gs_ind in xrange(Nzs):
     ax1[gs_ind].set_xlim(0, k_max * 1.01)
     ax1[gs_ind].get_shared_y_axes().join(ax1[0], ax1[gs_ind])
     ax1[gs_ind].grid(True)
-
+    
     ax2[gs_ind].set_yscale('log', nonposy='clip')
     ax2[gs_ind].set_title('z = {0:.2f}'.format(zs[gs_ind]))
     ax2[gs_ind].set_xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]')
