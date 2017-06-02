@@ -103,15 +103,19 @@ if args.noisefiles:
 
     # Plot the Noise files on the plot
     for gs_ind in xrange(Nzs):
-        ax1[gs_ind].plot(noise_ks[gs_ind], noises[gs_ind], 'c-', label='21cmSense')
+        ax1[gs_ind].plot(noise_ks[gs_ind], noises[gs_ind], 'c-',
+                         label='21cmSense')
 
         d2_n = noises[gs_ind]
         pk_n = 2*np.pi**2/(np.array(noise_ks[gs_ind])**3)*d2_n
         ax2[gs_ind].plot(noise_ks[gs_ind], pk_n, '-', color='c')
-        ax2[gs_ind].plot(-np.array(noise_ks[gs_ind]), pk_n, '-', color='c', label='21cmSense')
-        ax3[gs_ind].plot(noise_ks[gs_ind], noises[gs_ind], 'c-', label='21cmSense')
+        ax2[gs_ind].plot(-np.array(noise_ks[gs_ind]), pk_n, '-', color='c',
+                         label='21cmSense')
+        ax3[gs_ind].plot(noise_ks[gs_ind], noises[gs_ind], 'c-',
+                         label='21cmSense')
         ax4[gs_ind].plot(noise_ks[gs_ind], pk_n, '-', color='c')
-        ax4[gs_ind].plot(-np.array(noise_ks[gs_ind]), pk_n, '-', color='c', label='21cmSense')
+        ax4[gs_ind].plot(-np.array(noise_ks[gs_ind]), pk_n, '-', color='c',
+                         label='21cmSense')
 
 k_max = 0
 k_par_max = 0
@@ -126,7 +130,7 @@ for filename in args.files:
 
     redshift = f212z(pspec_dict['freq'] * 1e9)
     gs_ind = int(np.where(zs == redshift)[0].item())
-    
+
     if args.analytical:
         inttime = pspec_dict['frf_inttime']
         cnt = pspec_dict['cnt_eff']
@@ -135,7 +139,8 @@ for filename in args.files:
         nlsts /= pspec_dict['frf_inttime']
         nlsts_g = pspec_dict['nlsts_g']
         if pspec_dict['frf_inttime'] == pspec_dict['inttime']:
-            omega_eff = .74**2/.32 # for capo analytical; from T1 of Parsons FRF paper
+            # for capo analytical; from T1 of Parsons FRF paper
+            omega_eff = .74**2/.32
         else:
             omega_eff = .74**2/.24
         print 'Redshift:', redshift
@@ -144,10 +149,11 @@ for filename in args.files:
         print '\tNdays:', cnt
         print '\tNlsts:', nlsts
         print '\tNlsts_g:', nlsts_g
-        if old_analytical: # XXX might not work anymore, since we should use nlsts_g and nbls_g
-            tsys = 500e3  #mK
-            nseps = 1  #number of seps used
-            folding = 2 # XXX 2 for delta^2
+        if old_analytical:
+            # XXX might not work anymore, we should use nlsts_g and nbls_g
+            tsys = 500e3  # mK
+            nseps = 1  # number of seps used
+            folding = 2  # XXX 2 for delta^2
             nmodes = (nlsts*nseps*folding)**.5
             pol = 2
             real = np.sqrt(2)
@@ -155,54 +161,78 @@ for filename in args.files:
             freqs = pspec_dict['afreqs']
             freq = pspec_dict['freq']
             z = capo.pspec.f2z(freq)
-            X2Y = capo.pspec.X2Y(z)/1e9 #h^-3 Mpc^3 / str/ Hz
+            X2Y = capo.pspec.X2Y(z)/1e9  # h^-3 Mpc^3 / str/ Hz
             B = sdf*freqs.size
-            bm = np.polyval(capo.pspec.DEFAULT_BEAM_POLY, freq) * 2.35 #correction for beam^2
+            # correction for beam^2
+            bm = np.polyval(capo.pspec.DEFAULT_BEAM_POLY, freq) * 2.35
             if pspec_dict['frf_inttime'] != pspec_dict['inttime']:
-                bm *= 1.3 # correction factor for FRF version of omega_pp = .32/.24 = 1.3
-            scalar = X2Y * bm #* B
-            #error bars minimum width. Consider them flat for P(k). Factor of 2 at the end is due to folding of kpl (root(2)) and root(2) in radiometer equation.
-            #pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (2*inttime*pol*real*nbls*ndays*nmodes) ) #this 2-sigma curve should encompass 95% of the points
-            pk_noise = 2*scalar*( (tsys)**2 / (inttime*pol*real*nbls*cnt*nmodes) ) # this 2-sigma curve should line up with pI
+                bm *= 1.3
+                # correction factor for FRF version of omega_pp = .32/.24 = 1.3
+            scalar = X2Y * bm  # * B
+            # error bars minimum width. Consider them flat for P(k).
+            # Factor of 2 at the end is due to folding of kpl (root(2))
+            # and root(2) in radiometer equation.
+            # pk_noise = 2*scalar*fr_correct*( (tsys)**2
+            # / (2*inttime*pol*real*nbls*ndays*nmodes) )
+            # this 2-sigma curve should encompass 95% of the points
+            pk_noise = 2*scalar*((tsys)**2
+                                 / (inttime*pol*real*nbls*cnt*nmodes))
+            # this 2-sigma curve should line up with pI
             # Plot analytical noise curve on plots
-            ax1[gs_ind].plot(pspec_dict['k'],pk_noise*pspec_dict['k']**3/(2*np.pi**2),'g-',label='Analytical 2-sigma')
-            ax2[gs_ind].axhline(pk_noise,color='g',marker='_',label='Analytical 2-sigma')
-            ax3[gs_ind].plot(pspec_dict['k'],pk_noise*pspec_dict['k']**3/(2*np.pi**2),'g-',label='Analytical 2-sigma')
-            ax4[gs_ind].axhline(pk_noise,color='g',marker='_',label='Analytical 2-sigma')
-        else: #new capo.sensitivity
+            ax1[gs_ind].plot(pspec_dict['k'],
+                             pk_noise * pspec_dict['k']**3/(2*np.pi**2),
+                             'g-', label='Analytical 2-sigma')
+            ax2[gs_ind].axhline(pk_noise, color='g', marker='_',
+                                label='Analytical 2-sigma')
+            ax3[gs_ind].plot(pspec_dict['k'],
+                             pk_noise*pspec_dict['k']**3/(2*np.pi**2),
+                             'g-', label='Analytical 2-sigma')
+            ax4[gs_ind].axhline(pk_noise, color='g', marker='_',
+                                label='Analytical 2-sigma')
+        else:  # new capo.sensitivity
             from capo import sensitivity
             S = sensitivity.Sense()
             f = freq
             S.z = capo.pspec.f2z(f)
 
             #   Tsys
-            #S.Tsys = 551e3  #set to match 21cmsense exactly
-            #S.Tsys = 505e3 #Ali et al, at 164MHz
-            S.Tsys = (200 + 180.*(f/.180)**-2.55)*1e3 #set to match noise realization
-            print "Tsys = ",S.Tsys
+            # S.Tsys = 551e3  #set to match 21cmsense exactly
+            # S.Tsys = 505e3 #Ali et al, at 164MHz
+            # set to match noise realization
+            S.Tsys = (200 + 180.*(f/.180)**-2.55)*1e3
+            print "Tsys = ", S.Tsys
 
             S.t_int = inttime
-            S.Ndays = cnt  #effective number of days
+            S.Ndays = cnt  # effective number of days
             S.Npols = 2
             S.Nseps = 1
-            S.Nblgroups = 1 #groups are already folded into the calculation of nbls_eff
-            S.Omega_eff = omega_eff #use the FRF weighted beams listed in T1 of Parsons etal beam sculpting paper
+            # groups are already folded into the calculation of nbls_eff
+            S.Nblgroups = 1
+            # use the FRF weighted beams listed in
+            # T1 of Parsons etal beam sculpting paper
+            S.Omega_eff = omega_eff
             k = pspec_dict['k']
             S.Nbls = nbls_g
             S.Nlstbins = nlsts_g
             S.calc()
-            print "capo.sensitivity Pk_noise = ",S.P_N
-            ax5[gs_ind].axhline(S.P_N*2,color='g',marker='_',label='Analytical 2-sigma')
-            ax6[gs_ind].axhline(S.P_N*2,color='g',marker='_',label='Analytical 2-sigma')
-            ax1[gs_ind].plot(k,S.Delta2_N(k)*2,'g-',label='Analytical 2-sigma')
-            ax2[gs_ind].axhline(S.P_N*2,color='g',marker='_',label='Analytical 2-sigma')
-            ax3[gs_ind].plot(k,S.Delta2_N(k)*2,'g-',label='Analytical 2-sigma')
-            ax4[gs_ind].axhline(S.P_N*2,color='g',marker='_',label='Analytical 2-sigma')
+            print "capo.sensitivity Pk_noise = ", S.P_N
+            ax5[gs_ind].axhline(S.P_N*2, color='g', marker='_',
+                                label='Analytical 2-sigma')
+            ax6[gs_ind].axhline(S.P_N*2, color='g', marker='_',
+                                label='Analytical 2-sigma')
+            ax1[gs_ind].plot(k, S.Delta2_N(k)*2, 'g-',
+                             label='Analytical 2-sigma')
+            ax2[gs_ind].axhline(S.P_N*2, color='g', marker='_',
+                                label='Analytical 2-sigma')
+            ax3[gs_ind].plot(k, S.Delta2_N(k)*2, 'g-',
+                             label='Analytical 2-sigma')
+            ax4[gs_ind].axhline(S.P_N*2, color='g', marker='_',
+                                label='Analytical 2-sigma')
     # get special index for gridspec to plot all pspecs on same z value
     marker = markers[marker_count[gs_ind]]
     marker_count[gs_ind] += 1
 
-    try: # find from signal loss results
+    try:  # find from signal loss results
         pCv = pspec_dict['pC']
         pIv = pspec_dict['pI']
         pCn = pspec_dict['pCn']
@@ -220,7 +250,7 @@ for filename in args.files:
         pCn_fold_up = pspec_dict['pCn_fold_up']
         pIn_fold_up = pspec_dict['pIn_fold_up']
         prob = pspec_dict['prob']*100
-    except: # find from pspec_2d_to_1d results
+    except:  # find from pspec_2d_to_1d results
         fold_factor = pspec_dict['k']**3/(2*np.pi**2)
         pCv = pspec_dict['pCv']
         pIv = pspec_dict['pIv']
@@ -239,7 +269,7 @@ for filename in args.files:
         pCn_fold_up = pspec_dict['pCn_fold_err']*2*fold_factor
         pIn_fold_up = pspec_dict['pIn_fold_err']*2*fold_factor
         prob = 95
-    
+
     pos_ind = np.where(pCv >= 0)[0]
     pos_ind_noise = np.where(pCn >= 0)[0]
     pos_ind_fold = np.where(pCv_fold >= 0)[0]
@@ -252,7 +282,7 @@ for filename in args.files:
     ax1[gs_ind].plot(pspec_dict['k'],
                      np.abs(pIv_fold) + pIv_fold_up, '--',
                      label='pI {0:02d}%'.format(int(prob)))
-    #ax1[gs_ind].errorbar(pspec_dict['k'],
+    # ax1[gs_ind].errorbar(pspec_dict['k'],
     #                pIv_fold, pIv_fold_up,
     #                label='pI {0:02d}%'.format(int(prob)),
     #                linestyle='',marker=marker,color='blue')
@@ -264,27 +294,27 @@ for filename in args.files:
     ax1[gs_ind].errorbar(pspec_dict['k'][neg_ind_fold],
                          -pCv_fold[neg_ind_fold],
                          pCv_fold_up[neg_ind_fold],
-                         linestyle='',marker=marker, color='0.5')
+                         linestyle='', marker=marker, color='0.5')
     ax2[gs_ind].plot(pspec_dict['kpl'],
                      np.abs(pIv) + pIv_up, '--',
                      label='pI {0:02d}%'.format(int(prob)))
-    #ax2[gs_ind].errorbar(pspec_dict['kpl'],
+    # ax2[gs_ind].errorbar(pspec_dict['kpl'],
     #                pIv, pIv_up,
     #                label='pI {0:02d}%'.format(int(prob)),
     #                linestyle='',marker=marker,color='blue')
-    ax2[gs_ind].errorbar(pspec_dict['kpl'][pos_ind], 
+    ax2[gs_ind].errorbar(pspec_dict['kpl'][pos_ind],
                          pCv[pos_ind],
                          pCv_up[pos_ind],
                          label='pC {0:02d}%'.format(int(prob)),
                          linestyle='', marker=marker, color='black')
-    ax2[gs_ind].errorbar(pspec_dict['kpl'][neg_ind], 
+    ax2[gs_ind].errorbar(pspec_dict['kpl'][neg_ind],
                          -pCv[neg_ind],
                          pCv_up[neg_ind],
                          linestyle='', marker=marker, color='0.5')
     ax3[gs_ind].plot(pspec_dict['k'],
                      np.abs(pIn_fold) + pIn_fold_up, '--',
                      label='pIn {0:02d}%'.format(int(prob)))
-    #ax3[gs_ind].errorbar(pspec_dict['k'],
+    # ax3[gs_ind].errorbar(pspec_dict['k'],
     #                    pIn_fold, pIn_fold_up,
     #                    label='pIn {0:02d}%'.format(int(prob)),
     #                    linestyle='', marker=marker, color='blue')
@@ -300,7 +330,7 @@ for filename in args.files:
     ax4[gs_ind].plot(pspec_dict['kpl'],
                      np.abs(pIn) + pIn_up, '--',
                      label='pIn {0:02d}%'.format(int(prob)))
-    #ax4[gs_ind].errorbar(pspec_dict['kpl'],
+    # ax4[gs_ind].errorbar(pspec_dict['kpl'],
     #                pIn, pIn_up,
     #                label='pIn {0:02d}%'.format(int(prob)),
     #                linestyle='', marker=marker, color='blue')
@@ -313,48 +343,51 @@ for filename in args.files:
                          -pCn[neg_ind_noise],
                          pCn_up[neg_ind_noise],
                          linestyle='', marker=marker, color='0.5')
-    """
-    ax1[gs_ind].errorbar(pspec_dict['k'][pos_ind_fold], 
-                        pspec_dict['pC_fold'][pos_ind_fold], 
-                        S.Delta2_N(pspec_dict['k'][pos_ind_fold])*2,
-                        label='pC', linestyle='', marker=marker, color='black')
-    ax1[gs_ind].errorbar(pspec_dict['k'][neg_ind_fold], 
-                        -pspec_dict['pC_fold'][neg_ind_fold], 
-                        S.Delta2_N(pspec_dict['k'][neg_ind_fold])*2,
-                        linestyle='', marker=marker, color='0.5')
-    ax2[gs_ind].errorbar(pspec_dict['kpl'][pos_ind], 
-                        pspec_dict['pC'][pos_ind], 
-                        S.P_N*2,
-                        label='pC', linestyle='', marker=marker, color='black')
-    ax2[gs_ind].errorbar(pspec_dict['kpl'][neg_ind], 
-                        -pspec_dict['pC'][neg_ind], 
-                        S.P_N*2,
-                        linestyle='', marker=marker, color='0.5')
-    ax3[gs_ind].errorbar(pspec_dict['k'][pos_ind_noise_fold], 
-                        pspec_dict['pCn_fold'][pos_ind_noise_fold], 
-                        S.Delta2_N(pspec_dict['k'][pos_ind_noise_fold])*2,
-                        label='pCn', linestyle='', marker=marker, color='black')
-    ax3[gs_ind].errorbar(pspec_dict['k'][neg_ind_noise_fold], 
-                        -pspec_dict['pCn_fold'][neg_ind_noise_fold], 
-                        S.Delta2_N(pspec_dict['k'][neg_ind_noise_fold])*2,
-                        linestyle='', marker=marker, color='0.5')
-    ax4[gs_ind].errorbar(pspec_dict['kpl'][pos_ind_noise], 
-                        pspec_dict['pCn'][pos_ind_noise], 
-                        S.P_N*2,
-                        label='pCn', linestyle='', marker=marker, color='black')
-    ax4[gs_ind].errorbar(pspec_dict['kpl'][neg_ind_noise], 
-                        -pspec_dict['pCn'][neg_ind_noise], 
-                        S.P_N*2,
-                        linestyle='', marker=marker, color='0.5')
-    """ 
-    ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pCv_up),
-                    '--', color='black', label='pC {0:02}%'.format(int(prob))) 
-    ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pIv_up),
-                    '--', color='blue', label='pI {0:02}%'.format(int(prob)))
-    ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pCn_up),
-                    '--', color='black', label='pCn {0:02}%'.format(int(prob))) 
-    ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pIn_up),
-                    '--', color='blue', label='pIn {0:02}%'.format(int(prob)))
+#
+#    ax1[gs_ind].errorbar(pspec_dict['k'][pos_ind_fold],
+#                        pspec_dict['pC_fold'][pos_ind_fold],
+#                        S.Delta2_N(pspec_dict['k'][pos_ind_fold])*2,
+#                        label='pC', linestyle='',
+#                        marker=marker, color='black')
+#    ax1[gs_ind].errorbar(pspec_dict['k'][neg_ind_fold],
+#                        -pspec_dict['pC_fold'][neg_ind_fold],
+#                        S.Delta2_N(pspec_dict['k'][neg_ind_fold])*2,
+#                        linestyle='', marker=marker, color='0.5')
+#    ax2[gs_ind].errorbar(pspec_dict['kpl'][pos_ind],
+#                        pspec_dict['pC'][pos_ind],
+#                        S.P_N*2, label='pC', linestyle='',
+#                        marker=marker, color='black')
+#    ax2[gs_ind].errorbar(pspec_dict['kpl'][neg_ind],
+#                        -pspec_dict['pC'][neg_ind],
+#                        S.P_N*2, linestyle='',
+#                         marker=marker, color='0.5')
+#    ax3[gs_ind].errorbar(pspec_dict['k'][pos_ind_noise_fold],
+#                        pspec_dict['pCn_fold'][pos_ind_noise_fold],
+#                        S.Delta2_N(pspec_dict['k'][pos_ind_noise_fold])*2,
+#                        label='pCn', linestyle='',
+#                        marker=marker, color='black')
+#    ax3[gs_ind].errorbar(pspec_dict['k'][neg_ind_noise_fold],
+#                        -pspec_dict['pCn_fold'][neg_ind_noise_fold],
+#                        S.Delta2_N(pspec_dict['k'][neg_ind_noise_fold])*2,
+#                        linestyle='', marker=marker, color='0.5')
+#    ax4[gs_ind].errorbar(pspec_dict['kpl'][pos_ind_noise],
+#                        pspec_dict['pCn'][pos_ind_noise],
+#                        S.P_N*2,
+#                        label='pCn', linestyle='',
+#                        marker=marker, color='black')
+#    ax4[gs_ind].errorbar(pspec_dict['kpl'][neg_ind_noise],
+#                        -pspec_dict['pCn'][neg_ind_noise],
+#                        S.P_N*2,
+#                        linestyle='', marker=marker, color='0.5')
+#
+    ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pCv_up), '--', color='black',
+                     label='pC {0:02}%'.format(int(prob)))
+    ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pIv_up), '--', color='blue',
+                     label='pI {0:02}%'.format(int(prob)))
+    ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pCn_up), '--', color='black',
+                     label='pCn {0:02}%'.format(int(prob)))
+    ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pIn_up), '--', color='blue',
+                     label='pIn {0:02}%'.format(int(prob)))
 
 # set up some parameters to make the figures pretty
 for gs_ind in xrange(Nzs):
@@ -373,7 +406,7 @@ for gs_ind in xrange(Nzs):
     ax1[gs_ind].set_xlim(0, k_max * 1.01)
     ax1[gs_ind].get_shared_y_axes().join(ax1[0], ax1[gs_ind])
     ax1[gs_ind].grid(True)
-    
+
     ax2[gs_ind].set_yscale('log', nonposy='clip')
     ax2[gs_ind].set_title('z = {0:.2f}'.format(zs[gs_ind]))
     ax2[gs_ind].set_xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]')

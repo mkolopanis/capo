@@ -11,7 +11,7 @@ then
 echo "Danny and Matt PSA64!"
 CALFILE='psa6240_v003'
 RA='.1_8.6'
-SEP='-1,1'
+SEP='0,1'
 DATA=$1
 EVEN_FILES=${DATA}'/even/sep'${SEP}'/*.uvGAL'
 ODD_FILES=${DATA}'/odd/sep'${SEP}'/*.uvGAL'
@@ -25,9 +25,9 @@ weight='I'
 WINDOW='none'
 FRF='--frf'
 LMODE='' #'--lmode=12'
-CHANGEC='--changeC' #throw out off diagonal terms of covariance.
+CHANGEC='' # --changeC' #throw out off diagonal terms of covariance.
 NGPS=1
-NLSTG=2
+NGPS_LST=2
 
 else
 if false
@@ -93,5 +93,5 @@ for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-
     # Stage 2: pspec_2d_to_1d.py
     ~/capo/pspec_pipeline/pspec_2d_to_1d.py \
     --output=${DIRNAME}/inject_sep${SEP}_${inject}/ --NGPS_LST=${NGPS_LST} ${DIRNAME}/inject_sep${SEP}_${inject}/pspec_oqe_2d.npz
-    
+
 done
