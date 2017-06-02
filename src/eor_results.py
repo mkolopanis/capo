@@ -656,8 +656,8 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100, version=4)
             if version == 4:
                 # flatten array in time and baseline
                 # no boots
-                Z = scramble_avg_bootstrap_array_v4(indata[inname], func=avg_func)
-                Z_fold = scramble_avg_bootstrap_array_v4(X, func=avg_func)
+                Z = scramble_avg_bootstrap_array_v4(indata[inname])
+                Z_fold = scramble_avg_bootstrap_array_v4(X)
             vals[outname] = Z.data
             vals[outname_fold] = Z_fold.data
             # power spectrum is the mean and std dev over scramble dimension
@@ -719,7 +719,7 @@ def scramble_avg_bootstrap_array_v3(X, func=n.median, Nboots=100):
     bboots = n.ma.masked_invalid(n.array(bboots))
     return bboots
 
-def scramble_avg_bootstrap_array_v4(X, func=n.median):
+def scramble_avg_bootstrap_array_v4(X):
     """Collapse (baseline, k, time) array in baseline and time. No bootstrapping."""
     X = X.swapaxes(0,1).reshape((X.shape[1], X.shape[0]*X.shape[2])) # reshape to (k, bl*time)
     return X.T

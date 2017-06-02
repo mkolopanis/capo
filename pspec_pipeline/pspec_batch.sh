@@ -4,14 +4,14 @@
 #   $ pspec_batch.sh <path to LST-binned files> <directory name to save all outputs>
 
 #PSA64
-if false
+if true
 then
 CALFILE='psa6240_v003'
 RA='.1_8.6'
-SEP='0,1'
+SEP='-1,1'
 DATA=$1
-EVEN_FILES=${DATA}'/even/sep'${SEP}'/*.uvGA'
-ODD_FILES=${DATA}'/odd/sep'${SEP}'/*.uvGA'
+EVEN_FILES=${DATA}'/even/sep'${SEP}'/*.uvGAL'
+ODD_FILES=${DATA}'/odd/sep'${SEP}'/*.uvGAL'
 DIRNAME=$2
 EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
@@ -20,24 +20,24 @@ CHAN='95_115'
 POL='I'
 weight='I'
 WINDOW='none'
-FRF=''
-#NOFRFPATH='--nofrfpath pspec128_uvGA/inject_sep'${SEP}'_0.01/pspec_pk_k3pk.npz' # path to one pspec_2d_to_1d.py output for NONFRF case
-NOFRFPATH=''
+FRF='--frf'
 LMODE='' #'--lmode=12'
-CHANGEC='' #'--changeC'
+CHANGEC='--changeC' #throw out off diagonal terms of covariance.
+NGPS=1
+NLSTG=2
 
 else
-### My Options ###
-#CALFILE='psa6622_v003'
-#RA='4_10'
-#SEP='0,2'
-#DATA=$1
-#EVEN_FILES=${DATA}'/even/sep'${SEP}'/*I.uvGA'
-#ODD_FILES=${DATA}'/odd/sep'${SEP}'/*I.uvGA'
-#DIRNAME=$2
-#EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
-#ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
-#CHAN='110_130'
+### PSA128 options ###
+CALFILE='psa6622_v003'
+RA='4_10'
+SEP='0,2'
+DATA=$1
+EVEN_FILES=${DATA}'/even/sep'${SEP}'/*I.uvGA'
+ODD_FILES=${DATA}'/odd/sep'${SEP}'/*I.uvGA'
+DIRNAME=$2
+EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
+ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
+CHAN='110_130'
 #NBOOT=20
 POL='I'
 weight='L^-1'
@@ -46,8 +46,8 @@ FRF='--frf'
 NOFRFPATH='' #'--nofrfpath pspec128_uvGA/inject_sep'${SEP}'_0.01/pspec_pk_k3pk.npz' # path to one pspec_2d_to_1d.py output for NONFRF case
 LMODE='' #'--lmode=12'
 CHANGEC='--changeC'
-NGPS=2
-NLSTG=2
+NGPS=1
+NGPS_LST=2
 
 ### PSA64 Options ###
 
@@ -78,6 +78,6 @@ for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-
 
     # Stage 2: pspec_2d_to_1d.py
     ~/capo/pspec_pipeline/pspec_2d_to_1d.py \
-    --output=${DIRNAME}/inject_sep${SEP}_${inject}/ --nlstg=${NLSTG} ${DIRNAME}/inject_sep${SEP}_${inject}/pspec_oqe_2d.npz
+    --output=${DIRNAME}/inject_sep${SEP}_${inject}/ --NGPS_LST=${NGPS_LST} ${DIRNAME}/inject_sep${SEP}_${inject}/pspec_oqe_2d.npz
     
 done
