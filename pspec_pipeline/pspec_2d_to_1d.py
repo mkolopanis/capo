@@ -146,7 +146,7 @@ print '   We have', pk_pspecs['nPS'], 'independent samples...'
 print '   ... Therefore, we correct for error on error using factor =', scaling
 
 for key in pk_pspecs:
-    if key[0] == 'p':
+    if key[0] == 'p' and key[-3:] == 'err':
         pk_pspecs[key] = pk_pspecs[key] * scaling
 
 # Save values
