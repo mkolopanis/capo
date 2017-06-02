@@ -34,24 +34,22 @@ parser.add_argument('--avg_func', default='np.mean', type=str,
 parser.add_argument('-v', '--version', default=4, type=int,
                     help=('Version of bootstrapping method. '
                           'Existing versions are 1,2, or 4.'))
-parser.add_argument('--NGPS_LST', default=0, type=int,
+parser.add_argument('--NGPS_LST', default=1, type=int,
                     help='Number of total LST groups to average.')
 args = parser.parse_args()
 
 np.random.seed(0)
-print 'Reading', args.files[0]  # only one file from pspec_oqe_2d
-power_spectrum_channels = ['pC', 'pI', 'err', 'pCv', 'var', 'pIv',
-                           'pCe', 'pIe', 'pIr', 'pCr', 'pCr-pCv', 'pIr-pIv',
-                           'pCn', 'pIn', 'pCs', 'pIs', 'pCs-pCn', 'pIs-pIn']
-file = np.load(args.files[0])
-pspecs = {}
-for key in file:
-    if key in power_spectrum_channels:
-        pspecs[key] = np.real(file[key])  # take real part
-    else:
-        pspecs[key] = file[key]  # keys not in power_spectrum_channels
 
-# pspecs = read_bootstraps_dcj(args.files)
+pspecs = read_bootstraps_dcj(args.files)
+
+for key in pspecs:
+    if args.version == 4:
+        if key[0] == 'p':
+            pspecs[key] = pspecs[key][0] # turn 4-dimensional array back to 3-dim (this is okay since there was only one bootsigloss file read in)
+    if args.version == 1 or args.version == 2:
+        if key[0] == 'p':
+            pspecs[key] = np.average(pspecs[key],axis=1) # average along cross-multiplication axis (bl groups)
+
 if args.Neff_lst is None:
     Nlstbins = np.shape(pspecs['pCr'])[-1]
     # get the number of lst integrations in the dataset
@@ -59,9 +57,6 @@ if args.Neff_lst is None:
     Neff_lst = np.ceil(Nlstbins / t_eff)
 else:
     Neff_lst = int(float(args.Neff_lst))
-
-if args.NGPS_LST == 0: NGPS_LST = Neff_lst
-else: NGPS_LST = args.NGPS_LST
 
 # compute the effective number of LST bins
 # print Neff_lst
@@ -88,17 +83,22 @@ pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 #                              dtype='int', endpoint=False)
 #        pspecs[key] = pspecs[key][:,:,indices] # down-selecting in time
 
-# average LSTs within groups
-for pspec in pspecs:
-    if pspec[0] == 'p':
-        temp_pspec = []
-        indices = np.linspace(0, pspecs[pspec].shape[2], NGPS_LST + 1,
-                              endpoint=True, dtype='int')
-        for i, index in enumerate(range(len(indices) - 1)):
-            temp = pspecs[pspec][:, :, indices[i]:indices[i + 1]]
-            temp_pspec.append(np.ma.average(temp, axis=2))
-        avg_pspec = np.ma.array(temp_pspec).swapaxes(0, 2).swapaxes(0, 1)
-        pspecs[pspec] = avg_pspec
+# average LSTs within groups if given NGPS_LST (default is no averaging)
+if args.NGPS_LST == 0 and args.version == 4: NGPS_LST = Neff_lst
+elif args.NGPS_LST != 0 and args.version == 4: NGPS_LST = args.NGPS_LST
+else: NGPS_LST = 1 # 1 LST group if not version 4
+
+if args.version == 4: # average in LST if version 4
+    for pspec in pspecs:
+        if pspec[0] == 'p':
+            temp_pspec = []
+            indices = np.linspace(0, pspecs[pspec].shape[2], NGPS_LST + 1,
+                                  endpoint=True, dtype='int')
+            for i, index in enumerate(range(len(indices) - 1)):
+                temp = pspecs[pspec][:, :, indices[i]:indices[i + 1]]
+                temp_pspec.append(np.ma.average(temp, axis=2))
+            avg_pspec = np.ma.array(temp_pspec).swapaxes(0, 2).swapaxes(0, 1)
+            pspecs[pspec] = avg_pspec
 
 # compute Pk vs kpl vs bootstraps
 print "   Bootstrapping..."
@@ -120,16 +120,21 @@ print "   kperp = ", kperp
 pk_pspecs['k'] = np.sqrt(kperp**2 + pk_pspecs['kpl_fold']**2)
 pk_pspecs['kperp'] = np.ma.masked_invalid(kperp)
 pk_pspecs['cmd'] = pk_pspecs['cmd'].item() + ' \n ' + ' '.join(sys.argv)
-pk_pspecs['nlsts_g'] = Neff_lst / NGPS_LST  # number of lsts in one group
-pk_pspecs['nPS'] = pspecs['pCv'].shape[0] * pspecs['pCv'].shape[2]
+if NGPS_LST > 0: pk_pspecs['nlsts_g'] = Neff_lst / NGPS_LST  # number of lsts in one group
+else: pk_pspecs['nlsts_g'] = Neff_lst
+if args.version == 4: pk_pspecs['nPS'] = pspecs['pCv'].shape[0] * pspecs['pCv'].shape[2]
+else: pk_pspecs['nPS'] = pspecs['pCv'].shape[0]
 
-# Scale for error on error
+# Important numbers
 print "   Total number of bls = ", pk_pspecs['nbls']
 print "      number of bl groups = ", pk_pspecs['ngps']
-print "      nbls in a group = ", pk_pspecs['nbls_g']
+print "      nbls in a group = ", pk_pspecs['nbls'] / pk_pspecs['ngps']
+print "      nbls used for sensitivity = ", pk_pspecs['nbls_g']
 print "   Total number of lsts = ", Neff_lst
 print "      number of lst groups = ", NGPS_LST
-print "      nlsts in a group = ", pk_pspecs['nlsts_g']
+print "      nlsts in a group & nlsts used for sensitivity  = ", pk_pspecs['nlsts_g']
+
+# Scale for error on error
 if pk_pspecs['nPS'] != 1:
     scaling = 1. + (1. / np.sqrt(2 * (pk_pspecs['nPS'] - 1)))
 else:
@@ -137,11 +142,14 @@ else:
     print ('   !!! Warning: Scaling blows up '
            'since there is only one independent sample. '
            'Not applying correction factor !!!')
+print '   We have', pk_pspecs['nPS'], 'independent samples...'
+print '   ... Therefore, we correct for error on error using factor =', scaling
+
 for key in pk_pspecs:
     if key[0] == 'p':
         pk_pspecs[key] = pk_pspecs[key] * scaling
-print '   We have', pk_pspecs['nPS'], 'independent samples...'
-print '   ... Therefore, we correct for error on error using factor =', scaling
+
+# Save values
 for key in pk_pspecs.keys():
     if isinstance(pk_pspecs[key], np.ma.MaskedArray):
         pk_pspecs[key].fill_value = 0  # fills invalid values with 0's

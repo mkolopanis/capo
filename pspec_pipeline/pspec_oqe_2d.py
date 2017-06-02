@@ -17,6 +17,8 @@ import capo
 
 o = optparse.OptionParser()
 a.scripting.add_standard_options(o, ant=True, pol=True, chan=True, cal=True)
+o.add_option('-b', '--nboot', type='int', default=1,
+             help='Number of bootstraps.  Default is 1 (no bootstrapping).')
 o.add_option('--plot', action='store_true',
              help='Generate plots')
 o.add_option('--window', dest='window', default='blackman-harris',
@@ -432,7 +434,6 @@ lsts = lsts[lsts.keys()[0]]
 cnt_eff = 1./n.sqrt(n.ma.masked_invalid(1./cnt_full**2).mean())
 # calculate the effective number of baselines given grouping:
 N = len(bls_master)
-nbls_g = n.int(n.round(N/NGPS))
 nbls = N
 
 # Fringe-rate filter noise
@@ -498,89 +499,101 @@ if PLOT and False:
         p.tight_layout()
         p.show()
 
-# Create fake eor signal    
-if INJECT_SIG > 0.: 
-    print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
-    eij = make_eor((nlst*3, nchan))
-    size = nlst
-    #eij = n.tile(eij.flatten(), 3).reshape((3*nlst,nchan)) # add padding
-    wij = n.ones(eij.shape, dtype=bool)
-    eij_frf = fringe_rate_filter(aa, eij, wij, ij[0], ij[1], POL, bins, fir)
-    eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1], POL, bins, fir_conj) # conjugated eor with conjugated FIR
-    if opts.frf: # double frf eor
-        eij_frf = fringe_rate_filter(aa, eij_frf, wij, ij[0], ij[1], POL, bins, fir)
-        eij_conj_frf = fringe_rate_filter(aa, eij_conj_frf, wij, ij[0], ij[1], POL, bins, fir_conj)
+# Bootstrap
+for boot in xrange(opts.nboot):
+    print '\nBootstrap %d / %d' % (boot + 1, opts.nboot)
 
-    eor = eij_frf[size:2*size,:]*INJECT_SIG
-    eor_conj = eij_conj_frf[size:2*size,:]*INJECT_SIG
-    data_dict_r = {}
-    data_dict_e = {}
-    data_dict_s = {}
-    for key in data_dict_v:
-        if conj_dict[key[1]] is True:
-            eorinject = n.conj(eor_conj) # conjugate again, since when populating dse, the conj_dict knows whether it should be conjugated or not
-        else:
-            eorinject = eor
-        # track eor in separate dict
-        data_dict_e[key] = eorinject
-        # add injected signal to data
-        data_dict_r[key] = data_dict_v[key].copy() + eorinject
-        # add injected signal to noise
-        data_dict_s[key] = data_dict_n[key].copy() + eorinject
+    # Create fake eor signal    
+    if INJECT_SIG > 0.: 
+        print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
+        eij = make_eor((nlst*3, nchan))
+        size = nlst
+        #eij = n.tile(eij.flatten(), 3).reshape((3*nlst,nchan)) # add padding
+        wij = n.ones(eij.shape, dtype=bool)
+        eij_frf = fringe_rate_filter(aa, eij, wij, ij[0], ij[1], POL, bins, fir)
+        eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1], POL, bins, fir_conj) # conjugated eor with conjugated FIR
+        if opts.frf: # double frf eor
+            eij_frf = fringe_rate_filter(aa, eij_frf, wij, ij[0], ij[1], POL, bins, fir)
+            eij_conj_frf = fringe_rate_filter(aa, eij_conj_frf, wij, ij[0], ij[1], POL, bins, fir_conj)
 
-# Set data
-dsr = oqe.DataSet(lmode=LMODE)  # data + eor
-dsr.set_data(dsets=data_dict_r, conj=conj_dict, wgts=flg_dict)
-dse = oqe.DataSet(lmode=LMODE)  # just eor
-dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
-dss = oqe.DataSet(lmode=LMODE)  # noise + eor
-dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)
-if opts.changeC:
-    newCr = change_C(keys, dsr)
-    dsr.set_C(newCr)
-    newCe = change_C(keys, dse)
-    dse.set_C(newCe)
-    newCs = change_C(keys, dss)
-    dss.set_C(newCs)
+        eor = eij_frf[size:2*size,:]*INJECT_SIG
+        eor_conj = eij_conj_frf[size:2*size,:]*INJECT_SIG
+        data_dict_r = {}
+        data_dict_e = {}
+        data_dict_s = {}
+        for key in data_dict_v:
+            if conj_dict[key[1]] is True:
+                eorinject = n.conj(eor_conj) # conjugate again, since when populating dse, the conj_dict knows whether it should be conjugated or not
+            else:
+                eorinject = eor
+            # track eor in separate dict
+            data_dict_e[key] = eorinject
+            # add injected signal to data
+            data_dict_r[key] = data_dict_v[key].copy() + eorinject
+            # add injected signal to noise
+            data_dict_s[key] = data_dict_n[key].copy() + eorinject
 
-# Compute power spectra
-gps = [bls_master[i::NGPS] for i in range(NGPS)] # used if grouping=True in make_PS
-    # no repeated baselines between or within groups
-pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs = make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True)
+    # Set data
+    dsr = oqe.DataSet(lmode=LMODE)  # data + eor
+    dsr.set_data(dsets=data_dict_r, conj=conj_dict, wgts=flg_dict)
+    dse = oqe.DataSet(lmode=LMODE)  # just eor
+    dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
+    dss = oqe.DataSet(lmode=LMODE)  # noise + eor
+    dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)
+    if opts.changeC:
+        newCr = change_C(keys, dsr)
+        dsr.set_C(newCr)
+        newCe = change_C(keys, dse)
+        dse.set_C(newCe)
+        newCs = change_C(keys, dss)
+        dss.set_C(newCs)
 
-print '     Data:         pCv =', n.median(pCv.real),
-print 'pIv =', n.median(pIv.real)
-print '     EoR:          pCe =', n.median(pCe.real),
-print 'pIe =', n.median(pIe.real)
-print '     Noise:        pCn =', n.median(pCn.real),
-print 'pIn =', n.median(pIn.real)
-print '     Data + EoR:   pCr =', n.median(pCr.real),
-print 'pIr =', n.median(pIr.real)
-print '     Noise + EoR:  pCs =', n.median(pCs.real),
-print 'pIs =', n.median(pIs.real)
+    # Make groups
+    if opts.nboot > 1: # sample baselines w/replacement
+        gps = dsv.gen_gps(bls_master, ngps=NGPS)
+        nbls_g = n.int(n.round(N/NGPS)) * n.sqrt(NGPS**2-NGPS) # number of baselines per group, corrected by number of group cross-multiplications    
+ 
+    elif opts.nboot == 1: # divide up baselines into groups
+        gps = [bls_master[i::NGPS] for i in range(NGPS)]
+        # no repeated baselines between or within groups
+        nbls_g = n.int(n.round(N/NGPS)) # number of baselines per group
 
-print '       Signal Loss Data  ~ pIe/(pCr-pCv) =',
-print n.abs(n.median(pIe.real)) / n.abs(n.median(pCr.real) - n.median(pCv))
-print '       Signal Loss Noise ~ pIe/(pCs-pCn) =',
-print n.abs(n.median(pIe.real)) / n.abs(n.median(pCs.real) - n.median(pCn))
+    # Compute power spectra
+    pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs = make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True)
+    
+    print '     Data:         pCv =', n.median(pCv.real),
+    print 'pIv =', n.median(pIv.real)
+    print '     EoR:          pCe =', n.median(pCe.real),
+    print 'pIe =', n.median(pIe.real)
+    print '     Noise:        pCn =', n.median(pCn.real),
+    print 'pIn =', n.median(pIn.real)
+    print '     Data + EoR:   pCr =', n.median(pCr.real),
+    print 'pIr =', n.median(pIr.real)
+    print '     Noise + EoR:  pCs =', n.median(pCs.real),
+    print 'pIs =', n.median(pIs.real)
 
-if PLOT:
-    p.plot(kpl, n.average(pCr.real, axis=1), 'b.-')
-    p.plot(kpl, n.average(pIr.real, axis=1), 'k.-')
-    p.title('Data + EoR')
-    p.show()
+    print '       Signal Loss Data  ~ pIe/(pCr-pCv) =',
+    print n.abs(n.median(pIe.real)) / n.abs(n.median(pCr.real) - n.median(pCv))
+    print '       Signal Loss Noise ~ pIe/(pCs-pCn) =',
+    print n.abs(n.median(pIe.real)) / n.abs(n.median(pCs.real) - n.median(pCn))
 
-# Save Output
-if len(opts.output) > 0:
-    outpath = opts.output + '/pspec_oqe_2d.npz' 
-else:
-    outpath = 'pspec_oqe_2d.npz' 
-print '   Writing ' + outpath
-n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
-        pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe,
-        pIe=pIe, pCn=pCn, pIn=pIn, pCs=pCs, pIs=pIs,
-        sep=sep_type, uvw=uvw,
-        frf_inttime=frf_inttime, inttime=inttime,
-        inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
-        cnt_eff=cnt_eff, nbls=nbls, ngps=NGPS, nbls_g=nbls_g,
-        cmd=' '.join(sys.argv))
+    if PLOT:
+        p.plot(kpl, n.average(pCr.real, axis=1), 'b.-')
+        p.plot(kpl, n.average(pIr.real, axis=1), 'k.-')
+        p.title('Data + EoR')
+        p.show()
+    
+    # Save Output
+    if len(opts.output) > 0:
+        outpath = opts.output + '/pspec_bootsigloss%04d.npz' % boot 
+    else:
+        outpath = '/pspec_bootsigloss%04d.npz' % boot
+    print '   Writing ' + outpath
+    n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
+            pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe,
+            pIe=pIe, pCn=pCn, pIn=pIn, pCs=pCs, pIs=pIs,
+            sep=sep_type, uvw=uvw,
+            frf_inttime=frf_inttime, inttime=inttime,
+            inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
+            cnt_eff=cnt_eff, nbls=nbls, ngps=NGPS, nbls_g=nbls_g,
+            cmd=' '.join(sys.argv))

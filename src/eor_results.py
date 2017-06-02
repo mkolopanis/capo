@@ -734,8 +734,8 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100, version=4)
             if version == 2:
                 # for each baseline bootstrap, draw random samples in time only
                 # average over time
-                Z = scramble_avg_bootstrap_array_v2(indata[inname], func=avg_func, Nboots=Nboots)
-                Z_fold = scramble_avg_bootstrap_array_v2(X, func=avg_func, Nboots=Nboots)
+                Z = scramble_avg_bootstrap_array_v2(indata[inname], func=avg_func)
+                Z_fold = scramble_avg_bootstrap_array_v2(X, func=avg_func)
             if version == 3:
                 # flatten array in time and baseline
                 # draw samples from the flattened array, average them, and do it Nboots times
@@ -781,18 +781,22 @@ def scramble_avg_bootstrap_array(X, Nt_eff=10, Nboots=100, func=n.median):
     else: return func(bboots, axis=-1)
 
 def scramble_avg_bootstrap_array_v2(X, func=n.median):
-    """For every bootstrap file, choose random times and 
-    apply func to the result (default is numpy.median)
+    """For every bootstrap file, apply function along
+    time axis (default is numpy.median)
     Assumes input array dimensions (nbootstraps,nks,ntimes)
     """
-    bboots = []
-    for j in range(X.shape[0]):
-        n.random.seed(j) # seeded by boot index
-        times_i = n.random.choice(X.shape[-1], 1000, replace=True) #XXX 1000 is chosen arbitrarily, but any large number should converge on the same answer
-        if func == n.median: bboots.append(pspec_median(X[j, :, times_i], axis=0))
-        else: bboots.append(func(X[j, :, times_i], axis=0))
-    bboots = n.ma.masked_invalid(n.array(bboots))
-    return bboots
+    #bboots = []
+    #import IPython;IPython.embed()
+    #for j in range(X.shape[0]):
+    #    n.random.seed(j) # seeded by boot index
+    #    times_i = n.random.choice(X.shape[-1], 1000, replace=True) #XXX 1000 is chosen arbitrarily, but any large number should converge on the same answer
+    #    if func == n.median: bboots.append(pspec_median(X[j, :, times_i], axis=0))
+    #    else: bboots.append(func(X[j, :, times_i], axis=0))
+    #bboots = n.ma.masked_invalid(n.array(bboots))
+    #return bboots
+    if func == n.median: return pspec_median(X, axis=-1)
+    else: return func(X, axis=-1)
+
 
 def scramble_avg_bootstrap_array_v3(X, func=n.median, Nboots=100):
     """Collapse (baseline, k, time) array in baseline and time 

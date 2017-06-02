@@ -62,8 +62,10 @@ WINDOW='none'
 FRF='--frf'
 LMODE='' #'--lmode=12'
 CHANGEC='--changeC'
-NGPS=1
-NGPS_LST=2
+NBOOT=20 # use 1 if doing version 4 (pspec_banana)
+NGPS=5
+NGPS_LST=2 # only matters for version 4 (otherwise it's not used)
+VERSION=2 # version 4 is pspec_banana
 EVEN_FILES='/home/cacheng/capo/ctc/matt_data/even/*uvGAL'
 ODD_FILES='/home/cacheng/capo/ctc/matt_data/odd/*uvGAL'
 CALFILE='psa6240_v003'
@@ -87,11 +89,11 @@ for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-
     echo SIGNAL_LEVEL=${inject}
 
     ~/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} \
-    -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/inject_sep${SEP}_${inject} \
+    -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/inject_sep${SEP}_${inject} -b ${NBOOT} \
     ${EVEN_FILES} ${ODD_FILES} --NGPS=${NGPS}
 
     # Stage 2: pspec_2d_to_1d.py
     ~/capo/pspec_pipeline/pspec_2d_to_1d.py \
-    --output=${DIRNAME}/inject_sep${SEP}_${inject}/ --NGPS_LST=${NGPS_LST} ${DIRNAME}/inject_sep${SEP}_${inject}/pspec_oqe_2d.npz
+    --output=${DIRNAME}/inject_sep${SEP}_${inject}/ --NGPS_LST=${NGPS_LST} -v ${VERSION} ${DIRNAME}/inject_sep${SEP}_${inject}/*bootsigloss*.npz
     
 done
