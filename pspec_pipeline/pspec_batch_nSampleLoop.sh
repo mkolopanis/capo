@@ -48,7 +48,7 @@ FRF='--frf'
 NOFRFPATH='' #'--nofrfpath pspec128_uvGA/inject_sep'${SEP}'_0.01/pspec_pk_k3pk.npz' # path to one pspec_2d_to_1d.py output for NONFRF case
 LMODE='' #'--lmode=12'
 CHANGEC='--changeC'
-NGPS=5
+#NGPS=5
 
 ### PSA64 Options ###
 
@@ -60,10 +60,10 @@ SEP='0,1'
 RA='.1_8.6'
 EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
-DIRNAME='/home/saulkohn/pspec_test_large/'
-NBLG_MIN=2
-NBLG_MAX=24
-NLSTG_MIN=1
+DIRNAME='/home/saulkohn/pspec_banana_test_large/'
+NBLG_MIN=1
+NBLG_MAX=23
+NLSTG_MIN=2
 NLSTG_MAX=10
 fi
 #-----------------------------------------------------------------
@@ -90,19 +90,19 @@ for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-
             for NLSTG in $(seq ${NLSTG_MIN} ${NLSTG_MAX}); do
                 echo Making Directory ${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/nlst${NLSTG} 
                 mkdir ${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/nlst${NLSTG}
-                ${PATH2CAPO}/pspec_pipeline/pspec_2d_to_1d.py --nlstg=${NLSTG} \
+                ${PATH2CAPO}/pspec_pipeline/pspec_2d_to_1d.py --NGPS_LST=${NLSTG} \
                 --output=${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/nlst${NLSTG}/ \
                 ${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/pspec_oqe_2d.npz
             done
-            ${PATH2CAPO}/pspec_pipeline/pspec_2d_to_1d.py --nlstg=1 --output=${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/ \
+            ${PATH2CAPO}/pspec_pipeline/pspec_2d_to_1d.py --NGPS_LST=1 --output=${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/ \
             ${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/pspec_oqe_2d.npz
         else
-            ${PATH2CAPO}/pspec_pipeline/pspec_2d_to_1d.py --nlstg=1 --output=${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/ \
+            ${PATH2CAPO}/pspec_pipeline/pspec_2d_to_1d.py --NGPS_LST=1 --output=${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/ \
             ${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/pspec_oqe_2d.npz
         fi
     done
 done
 
 # Stage 3: Plot things
-${PATH2CAPO}/pspec_pipeline/nGroupPlots.py --path2data=${DIRNAME} --nblg_min=${NBLG_MIN} --nblg_max=${NBLG_MAX} --nlst_min=${NLSTG_MIN} --nlstmax=${NLSTG_MAX} --plotAll
+#${PATH2CAPO}/pspec_pipeline/nGroupPlots.py --path2data=${DIRNAME} --nblg_min=${NBLG_MIN} --nblg_max=${NBLG_MAX} --nlst_min=${NLSTG_MIN} --nlstmax=${NLSTG_MAX} --plotAll
 
