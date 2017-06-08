@@ -73,7 +73,62 @@ except:
     rmbls = []
 
 
-# FUNCTIONS #
+# CLASSES & FUNCTIONS #
+
+class DataSet(oqe.DataSet):
+    def iC(self, k, t=None, rcond=1e-12):
+        assert(t == None)
+        if not self._iC.has_key(k):
+            C = self.C(k)
+            ### CHANGE C HERE ###
+            # OPTION 1: identity multiplication
+            #C = C * n.identity(len(C))
+            # OPTION 2: identity addition
+            #C = C + n.identity(len(C))*10000.0
+            # OPTION 3: multiplication by identity + 2 diagonals
+            """
+            C2 = n.zeros_like(C)
+            for i in range(C.shape[0]):
+                for j in range(C.shape[1]):
+                    if n.abs(j-i) <= 1: C2[i,j] = 1.0
+            C = C * C2 
+            """
+            # OPTION 4: use 'average C', where it is computed based on average data
+            #avgx = self.x[k] - self.avgx
+            #C = oqe.cov(avgx, self.w[k])
+            # OPTION 5: subtract average C off of C
+            #C = C - self.avgC
+            # OPTION 6: add identity at strength of median(eigenvalues)
+            #U,S,V = n.linalg.svd(C.conj())
+            #C = C + n.identity(len(C)) * n.median(S)
+            # svd 
+            U,S,V = n.linalg.svd(C.conj()) # conj in advance of next step
+            iS = 1./S
+            ### OR CHANGE iS HERE ###
+            #iS[:3] = 0.0
+            #iS[3:] = 1.0
+            self.set_iC({k:n.einsum('ij,j,jk', V.T, iS, U.T)})
+        return self._iC[k]
+    def set_data(self, dsets, wgts=None, conj=None):
+        if type(dsets.values()[0]) == dict:
+            dsets,wgts = self.flatten_data(dsets), self.flatten_data(wgts)
+        self.x, self.w = {}, {}
+        avgx = []
+        avgC = []
+        for k in dsets:
+            self.x[k] = dsets[k].T
+            try: self.w[k] = wgts[k].T
+            except(TypeError): self.w[k] = n.ones_like(self.x[k])
+            try:
+                if conj[k[1]]: self.x[k] = n.conj(self.x[k])
+            except(TypeError,KeyError): pass
+            try: 
+                avgx.append(self.x[k])
+                avgC.append(oqe.cov(self.x[k], self.w[k]))
+            except(TypeError,KeyError): pass
+        self.avgx = n.average(avgx, axis=0)
+        self.avgC = n.average(avgC, axis=0)
+
 
 def complex_noise(size, noiselev):
     """Generate complex noise of given size and noiselevel."""
@@ -161,7 +216,7 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True):
         #print '   ',k+1,'/',len(newkeys)
         for key2 in newkeys[k:]:
             if len(newkeys) > 2 and (key1[0] == key2[0] or key1[1] == key2[1]): # NGPS > 1
-                continue  # don't do even w/even or bl w/same bl 
+                continue  
             if key1[0] == key2[0]: # don't do 'even' with 'even', for example
                 continue
             else:
@@ -256,21 +311,43 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True):
 def change_C(keys, ds):
     newC = {}
     for key in keys:
-        newC[key] = ds.C(key) * n.identity(len(ds.C(key))) # identity multiplication
-        #newC[key] = ds.C(key) + n.identity(len(ds.C(key)))*10000.0 # identity addition
+        # OPTION 1: identity multiplication
+        #newC[key] = ds.C(key) * n.identity(len(ds.C(key)))
+        # OPTION 2: identity addition
+        #newC[key] = ds.C(key) + n.identity(len(ds.C(key)))*10000.0 
+        # OPTION 3: identity + 2 diagonals
+        """
+        C2 = n.zeros_like(ds.C(key))
+        for i in range(ds.C(key).shape[0]):
+            for j in range(ds.C(key).shape[1]):
+                if n.abs(j-i) <= 1: C2[i,j] = 1.0
+        newC[key] = ds.C(key) * C2 # identity + diagonal multiplication
+        """
+        # OPTION 4: identity without highest 3 eigenmodes
+        """
+        U,S,V = n.linalg.svd(ds.C(key))
+        S[:3] = 0.0
+        S[3:] = 1.0
+        newC[key] = n.dot(U, n.dot(n.diag(S), V))
+        """
+        # OPTION 5: identity multiplication without highest 3 eigenmodes
+        U,S,V = n.linalg.svd(ds.C(key) * n.identity(len(ds.C(key))))
+        S[:3] = 0.0
+        newC[key] = n.dot(U, n.dot(n.diag(S), V))
     return newC
 
+"""
 def cov(m):
-    """Compute Complex Covariance.
+    '''Compute Complex Covariance.
 
     Because numpy.cov is stupid and casts as float.
-    """
+    '''
     X = n.array(m, ndmin=2, dtype=n.complex)
     X -= X.mean(axis=1)[(slice(None), n.newaxis)]
     N = X.shape[1]
     fact = float(N - 1)  # normalization
     return (n.dot(X, X.T.conj()) / fact).squeeze()
-
+"""
 
 def get_Q(mode, n_k):
     """Generate Fourier Transform Matrix.
@@ -457,16 +534,15 @@ for key in data_dict_n:
         data_dict_n[key] = n.conj(data_dict_n[key])
 
 # Set data
-dsv = oqe.DataSet(lmode=LMODE)  # just data
+if opts.changeC:
+    dsv = DataSet()
+    dsn = DataSet()
+else:
+    dsv = oqe.DataSet(lmode=LMODE)  # just data
+    dsn = oqe.DataSet(lmode=LMODE)  # just noise
 dsv.set_data(dsets=data_dict_v, conj=conj_dict, wgts=flg_dict)
-dsn = oqe.DataSet(lmode=LMODE)  # just noise
 dsn.set_data(dsets=data_dict_n, conj=conj_dict, wgts=flg_dict)
 
-if opts.changeC:
-    newCv = change_C(keys, dsv)
-    dsv.set_C(newCv)
-    newCn = change_C(keys, dsn)
-    dsn.set_C(newCn)
 
 """
 n_to_save = {}
@@ -534,19 +610,17 @@ for boot in xrange(opts.nboot):
             data_dict_s[key] = data_dict_n[key].copy() + eorinject
 
     # Set data
-    dsr = oqe.DataSet(lmode=LMODE)  # data + eor
-    dsr.set_data(dsets=data_dict_r, conj=conj_dict, wgts=flg_dict)
-    dse = oqe.DataSet(lmode=LMODE)  # just eor
-    dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
-    dss = oqe.DataSet(lmode=LMODE)  # noise + eor
-    dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)
     if opts.changeC:
-        newCr = change_C(keys, dsr)
-        dsr.set_C(newCr)
-        newCe = change_C(keys, dse)
-        dse.set_C(newCe)
-        newCs = change_C(keys, dss)
-        dss.set_C(newCs)
+        dsr = DataSet()
+        dse = DataSet()
+        dss = DataSet()
+    else:
+        dsr = oqe.DataSet(lmode=LMODE)  # data + eor
+        dse = oqe.DataSet(lmode=LMODE)  # just eor
+        dss = oqe.DataSet(lmode=LMODE)  # noise + eor
+    dsr.set_data(dsets=data_dict_r, conj=conj_dict, wgts=flg_dict)
+    dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
+    dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)
 
     # Make groups
     if opts.nboot > 1: # sample baselines w/replacement
