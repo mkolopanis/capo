@@ -57,7 +57,7 @@ else
 echo "CARINA PSA64!"
 ### PSA64 Options ###
 POL='I'
-weight='L^-1'
+weight='I' #'L^-1'
 WINDOW='none'
 FRF='--frf'
 LMODE='' #'--lmode=12'
@@ -84,7 +84,7 @@ mkdir ${DIRNAME}
 echo Making Directory ${DIRNAME}
 
 # Stage 1: pspec_oqe_2d.py over range of injection levels
-for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-2,3,1)))"` ; do
+for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-2,3,10)))"` ; do
     mkdir ${DIRNAME}/inject_sep${SEP}_${inject}
     echo SIGNAL_LEVEL=${inject}
 
