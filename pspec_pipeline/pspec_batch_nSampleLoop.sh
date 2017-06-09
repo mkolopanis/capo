@@ -63,6 +63,7 @@ ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
 DIRNAME='/home/saulkohn/pspec_banana_test_large/'
 NBLG_MIN=1
 NBLG_MAX=23
+NBLG_SEQ='1 2 4 8 16 23'
 NLSTG_MIN=2
 NLSTG_MAX=10
 fi
@@ -74,7 +75,8 @@ echo Making Directory ${DIRNAME}
 
 # Stage 1: pspec_oqe_2d.py over range of injection levels
 for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-2,3,1)))"` ; do
-    for NBLG in $(seq ${NBLG_MIN} ${NBLG_MAX}); do
+    #for NBLG in $(seq ${NBLG_MIN} ${NBLG_MAX}); do
+     for NBLG in ${NBLG_SEQ}; do
         echo Making Directory ${DIRNAME}/nblg${NBLG}/
         mkdir ${DIRNAME}/nblg${NBLG}
         mkdir ${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}
@@ -94,10 +96,10 @@ for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-
                 --output=${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/nlst${NLSTG}/ \
                 ${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/pspec_oqe_2d.npz
             done
-            ${PATH2CAPO}/pspec_pipeline/pspec_2d_to_1d.py --NGPS_LST=1 --output=${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/ \
+            ${PATH2CAPO}/pspec_pipeline/pspec_2d_to_1d.py --NGPS_LST=${NLSTG_MIN} --output=${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/ \
             ${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/pspec_oqe_2d.npz
         else
-            ${PATH2CAPO}/pspec_pipeline/pspec_2d_to_1d.py --NGPS_LST=1 --output=${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/ \
+            ${PATH2CAPO}/pspec_pipeline/pspec_2d_to_1d.py --NGPS_LST=${NLSTG_MIN} --output=${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/ \
             ${DIRNAME}/nblg${NBLG}/inject_sep${SEP}_${inject}/pspec_oqe_2d.npz
         fi
     done

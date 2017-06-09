@@ -3,19 +3,19 @@ import sys, optparse
 o = optparse.OptionParser()
 
 o.add_option('--path2data',default='/Users/saulkohn/Documents/PAPER/powerspectra/nBlGroupExperiment/',help='Path to the top of the directory tree containing the power spectra')
-o.add_option('--nblg_min',default=2,help='Minimum number of baseline groups used')
-o.add_option('--nblg_max',default=23,help='Maximum number of baseline groups used')
-o.add_option('--nlst_min',default=1,help='Minimum number of LST groups used')
+o.add_option('--nblg_arr',default="1,2,4,8,16,23",help='Comma-separated list of baseline groups used')
+o.add_option('--nlst_min',default=2,help='Minimum number of LST groups used')
 o.add_option('--nlst_max',default=10,help='Maximum number of LST groups used')
 o.add_option('--fold',action='store_true',help='Fold k and form Delta^2 power spectra')
-
+o.add_option('--fit',action='store_true',help='Fit the data curves')
 opts, args = o.parse_args(sys.argv[1:])
 
 # Parse options
 path2data = opts.path2data
-nblg_min,nblg_max = int(opts.nblg_min),int(opts.nblg_max)
+nblg_arr = map(int,opts.nblg_arr.split(','))
+nblg_min,nblg_max = nblg_arr[0],nblg_arr[-1]
 nlst_min,nlst_max = int(opts.nlst_min),int(opts.nlst_max)
-nblg_L = (nblg_max - nblg_min) + 1
+nblg_L = len(nblg_arr)
 nlst_L = (nlst_max - nlst_min) + 1
 
 if not opts.fold:
@@ -39,7 +39,8 @@ pCv_bl,pCv_lst = np.zeros((nblg_L,Nk)),np.zeros((nlst_L,Nk))
 
 # Data Parsing
 
-for i,nBL in enumerate(range(nblg_min,nblg_max+1)):
+for i,nBL in enumerate(nblg_arr):
+    print 'Reading %s/nblg%i/inject_sep0,1_0.01/pspec_pk_k3pk.npz'%(path2data,nBL)
     d = np.load('%s/nblg%i/inject_sep0,1_0.01/pspec_pk_k3pk.npz'%(path2data,nBL))
     pIv_bl[i,:] = d['pIv%s_err'%subs]
     pIn_bl[i,:] = d['pIn%s_err'%subs]
@@ -47,6 +48,7 @@ for i,nBL in enumerate(range(nblg_min,nblg_max+1)):
     nbl_g[i] = d['nbls_g']
     if i==0:
         for j,nLST in enumerate(range(nlst_min,nlst_max+1)):
+            print 'Reading %s/nblg%i/inject_sep0,1_0.01/nlst%i/pspec_pk_k3pk.npz'%(path2data,nBL,nLST)
             dl = np.load('%s/nblg%i/inject_sep0,1_0.01/nlst%i/pspec_pk_k3pk.npz'%(path2data,nBL,nLST))
             pIv_lst[j,:] = dl['pIv%s_err'%subs]
             pIn_lst[j,:] = dl['pIn%s_err'%subs]
@@ -55,6 +57,8 @@ for i,nBL in enumerate(range(nblg_min,nblg_max+1)):
 
 kpl = d['kpl']
 
+# Averaging
+
 pIn_bl_avg = np.mean(pIn_bl[:,nice],axis=1)
 pIv_bl_avg = np.mean(pIv_bl[:,nice],axis=1)
 pCv_bl_avg = np.mean(pCv_bl[:,nice],axis=1)
@@ -62,7 +66,30 @@ pIn_lst_avg = np.mean(pIn_lst[:,nice],axis=1)
 pIv_lst_avg = np.mean(pIv_lst[:,nice],axis=1)
 pCv_lst_avg = np.mean(pCv_lst[:,nice],axis=1)
 
-
+# Fitting
+if opts.fit:
+    def calc_ucoeffs(x,coeffs,cov,deg=1):
+        XX = np.vstack([x**(deg-i) for i in range(deg+1)]).T
+        yi = np.dot(XX,coeffs) #gets the polynomial values
+        C_yi = np.dot(XX,np.dot(cov,XX.T)) # C_y = XX.C.XX^T
+        sig_yi = np.sqrt(np.diag(C_yi))
+        return sig_yi
+    
+    coeffs_nbl,cov_nbl = np.polyfit(np.log10(nbl_g),np.log10(pIv_bl_avg),deg=1,cov=True)
+    coeffs_nlst,cov_nlst= np.polyfit(np.log10(nlst_g),np.log10(pIv_lst_avg),deg=1,cov=True)
+    print 'Coeffs for log10(nbl_g) vs log10(pIv_bl_avg): ',coeffs_nbl
+    ucoeffs_nbl = calc_ucoeffs(np.log10(nbl_g),coeffs_nbl,cov_nbl)
+    print 'Uncertainties per point: ',ucoeffs_nbl
+    print 'Uncertainty overall: ',np.sqrt(np.sum([j**2 for j in ucoeffs_nbl]))
+    print 'Coeffs for log10(nlst_g) vs log10(pIv_lst_avg): ',coeffs_nlst
+    ucoeffs_nlst = calc_ucoeffs(np.log10(nlst_g),coeffs_nlst,cov_nlst)
+    print 'Uncertainties per point: ',ucoeffs_nlst
+    print 'Uncertainty overall: ',np.sqrt(np.sum([j**2 for j in ucoeffs_nlst]))
+    
+    #poly_nbl = np.poly1d(coeffs_nbl)
+    #poly_nlst= np.poly1d(coeffs_nlst)
+    
+# Plotting
 f,axarr = plt.subplots(1,2,sharey=True)
 
 for nk in nice:
@@ -74,22 +101,30 @@ for nk in nice:
     axarr[1].plot(nlst_g,pIv_lst[:,nk],'b-',alpha=0.1)
     axarr[1].plot(nlst_g,pCv_lst[:,nk],'r-',alpha=0.1)
     
-    print np.log10(pIv_lst[:,nk])-np.log10(pIn_lst[:,nk])
+    #print np.log10(pIv_lst[:,nk])-np.log10(pIn_lst[:,nk])
     
 axarr[0].plot(nbl_g,pIn_bl_avg,'g-',lw=2)
 axarr[0].plot(nbl_g,pIv_bl_avg,'b-',lw=2)
 axarr[0].plot(nbl_g,pCv_bl_avg,'r-',lw=2)
+axarr[0].plot(nbl_g,pIn_bl_avg[-1]*nbl_g[-1]/nbl_g,'k--')
+#axarr[0].plot(nbl_g,poly_nbl,'m-')
 
 axarr[1].plot(nlst_g,pIn_lst_avg,'g-',lw=2,label='noise')
 axarr[1].plot(nlst_g,pIv_lst_avg,'b-',lw=2,label='data+I')
 axarr[1].plot(nlst_g,pCv_lst_avg,'r-',lw=2,label='data+C')
+axarr[1].plot(nlst_g,pIn_lst_avg[-1]*np.sqrt(nlst_g[-1]/nlst_g),'k--',label='analytic')
 
 axarr[0].set_xlabel('nbl/group')
 axarr[1].set_xlabel('nLST/group')
 if not opts.fold: ylab = 'P(k)'
 else: ylab = r'$\Delta^2(k)$'
 axarr[0].set_ylabel(ylab)
+
 axarr[0].set_yscale('log')
+axarr[0].set_xscale('log')
+axarr[1].set_xscale('log')
+
 plt.legend()
 
 plt.show()
+
