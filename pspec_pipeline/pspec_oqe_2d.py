@@ -82,7 +82,7 @@ class DataSet(oqe.DataSet):
             C = self.C(k)
             ### CHANGE C HERE ###
             # OPTION 1: identity multiplication
-            #C = C * n.identity(len(C))
+            C = C * n.identity(len(C))
             # OPTION 2: identity addition
             #C = C + n.identity(len(C))*10000.0
             # OPTION 3: multiplication by identity + 2 diagonals
