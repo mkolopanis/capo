@@ -631,6 +631,8 @@ for boot in xrange(opts.nboot):
         gps = [bls_master[i::NGPS] for i in range(NGPS)]
         # no repeated baselines between or within groups
         nbls_g = n.int(n.round(N/NGPS)) # number of baselines per group
+        nbls = nbls_g # over-ride nbls for proper sensitivity calculation later
+        NGPS = 1 # over-ride NGPS for proper sensitivity calculation later
 
     # Compute power spectra
     pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs = make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True)
