@@ -29,7 +29,7 @@ class Sense(object):
 
         if self.Nblgroups >1:
             Nb = (self.Nbls/self.Nblgroups)
-            self.bl_eff = Nb * np.sqrt((self.Nblgroups**2 - self.Nblgroups)/2)
+            self.bl_eff = Nb * np.sqrt((self.Nblgroups**2 - self.Nblgroups))
         else:
             self.bl_eff = self.Nbls
         self.P_N = self.X2Y * self.Omega_eff * self.Tsys**2
