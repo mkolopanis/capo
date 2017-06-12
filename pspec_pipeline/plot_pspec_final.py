@@ -185,10 +185,10 @@ for filename in args.files:
             S.Ndays = cnt  #effective number of days
             S.Npols = 2
             S.Nseps = 1
-            S.Nblgroups = 1 #groups are already folded into the calculation of nbls_eff
+            S.Nblgroups = pspec_dict['ngps'] 
             S.Omega_eff = omega_eff #use the FRF weighted beams listed in T1 of Parsons etal beam sculpting paper
             k = pspec_dict['k']
-            S.Nbls = nbls_g
+            S.Nbls = pspec_dict['nbls']
             S.Nlstbins = nlsts_g
             S.calc()
             print "capo.sensitivity Pk_noise = ",S.P_N
