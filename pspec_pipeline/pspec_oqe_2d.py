@@ -625,7 +625,7 @@ for boot in xrange(opts.nboot):
     # Make groups
     if opts.nboot > 1: # sample baselines w/replacement
         gps = dsv.gen_gps(bls_master, ngps=NGPS)
-        nbls_g = n.int(n.round(N/NGPS)) * n.sqrt(NGPS**2-NGPS) # number of baselines per group, corrected by number of group cross-multiplications    
+        nbls_g = n.int(n.round(N/NGPS))  # number of baselines per group
  
     elif opts.nboot == 1: # divide up baselines into groups
         gps = [bls_master[i::NGPS] for i in range(NGPS)]
