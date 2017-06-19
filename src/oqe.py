@@ -263,7 +263,8 @@ class DataSet:
                 newkey = (s,gp)
                 newkeys.append(newkey)
                 """ # Change sign of baselines going into each group
-                for b in range((len(gps[gp])/2)*2): #ensure it's an even number
+                gps[gp] = gps[gp][:(len(gps[gp])/2)*2] # ensure even number of baselines per group
+                for b in range(len(gps[gp])): 
                     if b < len(gps[gp])/2: #for half of the baselines
                         self.add_data(dsets={(s,gps[gp][b],POL): -1*self.x[(s,gps[gp][b],POL)].T})
                 """
