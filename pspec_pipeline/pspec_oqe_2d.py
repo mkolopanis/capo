@@ -171,6 +171,7 @@ def make_noise(d, cnt, inttime, df): #, freqs, jy2T=None):
     #noise.shape = d.shape
     return noise
 
+
 def fringe_rate_filter(aa, dij, wij, i, j, pol, bins, fir):
     """ Apply frf."""
     _d, _w, _, _ = fringe.apply_frf(aa, dij, wij, i, j, pol=pol, bins=bins, fir=fir)
@@ -181,6 +182,7 @@ def make_eor(shape):  # Create and fringe rate filter noise
     """Generate White Noise and Apply FRF."""
     dij = oqe.noise(size=shape)
     return dij
+
 
 def make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True):
     """Use OQE formalism to generate power spectrum.
@@ -306,66 +308,6 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True):
         p.legend()
         p.show()
     return n.array(pCvs), n.array(pIvs), n.array(pCns), n.array(pIns), n.array(pCes), n.array(pIes), n.array(pCrs), n.array(pIrs), n.array(pCss), n.array(pIss)
-
-
-def change_C(keys, ds):
-    newC = {}
-    for key in keys:
-        # OPTION 1: identity multiplication
-        #newC[key] = ds.C(key) * n.identity(len(ds.C(key)))
-        # OPTION 2: identity addition
-        #newC[key] = ds.C(key) + n.identity(len(ds.C(key)))*10000.0 
-        # OPTION 3: identity + 2 diagonals
-        """
-        C2 = n.zeros_like(ds.C(key))
-        for i in range(ds.C(key).shape[0]):
-            for j in range(ds.C(key).shape[1]):
-                if n.abs(j-i) <= 1: C2[i,j] = 1.0
-        newC[key] = ds.C(key) * C2 # identity + diagonal multiplication
-        """
-        # OPTION 4: identity without highest 3 eigenmodes
-        """
-        U,S,V = n.linalg.svd(ds.C(key))
-        S[:3] = 0.0
-        S[3:] = 1.0
-        newC[key] = n.dot(U, n.dot(n.diag(S), V))
-        """
-        # OPTION 5: identity multiplication without highest 3 eigenmodes
-        U,S,V = n.linalg.svd(ds.C(key) * n.identity(len(ds.C(key))))
-        S[:3] = 0.0
-        newC[key] = n.dot(U, n.dot(n.diag(S), V))
-    return newC
-
-"""
-def cov(m):
-    '''Compute Complex Covariance.
-
-    Because numpy.cov is stupid and casts as float.
-    '''
-    X = n.array(m, ndmin=2, dtype=n.complex)
-    X -= X.mean(axis=1)[(slice(None), n.newaxis)]
-    N = X.shape[1]
-    fact = float(N - 1)  # normalization
-    return (n.dot(X, X.T.conj()) / fact).squeeze()
-"""
-
-def get_Q(mode, n_k):
-    """Generate Fourier Transform Matrix.
-
-    Encodes the fourier transform from freq to delay
-    """
-    if not DELAY:
-        _m = n.zeros((n_k,), dtype=n.complex)
-        _m[mode] = 1.  # delta function at specific delay mode
-        m = n.fft.fft(n.fft.ifftshift(_m)) * a.dsp.gen_window(nchan, WINDOW)
-        # FFT it to go to freq
-        Q = n.einsum('i,j', m, m.conj())  # dot it with its conjugate
-        return Q
-    else:
-        # XXX need to have this depend on window
-        Q = n.zeros_like(C)
-        Q[mode, mode] = 1
-        return Q
 
 # --------------------------------------------------------------------
 
@@ -543,6 +485,17 @@ else:
 dsv.set_data(dsets=data_dict_v, conj=conj_dict, wgts=flg_dict)
 dsn.set_data(dsets=data_dict_n, conj=conj_dict, wgts=flg_dict)
 
+"""
+# Jack-Knife: create (even-odd) and (even+odd) datasets instead
+new_dict = {}
+for key in data_dict_v:
+    if key[0] == 'even': 
+        new = data_dict_v[key] + data_dict_v[('odd',key[1],key[2])]
+    if key[0] == 'odd': 
+        new = data_dict_v[('even',key[1],key[2])] - data_dict_v[key]
+    new_dict[key] = new
+dsv.add_data(dsets=new_dict)
+"""
 
 """
 n_to_save = {}
