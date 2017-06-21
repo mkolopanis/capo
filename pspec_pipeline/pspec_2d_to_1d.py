@@ -129,10 +129,9 @@ else: pk_pspecs['nPS'] = pspecs['pCv'].shape[0]
 print "   Total number of bls = ", pk_pspecs['nbls']
 print "      number of bl groups = ", pk_pspecs['ngps']
 print "      nbls in a group = ", pk_pspecs['nbls'] / pk_pspecs['ngps']
-print "      nbls used for sensitivity = ", pk_pspecs['nbls_g']
 print "   Total number of lsts = ", Neff_lst
 print "      number of lst groups = ", NGPS_LST
-print "      nlsts in a group & nlsts used for sensitivity  = ", pk_pspecs['nlsts_g']
+print "      nlsts in a group  = ", pk_pspecs['nlsts_g']
 
 # Scale for error on error
 if pk_pspecs['nPS'] != 1:

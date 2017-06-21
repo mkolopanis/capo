@@ -140,7 +140,8 @@ for filename in args.files:
             omega_eff = .74**2/.24
         print 'Redshift:', redshift
         print '\tT_int:', inttime
-        print '\tNbls_g:', nbls_g
+        print '\tNbls:', pspec_dict['nbls']
+        print '\tNgps:', pspec_dict['ngps']
         print '\tNdays:', cnt
         print '\tNlsts:', nlsts
         print '\tNlsts_g:', nlsts_g
