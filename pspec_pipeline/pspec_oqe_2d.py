@@ -174,7 +174,7 @@ def make_noise(d, cnt, inttime, df): #, freqs, jy2T=None):
 
 def fringe_rate_filter(aa, dij, wij, i, j, pol, bins, fir):
     """ Apply frf."""
-    _d, _w, _, _ = fringe.apply_frf(aa, dij, wij, i, j, pol=pol, bins=bins, fir=fir)
+    _d, _w, _, _ = fringe.apply_frf(aa, dij, wij, i, j, pol=pol, bins=bins, firs=fir)
     return _d
 
 
