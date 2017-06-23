@@ -395,6 +395,7 @@ mychan = 101 # XXX use this to match frf_filter.py
 frp, bins = fringe.aa_to_fr_profile(aa, ij, mychan, bins=bins)
 timebins, firs = fringe.frp_to_firs(frp, bins, aa.get_freqs(),
                                     fq0=aa.get_freqs()[mychan])
+firs = firs[int(opts.chan.split('_')[0]):int(opts.chan.split('_')[1])+1,:] # chop firs to frequency range of interest
 fir = {(ij[0], ij[1], POL): firs}
 fir_conj = {} # fir for conjugated baselines
 for key in fir:
@@ -469,11 +470,6 @@ if opts.frf:
             nij_frf = fringe_rate_filter(aa, nij, wij, ij[0], ij[1], POL, bins, fir)
         #data_dict_n[key] = nij_frf[size:2*size,:]
         data_dict_n[key] = nij_frf.copy()
-
-# Conjugate noise if needed
-for key in data_dict_n:
-    if conj_dict[key[1]] is True:
-        data_dict_n[key] = n.conj(data_dict_n[key])
 
 # Set data
 if opts.changeC:
@@ -552,7 +548,7 @@ for boot in xrange(opts.nboot):
         data_dict_s = {}
         for key in data_dict_v:
             if conj_dict[key[1]] is True:
-                eorinject = n.conj(eor_conj) # conjugate again, since when populating dse, the conj_dict knows whether it should be conjugated or not
+                eorinject = eor_conj 
             else:
                 eorinject = eor
             # track eor in separate dict
