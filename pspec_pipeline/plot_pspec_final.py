@@ -143,8 +143,7 @@ for filename in args.files:
         print '\tNbls:', pspec_dict['nbls']
         print '\tNgps:', pspec_dict['ngps']
         print '\tNdays:', cnt
-        print '\tNlsts:', nlsts
-        print '\tNlsts_g:', nlsts_g
+        print '\tNlstbins:', nlsts_g
         if old_analytical: # XXX might not work anymore, since we should use nlsts_g and nbls_g
             tsys = 500e3  #mK
             nseps = 1  #number of seps used
