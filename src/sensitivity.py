@@ -25,7 +25,7 @@ class Sense(object):
         return
     def calc(self):
         self.X2Y = pspec.X2Y(self.z)/1e9  #515  @ z=8.4
-        if self.Nlstbins is None: self.Nlstbins = self.Nlsthours*3600/self.t_int
+        if self.Nlstbins is None: self.Nlstbins = self.Nlsthours*3600/self.t_int #XXX the reason we don't use this in plotting is because self.t_int is wrong for *uvGA PSA64
 
         if self.Nblgroups >1:
             Nb = (self.Nbls/self.Nblgroups)
