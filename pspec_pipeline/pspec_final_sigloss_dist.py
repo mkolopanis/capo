@@ -42,7 +42,7 @@ for count in range(2):
         fig2 = p.figure(2, figsize=(15, 7))
         fig3 = p.figure(3, figsize=(15, 7))
         fig4 = p.figure(4, figsize=(15, 7))
-    pklo, pkhi = 1e1, 1e12
+    pklo, pkhi = 1e-1, 1e12
     Pouts = {}; Pouts_fold = {}
     Pouts_I = {}; Pouts_I_fold = {}
     pCs = {}; pCs_fold = {}
@@ -53,11 +53,15 @@ for count in range(2):
         print 'Reading', inject
         file_2d = n.load(inject + '/pspec_2d_to_1d.npz')
         if count == 1: # noise case
+            color='b.'
+            linecolor='cyan'
             Pout = n.abs(file_2d['pCs-pCn']); Pout_fold = n.abs(file_2d['pCs-pCn_fold'])
             Pout_I = n.abs(file_2d['pIs-pIn']); Pout_I_fold = n.abs(file_2d['pIs-pIn_fold'])
             pC = n.abs(file_2d['pCn']); pC_fold = n.abs(file_2d['pCn_fold'])
             pI = n.abs(file_2d['pIn']); pI_fold = n.abs(file_2d['pIn_fold'])
         else:
+            color='k.'
+            linecolor='0.5'
             Pout = n.abs(file_2d['pCr-pCv']); Pout_fold = n.abs(file_2d['pCr-pCv_fold']) # shape (#boots, #kpl)
             Pout_I = n.abs(file_2d['pIr-pIv']); Pout_I_fold = n.abs(file_2d['pIr-pIv_fold'])  # pI case
             pC = n.abs(file_2d['pCv']); pC_fold = n.abs(file_2d['pCv_fold'])
@@ -101,10 +105,9 @@ for count in range(2):
 
                 p.figure(1) # Pin vs. Pout
                 p.subplot(3, 7, ind+1)
-                p.loglog(Pin[:,ind], Pout[:,ind], 'k.')  # points
-                # p.loglog(Pin[ind],Pout_noise[ind],'b.') # noise points
+                p.loglog(Pin[:,ind], Pout[:,ind], color)  # points
                 p.loglog([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
-                p.axhline(pC[:,ind].max(), color='0.5') # max pC
+                p.axhline(pC[:,ind].max(), color=linecolor) # max pC
                 p.grid(True)
                 p.xlim(pklo, pkhi)
                 p.ylim(pklo, pkhi)
@@ -113,8 +116,8 @@ for count in range(2):
 
                 p.figure(2) # alpha vs. Pout
                 p.subplot(3, 7, ind+1)
-                p.loglog(Pin[:,ind]/Pout[:,ind],Pout[:,ind],'k.') # points
-                p.axhline(pC[:,ind].max(), color='0.5') # max pC
+                p.loglog(Pin[:,ind]/Pout[:,ind],Pout[:,ind], color) # points
+                p.axhline(pC[:,ind].max(), color=linecolor) # max pC
                 p.grid(True)
                 p.xlim(1e-3,1e7)
                 p.ylim(pklo, pkhi)
@@ -123,9 +126,9 @@ for count in range(2):
 
                 p.figure(3) # Pin vs. Pout for I case
                 p.subplot(3, 7, ind+1)
-                p.loglog(Pin[:,ind], Pout_I[:,ind], 'k.')  # points
+                p.loglog(Pin[:,ind], Pout_I[:,ind], color)  # points
                 p.loglog([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
-                p.axhline(pI[:,ind].max(), color='0.5') # max pI
+                p.axhline(pI[:,ind].max(), color=linecolor) # max pI
                 p.grid(True)
                 p.xlim(pklo, pkhi)
                 p.ylim(pklo, pkhi)
@@ -134,8 +137,8 @@ for count in range(2):
 
                 p.figure(4) # alpha vs. Pout for I case
                 p.subplot(3, 7, ind+1)
-                p.loglog(Pin[:,ind]/Pout_I[:,ind],Pout_I[:,ind],'k.') # points
-                p.axhline(pI[:,ind].max(), color='0.5') # max pI
+                p.loglog(Pin[:,ind]/Pout_I[:,ind], Pout_I[:,ind], color) # points
+                p.axhline(pI[:,ind].max(), color=linecolor) # max pI
                 p.grid(True)
                 p.xlim(1e-3,1e7)
                 p.ylim(pklo, pkhi)
