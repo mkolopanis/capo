@@ -418,18 +418,71 @@ for gs_ind in xrange(Nzs):
         plt.setp(ax5[gs_ind].get_yticklabels(), visible=False)
         plt.setp(ax6[gs_ind].get_yticklabels(), visible=False)
 
-ax1[0].set_ylim([1e-1, 1e12])
+# Check for maximum value along all sub-plots
+# use this value to set the ylim for all delta squared plots
+delta2_list = [ax1, ax3]
+max_d2 = -np.Inf
+for ax_set in delta2_list:
+    for ax in ax_set:
+        for lines in ax.get_lines():
+            # must check if there is data in the line
+            _data_array = lines.get_ydata()
+            if np.size(_data_array):
+                max_line_val = np.max(np.abs(_data_array))
+                if max_line_val > max_d2:
+                    max_d2 = max_line_val
+
+# use this value for all P(k) plots
+pk_list = [ax2, ax4, ax5, ax6]
+max_pk = -np.Inf
+for ax_set in pk_list:
+    for ax in ax_set:
+        for lines in ax.get_lines():
+            _data_array = lines.get_ydata()
+            if np.size(_data_array):
+                max_line_val = np.max(np.abs(_data_array))
+                if max_line_val > max_pk:
+                    max_pk = max_line_val
+
+# round up the power of 10 and add 1
+# this will set the ymax value to 10 * the highest value rounded up
+# across all plots of each type
+max_val_d2 = np.ceil(np.log10(max_d2)) +1
+ymax_d2 = np.power(10., max_val_d2)
+
+max_val_pk = np.ceil(np.log10(max_pk)) +1
+ymax_pk = np.power(10., max_val_pk)
+
+ax1[0].set_ylim([1e-1, ymax_d2])
 ax1[0].set_xlim([0.0, 0.6])
-ax2[0].set_ylim([1e-1, 1e12])
+ax2[0].set_ylim([1e-1, ymax_pk])
 ax2[0].set_xlim([-0.6, 0.6])
-ax3[0].set_ylim([1e-1, 1e12])
+ax3[0].set_ylim([1e-1, ymax_d2])
 ax3[0].set_xlim([0.0, 0.6])
-ax4[0].set_ylim([1e-1, 1e12])
+ax4[0].set_ylim([1e-1, ymax_pk])
 ax4[0].set_xlim([-0.6, 0.6])
-ax5[0].set_ylim([1e-1, 1e12])
+ax5[0].set_ylim([1e-1, ymax_pk])
 ax5[0].set_xlim([-0.6, 0.6])
-ax6[0].set_ylim([1e-1, 1e12])
+ax6[0].set_ylim([1e-1, ymax_pk])
 ax6[0].set_xlim([-0.6, 0.6])
+
+
+# Some matplotlib versions will only give every other power of ten
+# The next few lines set the log yticks to be every power of ten
+ytick_d2= np.power(10., np.arange(-1,max_val_d2))
+ytick_pk= np.power(10., np.arange(-1,max_val_pk))
+
+for axes in delta2_list:
+    for ax in axes:
+        ax.set_yticks(ytick_d2)
+        # set to force matplotlib to make more x-ticks 
+        # some matplotlibs only plot every other .1 kvalues
+        ax.locator_params(nbins=10, axis='x')
+
+for axes in pk_list:
+    for ax in axes:
+        ax.set_yticks(ytick_pk)
+        ax.locator_params(nbins=10, axis='x')
 
 handles, labels = ax1[-1].get_legend_handles_labels()
 ax1[-1].legend(handles, labels, loc='lower right', numpoints=1)
