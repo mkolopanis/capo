@@ -529,34 +529,38 @@ for boot in xrange(opts.nboot):
     print '\nBootstrap %d / %d' % (boot + 1, opts.nboot)
 
     # Create fake eor signal    
-    if INJECT_SIG > 0.: 
-        print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
-        eij = make_eor((nlst*3, nchan))
-        size = nlst
-        #eij = n.tile(eij.flatten(), 3).reshape((3*nlst,nchan)) # add padding
-        wij = n.ones(eij.shape, dtype=bool)
-        eij_frf = fringe_rate_filter(aa, eij, wij, ij[0], ij[1], POL, bins, fir)
-        eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1], POL, bins, fir_conj) # conjugated eor with conjugated FIR
-        if opts.frf: # double frf eor
-            eij_frf = fringe_rate_filter(aa, eij_frf, wij, ij[0], ij[1], POL, bins, fir)
-            eij_conj_frf = fringe_rate_filter(aa, eij_conj_frf, wij, ij[0], ij[1], POL, bins, fir_conj)
+    print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
+    eij = make_eor((nlst*3, nchan))
+    size = nlst
+    #eij = n.tile(eij.flatten(), 3).reshape((3*nlst,nchan)) # add padding
+    wij = n.ones(eij.shape, dtype=bool)
+    eij_frf = fringe_rate_filter(aa, eij, wij, ij[0], ij[1], POL, bins, fir)
+    eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1], POL, bins, fir_conj) # conjugated eor with conjugated FIR
+    if opts.frf: # double frf eor
+        eij_frf = fringe_rate_filter(aa, eij_frf, wij, ij[0], ij[1], POL, bins, fir)
+        eij_conj_frf = fringe_rate_filter(aa, eij_conj_frf, wij, ij[0], ij[1], POL, bins, fir_conj)
 
-        eor = eij_frf[size:2*size,:]*INJECT_SIG
-        eor_conj = eij_conj_frf[size:2*size,:]*INJECT_SIG
-        data_dict_r = {}
-        data_dict_e = {}
-        data_dict_s = {}
-        for key in data_dict_v:
-            if conj_dict[key[1]] is True:
-                eorinject = eor_conj 
-            else:
-                eorinject = eor
-            # track eor in separate dict
-            data_dict_e[key] = eorinject
-            # add injected signal to data
-            data_dict_r[key] = data_dict_v[key].copy() + eorinject
-            # add injected signal to noise
-            data_dict_s[key] = data_dict_n[key].copy() + eorinject
+    eor = eij_frf[size:2*size,:]*n.abs(INJECT_SIG)
+    eor_conj = eij_conj_frf[size:2*size,:]*n.abs(INJECT_SIG)
+    data_dict_r = {}
+    data_dict_e = {}
+    data_dict_s = {}
+    for key in data_dict_v:
+        if conj_dict[key[1]] is True:
+            eorinject = eor_conj 
+        else:
+            eorinject = eor
+        # track eor in separate dict
+        data_dict_e[key] = eorinject
+        # add injected signal to data
+        data_dict_r[key] = data_dict_v[key].copy() + eorinject
+        # add injected signal to noise
+        data_dict_s[key] = data_dict_n[key].copy() + eorinject
+        if INJECT_SIG < 0.: # negative injects
+            if key[0] == 'even': # XXX hard-coded way to subtract e for negative injects
+                data_dict_e[key] = -eorinject
+                data_dict_r[key] = data_dict_v[key].copy() - eorinject
+                data_dict_s[key] = data_dict_n[key].copy() - eorinject
 
     # Set data
     if opts.changeC:
