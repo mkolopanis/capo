@@ -107,7 +107,8 @@ for count in range(2):
                 p.subplot(3, 7, ind+1)
                 p.loglog(Pin[:,ind], Pout[:,ind], color)  # points
                 p.loglog([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
-                p.axhline(pC[:,ind].max(), color=linecolor) # max pC
+                #p.axhline(pC[:,ind].max(), color=linecolor) # max pC
+                p.axhspan(pC[:,ind].min(), pC[:,ind].max(), facecolor=linecolor, edgecolor=linecolor, alpha=0.5)
                 p.grid(True)
                 p.xlim(pklo, pkhi)
                 p.ylim(pklo, pkhi)
@@ -128,7 +129,8 @@ for count in range(2):
                 p.subplot(3, 7, ind+1)
                 p.loglog(Pin[:,ind], Pout_I[:,ind], color)  # points
                 p.loglog([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
-                p.axhline(pI[:,ind].max(), color=linecolor) # max pI
+                #p.axhline(pI[:,ind].max(), color=linecolor) # max pI
+                p.axhspan(pI[:,ind].min(), pI[:,ind].max(), facecolor=linecolor, edgecolor=linecolor, alpha=0.5)
                 p.grid(True)
                 p.xlim(pklo, pkhi)
                 p.ylim(pklo, pkhi)
