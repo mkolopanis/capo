@@ -785,15 +785,19 @@ def scramble_avg_bootstrap_array_v2(X, func=n.median):
     time axis (default is numpy.median)
     Assumes input array dimensions (nbootstraps,nks,ntimes)
     """
-    #bboots = []
-    #import IPython;IPython.embed()
-    #for j in range(X.shape[0]):
-    #    n.random.seed(j) # seeded by boot index
-    #    times_i = n.random.choice(X.shape[-1], 1000, replace=True) #XXX 1000 is chosen arbitrarily, but any large number should converge on the same answer
-    #    if func == n.median: bboots.append(pspec_median(X[j, :, times_i], axis=0))
-    #    else: bboots.append(func(X[j, :, times_i], axis=0))
-    #bboots = n.ma.masked_invalid(n.array(bboots))
-    #return bboots
+    """ # OLD METHOD (ali et al):
+    bboots = []
+    for i in xrange(100):
+        n.random.seed(i) # seeded by boot index
+        times_i = n.random.choice(X.shape[-1], X.shape[-1], replace=True)
+        bs_i = n.random.choice(X.shape[0], X.shape[-1], replace=True)
+        bboots.append(X[bs_i, :, times_i].squeeze().T)
+    bboots = n.ma.masked_invalid(n.array(bboots))
+    if func == n.median: return pspec_median(bboots, axis=-1)
+    else: return func(bboots, axis=-1)
+    bboots = n.ma.masked_invalid(n.array(bboots))
+    return bboots
+    """
     if func == n.median: return pspec_median(X, axis=-1)
     else: return func(X, axis=-1)
 
