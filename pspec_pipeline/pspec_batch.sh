@@ -59,11 +59,11 @@ else
 echo "CARINA PSA64!"
 ### PSA64 Options ###
 POL='I'
-weight='L^-1'
+weight='I' #'L^-1'
 WINDOW='none'
 FRF='--frf'
 LMODE='' #'--lmode=12'
-CHANGEC='--changeC'
+CHANGEC='' #'--changeC'
 NBOOT=20 # use 1 if doing version 4 (pspec_banana)
 NGPS=5
 NGPS_LST=2 # only matters for version 4 (otherwise it's not used)
@@ -73,7 +73,7 @@ ODD_FILES='/home/cacheng/capo/ctc/matt_data/odd/*uvGAL'
 CALFILE='psa6240_v003'
 CHAN='95_115'
 SEP='0,1'
-RA='.1_8.6'
+RA='0.5_8.6'
 RMBLS=''
 EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
@@ -87,7 +87,8 @@ mkdir ${DIRNAME}
 echo Making Directory ${DIRNAME}
 
 # Stage 1: pspec_oqe_2d.py over range of injection levels
-for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-2,3,1)))"` ; do
+#for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-3,3,20))), ' '.join(map(str, -numpy.logspace(-3,3,20)))"` ; do
+for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-3,3,20)))"` ; do
     mkdir ${DIRNAME}/inject_sep${SEP}_${inject}
     echo SIGNAL_LEVEL=${inject}
 
