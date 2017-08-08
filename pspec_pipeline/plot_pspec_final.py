@@ -453,6 +453,13 @@ ymax_d2 = np.power(10., max_val_d2)
 max_val_pk = np.ceil(np.log10(max_pk)) +1
 ymax_pk = np.power(10., max_val_pk)
 
+if ymax_d2 > ymax_pk: # use highest ymax for both delta^2 and p(k) plots, so that they're both the same
+    ymax_pk = ymax_d2.copy()
+    max_val_pk = max_val_d2.copy()
+if ymax_pk > ymax_d2:
+    ymax_d2 = ymax_pk.copy()
+    max_val_d2 = max_val_pk.copy()
+
 ax1[0].set_ylim([1e-1, ymax_d2])
 ax1[0].set_xlim([0.0, 0.6])
 ax2[0].set_ylim([1e-1, ymax_pk])
