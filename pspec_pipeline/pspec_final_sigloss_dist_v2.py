@@ -143,20 +143,21 @@ for count in range(2):
     def transfer_func(data, identity=False):
    
         # Make bins
-        ninjects = n.array(Pins_fold[Pins_fold.keys()[0]]).shape[0]
+        ninjects = n.array(Pins_fold[Pins_fold.keys()[0]]).shape[0]*2
         bins_in = []
         bins_in.append(n.logspace(n.log10(pklo), n.log10(pkhi), ninjects)) # positive
         bins_in.append(-(n.logspace(n.log10(pklo), n.log10(pkhi), ninjects))) # negative 
         bins_in = n.array(bins_in).flatten()
         bins_in.sort()
-        bins_out = []
-        max_val = n.abs(n.array(data.values())).max()
-        min_val = n.abs(n.array(data.values())).min()
-        bins_out.append(n.logspace(n.log10(min_val), n.log10(max_val), ninjects))
-        bins_out.append(-(n.logspace(n.log10(min_val), n.log10(max_val), ninjects)))
-        bins_out = n.array(bins_out).flatten()
-        bins_out.sort()
-        
+        #bins_out = []
+        #max_val = n.abs(n.array(data.values())).max()
+        #min_val = n.abs(n.array(data.values())).min()
+        #bins_out.append(n.logspace(n.log10(min_val), n.log10(max_val), ninjects))
+        #bins_out.append(-(n.logspace(n.log10(min_val), n.log10(max_val), ninjects)))
+        #bins_out = n.array(bins_out).flatten()
+        #bins_out.sort()
+        bins_out = bins_in.copy()        
+
         # Compute probabilities in each bin for 'transfer function' Pin vs. Pout
         prob_func = {}
         for k in kpl_fold:
@@ -169,7 +170,7 @@ for count in range(2):
             for bin_y in range(len(bins_out)+1): # loop through Pout
                 prob_Pin = n.zeros(bins_in.size+1)
                 index_y = n.where(bin_Pouts_fold == bin_y)
-                index_x = bin_Pins_fold[index_y]
+                index_x = bin_Pins_fold[index_y] # indices for bins in Pin that have corresponding Pouts in bin_y
                 for x in index_x:
                     prob_Pin[x] += 1
                 prob_Pin /= len(index_x)
@@ -179,22 +180,20 @@ for count in range(2):
     # Function to apply transfer function
     def sigloss_func(bins_in, bins_out, data, func):
         # Compute probabilities of PS values in bins
-        data_corr = {}
+        data_prob = {}
         new_PS = {}
         for k in data.keys():
-            data_corr[k] = {}
+            data_prob[k] = {}
             bin_data = n.digitize(data[k][0], bins_out) # data[k] is an array in an array for some reason
-            prob_data = n.zeros(bins_in.size+1)
-            for x in bin_data:
-                prob_data[x] += 1
-            prob_data /= len(bin_data) # probability of data for a Pout bin
-            for p, prob in enumerate(prob_data):
-                data_corr[k][p] = prob # probability in this bin
+            for bin_y in range(len(bins_out)+1): # loop through Pout
+                index = n.where(bin_data == bin_y)[0]
+                prob = float(len(index)) / len(bin_data) # probability of data for a Pout bin
+                data_prob[k][bin_y] = prob
             # Match probabilities
             weights = n.zeros(bins_in.size+1)
-            for b in data_corr[k].keys(): # loop through Pout bins
-                try: val = data_corr[k][b] * func[k][b]
-                except: val = data_corr[k][b] * func[-k][b] # if data has negative k's
+            for b in data_prob[k].keys(): # loop through Pout bins
+                try: val = data_prob[k][b] * func[k][b]
+                except: val = data_prob[k][b] * func[-k][b] # if data has negative k's
                 val[n.isnan(val)] = 0.0
                 weights += val
             new_PS[k] = weights
@@ -252,11 +251,11 @@ for count in range(2):
     pC = []; pC_fold = []; pC_err = []; pC_fold_err = []
     pI = []; pI_fold = []; pI_err = []; pI_fold_err = []
     for key in n.sort(new_pCs.keys()):
-         pC.append(bin_cent[n.argmax(new_pCs[key])])
-         pI.append(bin_cent_I[n.argmax(new_pIs[key])])
+        pC.append(bin_cent[n.argmax(new_pCs[key])])
+        pI.append(bin_cent_I[n.argmax(new_pIs[key])])
     for key in n.sort(new_pCs_fold.keys()):
-         pC_fold.append(bin_cent[n.argmax(new_pCs_fold[key])])
-         pI_fold.append(bin_cent_I[n.argmax(new_pIs_fold[key])])
+        pC_fold.append(bin_cent[n.argmax(new_pCs_fold[key])])
+        pI_fold.append(bin_cent_I[n.argmax(new_pIs_fold[key])])
     
     # Compute errors
     for key in n.sort(new_pCs.keys()):
@@ -271,6 +270,26 @@ for count in range(2):
         pI_fold_err.append(n.interp(0.95,percents_I,bin_cent_I))
     
     # Save values
+    if opts.skip_sigloss:
+        if count == 0: # data case
+            pC = file['pCv']
+            pC_fold = file['pCv_fold']
+            pI = file['pIv']
+            pI_fold = file['pIv_fold']
+            pC_err = file['pCv_err']*2
+            pC_fold_err = file['pCv_fold_err']*2
+            pI_err = file['pIv_err']*2
+            pI_fold_err = file['pIv_fold_err']*2
+        else: # noise case
+            pC = file['pCn']
+            pC_fold = file['pCn_fold']
+            pI = file['pIn']
+            pI_fold = file['pIn_fold']
+            pC_err = file['pCn_err']*2
+            pC_fold_err = file['pCn_fold_err']*2
+            pI_err = file['pIn_err']*2
+            pI_fold_err = file['pIn_fold_err']*2
+        
     fold_factor = file['k']**3/(2*n.pi**2)
     if count == 0: # data case
         pCv = pC    
