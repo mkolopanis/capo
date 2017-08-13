@@ -46,6 +46,7 @@ for count in range(2):
     for inject in glob.glob('inject_sep'+opts.sep+'*'):
         print 'Reading', inject
         file_2d = n.load(inject + '/pspec_2d_to_1d.npz')
+
         if count == 1: # noise case
             color='b.'
             linecolor='cyan'
@@ -66,6 +67,7 @@ for count in range(2):
             pI_fold = file_2d['pIv_fold']
 
         Pin_fold = file_2d['pIe_fold']
+
         for ind in range(len(kpl_fold)): # loop through k for Delta^2(k)
             try:
                 Pouts_fold[kpl_fold[ind]].append(Pout_fold[:,ind])
@@ -79,41 +81,74 @@ for count in range(2):
                 Pins_fold[kpl_fold[ind]] = [Pin_fold[:,ind]]
                 pCs_fold[kpl_fold[ind]] = [pC_fold[:,ind]]
                 pIs_fold[kpl_fold[ind]] = [pI_fold[:,ind]]
-
-            if opts.plot:
-
-                p.figure(1) # Pin vs. Pout
-                p.subplot(3, 4, ind+1)
-                p.plot(Pin_fold[:,ind], Pout_fold[:,ind], color)  # points
-                #p.plot([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
-                p.plot([-pkhi, pkhi], [-pkhi, pkhi], 'k-')  # diagonal line
-                p.grid(True)
-                p.xscale('symlog',linthreshx=1e6)
-                p.yscale('symlog',linthreshy=1e6)
-                #p.xlim(pklo, pkhi)
-                #p.ylim(pklo, pkhi)
-                p.tick_params(axis='both', which='both', labelsize=6)
-                p.title('k = '+str("%.4f" % kpl_fold[ind]), fontsize=8)
-
-                p.figure(2) # Pin vs. Pout for I case
-                p.subplot(3, 4, ind+1)
-                p.plot(Pin_fold[:,ind], Pout_I_fold[:,ind], color)  # points
-                #p.plot([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
-                p.plot([-pkhi, pkhi], [-pkhi, pkhi], 'k-')  # diagonal line
-                p.grid(True)
-                #p.xlim(pklo, pkhi)
-                #p.ylim(pklo, pkhi)
-                p.xscale('symlog',linthreshx=1e6)
-                p.yscale('symlog',linthreshy=1e6)
-                p.tick_params(axis='both', which='both', labelsize=6)
-                p.title('k = '+str("%.4f" % kpl_fold[ind]), fontsize=8)
-        
+   
         for ind in range(len(kpl)): # loop through k for P(k)
                 pCs[kpl[ind]] = [pC[:,ind]] # no appending because it's the same for every inject
                 pIs[kpl[ind]] = [pI[:,ind]]
+    
+
+    # Values of interest are contained within dictionaries indexed by kpl_fold:
+    #     Pins_fold
+    #     Pouts_fold
+    #     Pouts_I_fold
+    #     pCs, pCs_fold, pIs, pIs_fold  (data/noise values)
+
+ 
+    # fit polynomial and plot Pin vs. Pout
+    poly, poly_I = {},{}
+    deriv_coeff, deriv_coeff_I = {},{}
+    for ind,k in enumerate(Pins_fold.keys()):
+        # get x and y data for plotting and fit
+        Pins_fold[k] = n.array(Pins_fold[k]).flatten()
+        Pouts_fold[k] = n.array(Pouts_fold[k]).flatten()
+        Pouts_I_fold[k] = n.array(Pouts_I_fold[k]).flatten()
+        # hack: add in (0,0) point many times so fit goes through it
+        Pins_fold[k] = n.concatenate((Pins_fold[k],n.repeat(0.,100000)))
+        Pouts_fold[k] = n.concatenate((Pouts_fold[k],n.repeat(0.,100000)))
+        Pouts_I_fold[k] = n.concatenate((Pouts_I_fold[k],n.repeat(0.,100000)))
+        # order arrays based on Pin
+        order = n.argsort(Pins_fold[k]) 
+        Pins_fold[k] = Pins_fold[k][order]
+        Pouts_fold[k] = Pouts_fold[k][order]
+        Pouts_I_fold[k] = Pouts_I_fold[k][order]
+        # find polyfit
+        fit = n.polyfit(Pins_fold[k],Pouts_fold[k],10) # coefficients from highest to lowest order
+        fit_I = n.polyfit(Pins_fold[k],Pouts_I_fold[k],10)
+        poly[k] = n.polyval(fit,Pins_fold[k]) # polynomial fit for plotting
+        poly_I[k] = n.polyval(fit_I,Pins_fold[k])
+        deriv_coeff[k] = [fit[i]*ii for i,ii in enumerate(n.arange(0,len(fit))[::-1])][:-1] # coefficients of derivative from highest to lowest order
+        deriv_coeff_I[k] = [fit_I[i]*ii for i,ii in enumerate(n.arange(0,len(fit_I))[::-1])][:-1] 
+        
+        if opts.plot:
+            p.figure(1) # Pin vs. Pout
+            p.subplot(3, 4, ind+1)
+            p.plot(Pins_fold[k], Pouts_fold[k], color)  # points
+            p.plot(Pins_fold[k], poly[k], 'r-') # polyfit
+            #p.plot([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
+            p.plot([-pkhi, pkhi], [-pkhi, pkhi], 'k-')  # diagonal line
+            p.grid(True)
+            p.xscale('symlog',linthreshx=1e6)
+            p.yscale('symlog',linthreshy=1e6)
+            #p.xlim(pklo, pkhi)
+            #p.ylim(pklo, pkhi)
+            p.tick_params(axis='both', which='both', labelsize=6)
+            p.title('k = '+str("%.4f" % kpl_fold[ind]), fontsize=8)
+
+            p.figure(2) # Pin vs. Pout for I case
+            p.subplot(3, 4, ind+1)
+            p.plot(Pins_fold[k], Pouts_I_fold[k], color)  # points
+            p.plot(Pins_fold[k], poly_I[k], 'r-') # polyfit
+            #p.plot([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
+            p.plot([-pkhi, pkhi], [-pkhi, pkhi], 'k-')  # diagonal line
+            p.grid(True)
+            #p.xlim(pklo, pkhi)
+            #p.ylim(pklo, pkhi)
+            p.xscale('symlog',linthreshx=1e6)
+            p.yscale('symlog',linthreshy=1e6)
+            p.tick_params(axis='both', which='both', labelsize=6)
+            p.title('k = '+str("%.4f" % kpl_fold[ind]), fontsize=8)
 
     if opts.plot:
-
         # plot Pin vs. Pout
         p.figure(1)
         p.tight_layout()
@@ -129,15 +164,10 @@ for count in range(2):
                  ha='center')
         fig2.text(0.0, 0.5, r'$P_{\rm out,I}(k)\ [{\rm mK}^2\ (h^{-1}\ {\rm Mpc})^3]$',
                  va='center', rotation='vertical')
+        p.show()
 
-    if opts.plot: p.show()
 
-    # Values of interest are contained within dictionaries indexed by kpl_fold:
-    #     Pins_fold
-    #     Pouts_fold
-    #     Pouts_I_fold
-    #     pCs, pCs_fold, pIs, pIs_fold  (data/noise values)
-
+    """
 
     # Function to compute probability matrix ('transfer function')
     def transfer_func(data, identity=False):
@@ -208,29 +238,62 @@ for count in range(2):
     new_pCs_fold = sigloss_func(bins_in, bins_out, pCs_fold, prob_func_pCs)
     new_pIs = sigloss_func(bins_in_I, bins_out_I, pIs, prob_func_pIs)
     new_pIs_fold = sigloss_func(bins_in_I, bins_out_I, pIs_fold, prob_func_pIs)
-    
+    """
+
+    # Compute new distributions
+    new_pCs, new_pIs = {}, {}
+    new_pCs_fold, new_pIs_fold = {}, {}
+    for k in pCs.keys():
+        if k >= 0: # positive k's
+            # Find Pins that match up with data values
+            data_match_x = n.interp(pCs[k], poly[k], Pins_fold[k])
+            data_match_x_fold = n.interp(pCs_fold[k], poly[k], Pins_fold[k])
+            data_match_x_I = n.interp(pIs[k], poly_I[k], Pins_fold[k])
+            data_match_x_I_fold = n.interp(pIs_fold[k], poly_I[k], Pins_fold[k])
+            # Evaluate derivative at those values
+            dydx = 1./n.abs(n.polyval(deriv_coeff[k], data_match_x)) # XXX not entirely sure why I need to do 1 divided by... but it intuitively makes sense if we do that
+            dydx_fold = 1./n.abs(n.polyval(deriv_coeff[k], data_match_x_fold)) 
+            dydx_I = 1./n.abs(n.polyval(deriv_coeff_I[k], data_match_x_I))
+            dydx_I_fold = 1./n.abs(n.polyval(deriv_coeff_I[k], data_match_x_I_fold))
+            new_pCs[k] = dydx*pCs[k]
+            new_pCs_fold[k] = dydx_fold*pCs_fold[k]
+            new_pIs[k] = dydx_I*pIs[k]
+            new_pIs_fold[k] = dydx_I_fold*pIs_fold[k]
+        else: # negative k's (don't populate folded data)
+            kpos = -k
+            # Find Pins that match up with data values
+            data_match_x = n.interp(pCs[k], poly[kpos], Pins_fold[kpos])
+            data_match_x_I = n.interp(pIs[k], poly_I[kpos], Pins_fold[kpos])
+            # Evaluate derivative at those values
+            dydx = 1./n.abs(n.polyval(deriv_coeff[kpos], data_match_x)) 
+            dydx_I = 1./n.abs(n.polyval(deriv_coeff_I[kpos], data_match_x_I))
+            new_pCs[k] = dydx*pCs[k]
+            new_pIs[k] = dydx_I*pIs[k]
+
     # Plot histograms for each k
-    if opts.plot:        
+    if False: 
         for ind,k in enumerate(new_pCs_fold.keys()):
-            p.figure(3) # Folded Data Histgraom
+            nbins = 50
+            p.figure(3) # Folded Data Histogram
             p.subplot(3, 4, ind+1)
-            p.plot(bins_in,new_pCs_fold[k][:-1],color,linestyle='-')  # bins are upper limits
-            p.grid(True)
+            bins = n.logspace(-n.log10(new_pCs_fold[k].max()), n.log10(new_pCs_fold[k].max()), nbins)
+            p.hist(n.abs(new_pCs_fold[k][0]),bins=bins,facecolor=linecolor) # XXX only abs plotted
             p.xscale('symlog',linthreshx=1e5)
-            p.xlim(-1e9, 1e9)
+            p.xlim(-1e11, 1e11)
             #p.ylim(pklo, pkhi)
-            p.ylim(0,1)
+            #p.ylim(0,1)
             p.tick_params(axis='both', which='both', labelsize=6)
             p.title('k = '+str("%.4f" % kpl_fold[ind]), fontsize=8)
 
-            p.figure(4) # Folded I Data Histgraom
+            p.figure(4) # Folded I Data Histogram
             p.subplot(3, 4, ind+1)
-            p.plot(bins_in_I,new_pIs_fold[k][:-1],color,linestyle='-')  
-            p.grid(True)
+            bins = n.logspace(-n.log10(new_pIs_fold[k].max()), n.log10(new_pIs_fold[k].max()), nbins)
+            p.hist(n.abs(new_pIs_fold[k][0]),bins=bins,facecolor=linecolor)  
+            #p.grid(True)
             p.xscale('symlog',linthreshx=1e5)
-            p.xlim(-1e9, 1e9)
+            p.xlim(-1e11, 1e11)
             #p.ylim(pklo, pkhi)
-            p.ylim(0,1)
+            #p.ylim(0,1)
             p.tick_params(axis='both', which='both', labelsize=6)
             p.title('k = '+str("%.4f" % kpl_fold[ind]), fontsize=8)
        
@@ -239,6 +302,7 @@ for count in range(2):
         p.show()
 
     # Compute PS points 
+    """
     bin_cent = [(bins_in[i+1]+bins_in[i])/2.0 for i in range(len(bins_in)-1)]
     bin_cent.append(bin_cent[-1] * 10**(n.log10(bin_cent[-1]/bin_cent[-2]))) # right edge bin
     bin_cent.append(bin_cent[0] * 10**(n.log10(bin_cent[0]/bin_cent[1]))) # left edge bin
@@ -247,27 +311,40 @@ for count in range(2):
     bin_cent_I.append(bin_cent_I[-1] * 10**(n.log10(bin_cent_I[-1]/bin_cent_I[-2]))) # right edge bin
     bin_cent_I.append(bin_cent_I[0] * 10**(n.log10(bin_cent_I[0]/bin_cent_I[1]))) # left edge bin
     bin_cent_I.sort()
-
+    """
     pC = []; pC_fold = []; pC_err = []; pC_fold_err = []
     pI = []; pI_fold = []; pI_err = []; pI_fold_err = []
-    for key in n.sort(new_pCs.keys()):
-        pC.append(bin_cent[n.argmax(new_pCs[key])])
-        pI.append(bin_cent_I[n.argmax(new_pIs[key])])
-    for key in n.sort(new_pCs_fold.keys()):
-        pC_fold.append(bin_cent[n.argmax(new_pCs_fold[key])])
-        pI_fold.append(bin_cent_I[n.argmax(new_pIs_fold[key])])
     
+    for key in n.sort(new_pCs.keys()):
+        new_pCs[key] = new_pCs[key][0] # it's an array in an array for some reason
+        new_pIs[key] = new_pIs[key][0]
+        pC.append(n.mean(new_pCs[key]))
+        pI.append(n.mean(new_pIs[key]))
+        #pC.append(bin_cent[n.argmax(new_pCs[key])])
+        #pI.append(bin_cent_I[n.argmax(new_pIs[key])])
+    for key in n.sort(new_pCs_fold.keys()):
+        new_pCs_fold[key] = new_pCs_fold[key][0]
+        new_pIs_fold[key] = new_pIs_fold[key][0]
+        pC_fold.append(n.mean(new_pCs_fold[key]))
+        pI_fold.append(n.mean(new_pIs_fold[key]))
+        #pC_fold.append(bin_cent[n.argmax(new_pCs_fold[key])])
+        #pI_fold.append(bin_cent_I[n.argmax(new_pIs_fold[key])])
+     
     # Compute errors
     for key in n.sort(new_pCs.keys()):
-        percents = [n.sum(new_pCs[key][:i]) for i in range(len(new_pCs[key]))]
-        percents_I = [n.sum(new_pIs[key][:i]) for i in range(len(new_pIs[key]))]
-        pC_err.append(n.interp(0.95,percents,bin_cent))
-        pI_err.append(n.interp(0.95,percents_I,bin_cent_I))
+        #percents = [n.sum(new_pCs[key][:i]) for i in range(len(new_pCs[key]))]
+        #percents_I = [n.sum(new_pIs[key][:i]) for i in range(len(new_pIs[key]))]
+        #pC_err.append(n.interp(0.95,percents,bin_cent))
+        #pI_err.append(n.interp(0.95,percents_I,bin_cent_I))
+        pC_err.append(n.std(new_pCs[key])*2)
+        pI_err.append(n.std(new_pIs[key])*2)
     for key in n.sort(new_pCs_fold.keys()):
-        percents = [n.sum(new_pCs_fold[key][:i]) for i in range(len(new_pCs_fold[key]))]
-        percents_I = [n.sum(new_pIs_fold[key][:i]) for i in range(len(new_pIs_fold[key]))]
-        pC_fold_err.append(n.interp(0.95,percents,bin_cent))
-        pI_fold_err.append(n.interp(0.95,percents_I,bin_cent_I))
+        #percents = [n.sum(new_pCs_fold[key][:i]) for i in range(len(new_pCs_fold[key]))]
+        #percents_I = [n.sum(new_pIs_fold[key][:i]) for i in range(len(new_pIs_fold[key]))]
+        #pC_fold_err.append(n.interp(0.95,percents,bin_cent))
+        #pI_fold_err.append(n.interp(0.95,percents_I,bin_cent_I))
+        pC_fold_err.append(n.std(new_pCs_fold[key])*2)
+        pI_fold_err.append(n.std(new_pIs_fold[key])*2)
     
     # Save values
     if opts.skip_sigloss:
