@@ -2,10 +2,15 @@
 """Compute Signal Loss factor via distribution method v2.
    -Begins with distribution of power spectrum values p (all bootstraps)
    -Computes Pin vs. Pout curve
-   -Bins in Pin and Pout
-   -Computes probabilities in each bin 
-   -Matches them up with probabilities of p
-   -End up with rescaled p based Pin values allowed for a given Pout
+   Commented-out code:
+        -Bins in Pin and Pout
+        -Computes probabilities in each bin 
+        -Matches them up with probabilities of p
+        -End up with rescaled p based Pin values allowed for a given Pout
+   Current code:
+        -Fits a polynomial to Pin-Pout curve, takes derivative
+        -Corrects original data p by the derivative
+        -Computes new points and errors from this new distribution
 """
 import numpy as n
 import pylab as p
