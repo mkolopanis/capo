@@ -66,7 +66,7 @@ def combine_PS(ks, vals, errs):
         elif args.weight == 'var': weights=var
         else: weights = n.ones_like(var)
         value = n.average(vals[k], weights=weights)
-        err_value = n.average(errs[k], weights=weights)
+        err_value = n.average(var, weights=weights)
         values.append(value)
         err_values.append(n.sqrt(err_value)) # back to std
     return values, err_values
