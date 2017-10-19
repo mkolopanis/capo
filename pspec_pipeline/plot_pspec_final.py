@@ -184,7 +184,9 @@ for filename in args.files:
             S.t_int = inttime
             S.Ndays = cnt  #effective number of days
             S.Npols = 2
-            S.Nseps = 1
+            try: S.Nseps = pspec_dict['nseps']
+            except: S.Nseps = 1
+            print "Nseps = ",S.Nseps
             S.Nblgroups = pspec_dict['ngps'] 
             S.Omega_eff = omega_eff #use the FRF weighted beams listed in T1 of Parsons etal beam sculpting paper
             k = pspec_dict['k']
