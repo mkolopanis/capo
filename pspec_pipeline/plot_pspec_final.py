@@ -172,7 +172,7 @@ for filename in args.files:
         else: #new capo.sensitivity
             from capo import sensitivity
             S = sensitivity.Sense()
-            f = freq
+            f = pspec_dict['freq']
             S.z = capo.pspec.f2z(f)
 
             #   Tsys
