@@ -18,7 +18,7 @@ parser.add_argument('--kmags', type=float, nargs='+',
 args = parser.parse_args()
 
 def r(number):
-    return '{0:5.2f}'.format(np.round(number, 2))
+    return '%.2f' % np.round(number, 2)
 
 
 def f212z(fq):
@@ -62,13 +62,13 @@ for index, file in enumerate(files):
         # for capo analytical; from T1 of Parsons FRF paper
     else:
         omega_eff = .74**2/.24
-    print 'Using these parameters for the Analytic Model:'
-    print 'Redshift:', redshift
-    print '\tT_int:', inttime
-    print '\tNbls:', pspec_dict['nbls']
-    print '\tNgps:', pspec_dict['ngps']
-    print '\tNdays:', cnt
-    print '\tNlstbins:', nlsts_g
+    #print 'Using these parameters for the Analytic Model:'
+    #print 'Redshift:', redshift
+    #print '\tT_int:', inttime
+    #print '\tNbls:', pspec_dict['nbls']
+    #print '\tNgps:', pspec_dict['ngps']
+    #print '\tNdays:', cnt
+    #print '\tNlstbins:', nlsts_g
     S = sensitivity.Sense()
     S.z = redshift
 
@@ -77,7 +77,7 @@ for index, file in enumerate(files):
     # S.Tsys = 505e3 #Ali et al, at 164MHz
     # set to match noise realization
     S.Tsys = (200 + 180.*(freqs[index]/.180)**-2.55)*1e3
-    print "Tsys = ", S.Tsys
+    #print "Tsys = ", S.Tsys
 
     S.t_int = inttime
     S.Ndays = cnt  # effective number of days
@@ -91,8 +91,8 @@ for index, file in enumerate(files):
     S.Nbls = pspec_dict['nbls']
     S.Nlstbins = nlsts_g
     S.calc()
-    print 'Beggining Table Data: '
-    print '\n'
+    #print 'Beggining Table Data: '
+    #print '\n'
     for k in args.kmags:
         k_ind = np.argmin(np.abs(k - f['k']))
         try: # find from signal loss results
@@ -109,17 +109,18 @@ for index, file in enumerate(files):
         #                       bootstrap error, bootstrap sigma, (Det/Ulim)
         print k, '&',
         print r(redshift), '&',
-        print r(S.Delta2_N(k)*2), '&',
+        print r(delta2_value), '&',
+        print '$\pm$ '+  r(S.Delta2_N(k)*2), '&',
         print r(delta2_value/(S.Delta2_N(k))), '&',
         if delta2_value - (S.Delta2_N(k)*2) > 0:
             print 'Det', '&',
         else:
             print 'ULim', '&',
-        print r(bootstrap_error), '&',
+        print '$\pm$ ' + r(bootstrap_error), '&',
         print r(delta2_value/(bootstrap_error/2.)), '&',
         if delta2_value-bootstrap_error > 0:
-            print 'Det', '&',
+            print 'Det',
         else:
-            print 'Ulim', '&',
+            print 'Ulim',
         print '\\tabularnewline'
     print '\t\hline \hline'
