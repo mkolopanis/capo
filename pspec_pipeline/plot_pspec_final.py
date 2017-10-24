@@ -204,7 +204,7 @@ for filename in args.files:
     marker = markers[marker_count[gs_ind]]
     marker_count[gs_ind] += 1
 
-    try: # find from signal loss results
+    try: # find from old signal loss results 
         pCv = pspec_dict['pC']
         pIv = pspec_dict['pI']
         pCn = pspec_dict['pCn']
@@ -222,7 +222,7 @@ for filename in args.files:
         pCn_fold_up = pspec_dict['pCn_fold_up']
         pIn_fold_up = pspec_dict['pIn_fold_up']
         prob = pspec_dict['prob']*100
-    except: # find from pspec_2d_to_1d results
+    except: # find from pspec_2d_to_1d results or pspec_final_sigloss_v3.py results
         fold_factor = pspec_dict['k']**3/(2*np.pi**2)
         pCv = pspec_dict['pCv']
         pIv = pspec_dict['pIv']
