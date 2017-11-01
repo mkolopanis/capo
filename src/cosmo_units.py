@@ -48,10 +48,10 @@ def eta2kparr(eta,z):
     return eta*(2*n.pi*Ho*f21*E(z))/(ckm*(1+z)**2)
 
 def kperp2u(kperp,z):
-    return kperp*DA(z)/(2*n.pi)
+    return kperp*DM(z)/(2*n.pi)
 
 def u2kperp(u,z):
-    return u*2*n.pi/DA(z)
+    return u*2*n.pi/DM(z)
 def r2theta(r,z):
     return r/DA(z)
 def theta2r(theta,z):
