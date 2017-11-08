@@ -159,7 +159,7 @@ for count in range(2):
     # Make bins (grid), which is used for sampling distributions 
     def make_bins():
         # lin-log grid-spacing
-        nbins = 100 # XXX hard-coded number of bins for grid upon which to estimate kernels
+        nbins = 101 # XXX hard-coded number of bins for grid upon which to estimate kernels (must be odd for fftshift to do the right thing)
         dmax = n.max(Pins_fold.values())
         dg = 1 # spacing in linear regime
         G = n.logspace(0,n.log10(dmax),nbins)[-1]/n.logspace(0,n.log10(dmax),nbins)[-2] # way to estimate multiplicative factor in log regime (~1.3) 
@@ -191,11 +191,19 @@ for count in range(2):
             m[y_ind][bb] = 1.0 # fill with 1
         return m
 
+    def make_gaussian(sigma,offset):
+        x = n.fft.fftshift(n.arange(-bins.size/2,bins.size/2))
+        g = n.exp(-x**2/(2*sigma**2))
+        g /= n.sum(g)
+        g = n.fft.ifft(n.fft.fft(g)*n.exp(-2j*n.pi*x*offset))
+        return g
+
     # Function to fit for a sigma and offset (convolves "I" curve with a gaussian of some sigma to "fatten" it up, and shifts it to best match "C" curve)
     def find_sigma((sigma,offset),curveC,curveI):
-        fattened_I = scipy.ndimage.filters.gaussian_filter(curveI,sigma=sigma)
-        shift = scipy.ndimage.interpolation.shift(fattened_I,offset)
-        return n.sum(n.abs(curveC-shift)) # minimize difference
+        g = make_gaussian(sigma,offset)
+        fat_I = n.convolve(g,curveI,mode='same')
+        score = n.sum(n.abs(curveC-fat_I)**2) 
+        return score # minimize difference
 
     # Using all bootstrapped points, use kernel density estimators to smooth out both the C and I distributions, and then de-convolve out the extra width that C has on I for every P_in 
     def convolve_kernel():
@@ -224,9 +232,8 @@ for count in range(2):
             for col in range(M_matrix_C[k].shape[1]): # doing this for every column of P_in seems overkill and makes the code slow
                 curveC = M_matrix_C[k][:,col]
                 curveI = M_matrix_I[k][:,col]
-                result = scipy.optimize.least_squares(find_sigma,(1,1),bounds=([0,-n.inf],[n.inf,n.inf]),args=(curveC,curveI)) # minimize find_sigma function
-                if result.x[0] > 2: convolve_curve[k][:,col] = scipy.signal.gaussian(M_matrix_C[k].shape[1],result.x[0]) # XXX the "2" is hard-coded... basically the difference in width between the "I" and "C" curve doesn't seem significant enough to use unless the sigma found is > 2
-                else: convolve_curve[k][:,col] = n.zeros(M_matrix_C[k].shape[1])
+                result = scipy.optimize.least_squares(find_sigma,(0,0),bounds=([0,-n.inf],[n.inf,n.inf]),args=(curveC,curveI)) # minimize find_sigma function
+                convolve_curve[k][:,col] = n.fft.fftshift(make_gaussian(result.x[0],0))
             # Plot 2D distribution (KDE)
             if False and kk == 0: # just one k-value
                 p.plot(n.log10(xs), n.log10(ys),'k.')
@@ -253,18 +260,24 @@ for count in range(2):
                         M_matrix[k][:,col] = new_col/n.sum(new_col*bin_size(bins))
                     else: M_matrix[k][:,col] /= n.sum(M_matrix[k][:,col]*bin_size(bins))
         return M_matrix
-        
-    # Apply transfer function to data
-    def sigloss_func(data, M_matrix):
-        new_PS = {} # dictionaries that will hold PS distributions
+    
+    # Get data distribution
+    def data_dist(data):
         old_PS = {}
         for k in data.keys():
             kernel = scipy.stats.gaussian_kde(data[k][0]) # KDE for data
             data_dist = kernel(bins_concat)
             bins_concat_size = bin_size(bins_concat)
             data_dist /= n.sum(data_dist*bins_concat_size) # normalize
-            data_dist_pos = data_dist[len(bins):] # separate
-            data_dist_neg = data_dist[:len(bins)][::-1] # reverse this to apply same M
+            old_PS[k] = data_dist
+        return old_PS
+
+    # Apply transfer function to data
+    def sigloss_func(data_dist, M_matrix):
+        new_PS = {} # dictionaries that will hold PS distributions
+        for k in data_dist.keys():
+            data_dist_pos = data_dist[k][len(bins):] # separate
+            data_dist_neg = data_dist[k][:len(bins)][::-1] # reverse this to apply same M
             # Get new distribution
             try: M = M_matrix[k]
             except: M = M_matrix[-k] # M only exists for positive k's
@@ -276,22 +289,34 @@ for count in range(2):
             for row in Mpos: rowsum_pos += row # add up rows of M
             for row in Mneg: rowsum_neg += row 
             rowsum_combine = n.concatenate((rowsum_neg[::-1],rowsum_pos))
-            new_PS[k] = rowsum_combine/n.sum(rowsum_combine*bins_concat_size) # normalize
-            old_PS[k] = data_dist # save original distribution too
-        return new_PS, old_PS # both are distributions of bins_concat
+            new_PS[k] = rowsum_combine/n.sum(rowsum_combine*bin_size(bins_concat)) # normalize
+        return new_PS # distribution of bins_concat
    
 
     ### SIGNAL LOSS CODE
 
     bins, bins_concat = make_bins() # bins are where to sample distributions
-    convolve_curve = convolve_kernel() # convolution curve to convolve the "C" signal loss curve by, to account for the extra width that "C" can have on "I"
-    M = transfer_func(identity=False) # final signal loss transfer function
-    M_I = transfer_func(identity=True) 
+   
+    # Get distributions of original data 
+    old_pCs = data_dist(pCs)
+    old_pCs_fold = data_dist(pCs_fold)
+    old_pIs = data_dist(pIs)    
+    old_pIs_fold = data_dist(pIs_fold)
     
-    new_pCs, old_pCs = sigloss_func(pCs, M) # distributions of bins_concat, before and after signal loss correction
-    new_pCs_fold, old_pCs_fold = sigloss_func(pCs_fold, M)
-    new_pIs, old_pIs = sigloss_func(pIs, M_I)
-    new_pIs_fold, old_pIs_fold = sigloss_func(pIs_fold, M_I)
+    if opts.skip_sigloss:
+        print "Skipping Signal Loss!"
+        new_pCs = old_pCs.copy()
+        new_pCs_fold = old_pCs_fold.copy()
+        new_pIs = old_pIs.copy()
+        new_pIs_fold = old_pIs_fold.copy()
+    else:
+        convolve_curve = convolve_kernel() # convolution curve to convolve the "C" signal loss curve by, to account for the extra width that "C" can have on "I"
+        M = transfer_func(identity=False) # final signal loss transfer function
+        M_I = transfer_func(identity=True)
+        new_pCs = sigloss_func(old_pCs, M) # distributions of bins_concat, before and after signal loss correction
+        new_pCs_fold = sigloss_func(old_pCs_fold, M)
+        new_pIs = sigloss_func(old_pIs, M_I)
+        new_pIs_fold = sigloss_func(old_pIs_fold, M_I)
     
     # Compute PS points and errors
     def compute_stats(bins,data):
@@ -304,7 +329,7 @@ for count in range(2):
             right = n.interp(0.975,percents,bins)
             errs.append((right-left)/2) # 1-sigma
         return pts,errs
-
+    
     pC, pC_err = compute_stats(bins_concat, new_pCs)
     pI, pI_err = compute_stats(bins_concat, new_pIs)
     pC_fold, pC_fold_err = compute_stats(bins_concat, new_pCs_fold)
@@ -342,26 +367,12 @@ for count in range(2):
         p.show()
 
     # Save values
-    if opts.skip_sigloss:
-        print 'Skipping applying signal loss!!!'
-        if count == 0: # data case
-            pCv = file['pCv']
-            pCv_fold = file['pCv_fold']
-            pIv = file['pIv']
-            pIv_fold = file['pIv_fold']
-            pCv_err = file['pCv_err']
-            pCv_fold_err = file['pCv_fold_err']
-            pIv_err = file['pIv_err']
-            pIv_fold_err = file['pIv_fold_err']
-        else: # noise case
-            pCn = file['pCn']
-            pCn_fold = file['pCn_fold']
-            pIn = file['pIn']
-            pIn_fold = file['pIn_fold']
-            pCn_err = file['pCn_err']
-            pCn_fold_err = file['pCn_fold_err']
-            pIn_err = file['pIn_err']
-            pIn_fold_err = file['pIn_fold_err']
+    #if opts.skip_sigloss:
+    #    print 'Skipping applying signal loss!!!'
+    #    pC,pC_err = compute_stats(bins_concat,old_pCs)
+    #    pI,pI_err = compute_stats(bins_concat,old_pIs)
+    #    pC_fold,pC_fold_err = compute_stats(bins_concat,old_pCs_fold)
+    #    pI_fold,pI_fold_err = compute_stats(bins_concat,old_pIs_fold)
         
     if count == 0: # data case
         pCv = pC    
