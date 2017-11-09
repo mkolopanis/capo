@@ -249,9 +249,12 @@ for count in range(2):
         M_matrix = {}
         for kk,k in enumerate(kpl_fold): # only positive k's
             # Average signal loss curves together
-            xs = n.mean(n.array(Pins_fold[k]),axis=1)
-            if identity == True: ys = n.mean(n.array(Pouts_I_fold[k]),axis=1)
-            if identity == False: ys = n.mean(n.array(Pouts_fold[k]),axis=1)
+            xs = n.array(Pins_fold[k]).flatten()
+            if identity == True: ys = n.array(Pouts_I_fold[k]).flatten()
+            if identity == False: ys = n.array(Pouts_fold[k]).flatten()
+            #xs = n.mean(n.array(Pins_fold[k]),axis=1)
+            #if identity == True: ys = n.mean(n.array(Pouts_I_fold[k]),axis=1)
+            #if identity == False: ys = n.mean(n.array(Pouts_fold[k]),axis=1)
             M_matrix[k] = curve_to_matrix(xs,ys)
             if identity == False: # do convolution here
                 for col in range(M_matrix[k].shape[1]):
@@ -335,35 +338,50 @@ for count in range(2):
     pC_fold, pC_fold_err = compute_stats(bins_concat, new_pCs_fold)
     pI_fold, pI_fold_err = compute_stats(bins_concat, new_pIs_fold)
     
+    # Save values to use for plotting sigloss plots
+    if count == 0:
+        ind = -3 # one k-value
+        k = kpl[-3]
+        print "Saving pspec_sigloss.npz, which contains data values for k=",k
+        n.savez('pspec_sigloss.npz', k=k, bins=bins, bins_concat=bins_concat, pC=pC[ind], pC_err=pC_err[ind], pI=pI[ind], pI_err=pI_err[ind], new_pCs=new_pCs[k], new_pIs=new_pIs[k], old_pCs=old_pCs[k], old_pIs=old_pIs[k], Pins=Pins_fold[k], Pouts=Pouts_fold[k], Pouts_I=Pouts_I_fold[k])    
+    
     # Plot old vs. new distributions for P(k)
     if False:
-        num = 1 # weighted
-        p.figure(figsize=(15,8))
+        f, ax = p.subplots(3,7,figsize=(15,8))
+        xind,yind = 0,0
         for nn in range(len(file['kpl'])):
-            p.subplot(3,7,num)
-            p.plot(bin_cent,old_pCs[file['kpl'][nn]]/n.max(old_pCs[file['kpl'][nn]]),'b-',label='old')
-            p.plot(bin_cent,new_pCs[file['kpl'][nn]]/n.max(new_pCs[file['kpl'][nn]]),'g-',label='new')
-            p.xscale('symlog')
-            p.title('k = ' + str(file['kpl'][nn]),fontsize=8)
-            p.tick_params(axis='both', which='major', labelsize=6)
-            p.tick_params(axis='both', which='minor', labelsize=6)
-            p.grid()
-            num += 1
-        p.suptitle('Distribution of Weighted PS, Old (blue) vs. New (green)')
+            if yind == 7: yind = 0
+            if nn > 6: xind=1
+            if nn > 13: xind=2
+            #ax[xind,yind].plot(bins_concat,old_pCs[file['kpl'][nn]]/n.max(old_pCs[file['kpl'][nn]]),'b-',label='old')
+            ax[xind,yind].plot(bins_concat,new_pCs[file['kpl'][nn]]/n.max(new_pCs[file['kpl'][nn]]),'k-')
+            ax[xind,yind].set_xlim(-pC_err[nn]*10,pC_err[nn]*10)
+            ax[xind,yind].set_ylim(0,1)
+            ax[xind,yind].set_title('k = ' + str(n.round(file['kpl'][nn],3)),fontsize=8)
+            ax[xind,yind].tick_params(axis='both', which='both', labelsize=6)
+            ax[xind,yind].yaxis.offsetText.set_fontsize(6)
+            ax[xind,yind].xaxis.offsetText.set_fontsize(6)
+            yind += 1
+        f.text(0.5, 0.04, '$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$', ha='center', va='center')
+        #f.text(0.06, 0.5, 'common ylabel', ha='center', va='center', rotation='vertical')
+        #p.suptitle('Distribution of Weighted PS, Old (blue) vs. New (green)')
         p.show()
-        num = 1 # unweighted
-        p.figure(figsize=(15,8))
+        f, ax = p.subplots(3,7,figsize=(15,8))
+        xind,yind = 0,0
         for nn in range(len(file['kpl'])):
-            p.subplot(3,7,num)
-            p.plot(bin_cent_I,old_pIs[file['kpl'][nn]]/n.max(old_pIs[file['kpl'][nn]]),'b-',label='old')
-            p.plot(bin_cent_I,new_pIs[file['kpl'][nn]]/n.max(new_pIs[file['kpl'][nn]]),'g-',label='new')
-            p.xscale('symlog')
-            p.title('k = ' + str(file['kpl'][nn]),fontsize=8)
-            p.tick_params(axis='both', which='major', labelsize=6)
-            p.tick_params(axis='both', which='minor', labelsize=6)
-            p.grid()
-            num += 1
-        p.suptitle('Distribution of Unweighted PS, Old (blue) vs. New (green)')
+            if yind == 7: yind = 0
+            if nn > 6: xind=1
+            if nn > 13: xind=2
+            ax[xind,yind].plot(bins_concat,old_pIs[file['kpl'][nn]]/n.max(old_pIs[file['kpl'][nn]]),'b-',label='old')
+            ax[xind,yind].plot(bins_concat,new_pIs[file['kpl'][nn]]/n.max(new_pIs[file['kpl'][nn]]),'g-',label='new')
+            ax[xind,yind].set_xlim(-pI_err[nn]*10,pI_err[nn]*10)
+            ax[xind,yind].set_title('k = ' + str(n.round(file['kpl'][nn],3)),fontsize=8)
+            ax[xind,yind].tick_params(axis='both', which='both', labelsize=6)
+            ax[xind,yind].yaxis.offsetText.set_fontsize(6)
+            ax[xind,yind].xaxis.offsetText.set_fontsize(6)
+            yind += 1        
+        f.text(0.5, 0.04, '$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$', ha='center', va='center')
+        #p.suptitle('Distribution of Unweighted PS, Old (blue) vs. New (green)')
         p.show()
 
     # Save values
