@@ -38,7 +38,7 @@ if False: # added identity
     flipx = True
 
 # Read files
-sense=5691450.72021*2 # XXX from plotting one of the "project_#_modes" directories
+sense=4436767.36822*2 # XXX from plotting one of the "project_#_modes" directories
 PS_i_up = []
 PS_f_up = []
 PS_i = []

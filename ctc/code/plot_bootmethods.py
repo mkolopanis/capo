@@ -14,7 +14,7 @@ green = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_1
 red = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_IDENTITYMULTWEIGHT/inject_sep0,1_0.01/pspec_pk_k3pk_oldboot.npz') # bootstrap over time and bl; bootstraps last baseline slot only
 
 
-noise = 5691450 # XXX
+noise = 4436767.36822 # XXX
 
 # Plot
 plt.plot(blue['kpl'], blue['pIv_err']*2, color='blue', label='Bootstrap baselines only; suboptimal baseline sampling')

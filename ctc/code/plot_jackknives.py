@@ -14,13 +14,14 @@ p.errorbar(file_bl['kpl']+0.005,file_bl['pCv'],file_bl['pCv_err']*2,linestyle=''
 p.errorbar(file_lst['kpl']+0.01,file_lst['pCv'],file_lst['pCv_err']*2,linestyle='',marker='.',color='m',label='LST Null Test')
 p.errorbar(data['kpl']-0.005,data['pCv'],data['pCv_err']*2,linestyle='',marker='.',color='k',label='Original Data')
 
-noise = 5691450 # XXX
+noise = 4436767.36822 # XXX
 
 p.axhline(0,color='k',linestyle='--')
 p.axhspan(-noise*2,noise*2,facecolor='0.5',edgecolor="none",alpha=0.5,label='Estimated $2\sigma$ Error')
 p.legend(numpoints=1,prop={'size':12})
 p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$')
 p.xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]')
+p.ylim(-3.5e8,7e8)
 p.grid()
 p.show()
 
