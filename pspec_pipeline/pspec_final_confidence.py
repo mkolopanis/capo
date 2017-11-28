@@ -195,14 +195,15 @@ savefig(args.outfile + 'p_inj_prob.png', format='png')
 pIn, pIn_up = pspecs['pIn_fold'][0, :], pspecs['pIn_fold_err'][0, :]
 pIn_fold = pspecs['pIn_fold'][0, :]
 pIn_fold_up = pspecs['pIn_fold_err'][0, :]
-pIn_fold = k**3 / (2 * np.pi**2) * pIn_fold
-pIn_fold_up = k**3 / (2 * np.pi**2) * pIn_fold_up
+# Added multiplication by two for "2-sigma" upper bounds
+pIn_fold = k**3 / (2 * np.pi**2) * pIn_fold * 2
+pIn_fold_up = k**3 / (2 * np.pi**2) * pIn_fold_up * 2
 
 pI, pI_up = pspecs['pIv_fold'][0, :], pspecs['pIv_fold_err'][0, :]
 pI_fold = pspecs['pIv_fold'][0, :]
 pI_fold_up = pspecs['pIv_fold_err'][0, :]
-pI_fold = k**3 / (2 * np.pi**2) * pI_fold
-pI_fold_up = k**3 / (2 * np.pi**2) * pI_fold_up
+pI_fold = k**3 / (2 * np.pi**2) * pI_fold * 2
+pI_fold_up = k**3 / (2 * np.pi**2) * pI_fold_up * 2
 
 prob_limits = [.2, .25, .3, .35, .4, .5, .68, .85, .9, .95, .97, .99]
 
