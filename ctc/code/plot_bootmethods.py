@@ -21,13 +21,13 @@ plt.plot(blue['kpl'], blue['pIv_err']*2, color='blue', label='Bootstrap baseline
 plt.plot(black['kpl'], black['pIv_err']*2, color='black', label='Bootstrap baselines only; optimal baseline sampling')
 plt.plot(red['kpl'], red['pIv_err']*2, color='red', label='Bootstrap baselines and times; optimal baseline sampling')
 plt.axhline(y=noise*2, color='green', linestyle='-', label='Analytic')
-plt.legend(numpoints=1,prop={'size':12},loc='best')
+plt.legend(numpoints=1,prop={'size':13},loc='best')
 plt.grid()
 plt.yscale('log')
-plt.title('2$\sigma$ errors for PAPER-64 using different bootstrapping methods')
-plt.xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]')
-plt.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$')
-plt.ylim(1e6,5e9)
+#plt.title('2$\sigma$ errors for PAPER-64 using different bootstrapping methods')
+plt.xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]',fontsize=14)
+plt.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=14)
+plt.ylim(1e6,7e9)
 plt.show()
 
 
