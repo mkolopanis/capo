@@ -47,6 +47,8 @@ o.add_option('--lmode',type='int', default=None,
              help='Eigenvalue mode of C (in decreasing order) to be the minimum value used in C^-1')
 o.add_option('--changeC', action='store_true',
             help='Change covariance matrix C.')
+o.add_option('--mode_num', default=None,
+            help='Number to dial if changing regularization strength in pspec_batch_modeloop.py')
 opts, args = o.parse_args(sys.argv[1:])
 
 # Basic parameters
@@ -84,7 +86,7 @@ class DataSet(oqe.DataSet):
             # OPTION 1: identity multiplication
             C = C * n.identity(len(C))
             # OPTION 2: identity addition
-            #C = C + n.identity(len(C))*10000.0
+            #C = C + n.identity(len(C))*int(opts.mode_num)
             # OPTION 3: multiplication by identity + 2 diagonals
             """
             C2 = n.zeros_like(C)
@@ -106,7 +108,7 @@ class DataSet(oqe.DataSet):
             iS = 1./S
             ### OR CHANGE iS HERE ###
             #iS[:3] = 0.0
-            #iS[3:] = 1.0
+            #iS[int(opts.mode_num):] = 1.0
             self.set_iC({k:n.einsum('ij,j,jk', V.T, iS, U.T)})
         return self._iC[k]
     def set_data(self, dsets, wgts=None, conj=None):
@@ -184,7 +186,7 @@ def make_eor(shape):  # Create and fringe rate filter noise
     return dij
 
 
-def make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True):
+def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, grouping=True):
     """Use OQE formalism to generate power spectrum.
 
     Output weighted and identity weightings.
@@ -200,6 +202,10 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True):
         newkeys, dsIr = dsr.group_data(keys, gps, use_cov=False)
         newkeys, dsCs = dss.group_data(keys, gps)
         newkeys, dsIs = dss.group_data(keys, gps, use_cov=False)
+        newkeys, dsCe_Cr = dse_Cr.group_data(keys, gps)
+        newkeys, dsIe_Cr = dse_Cr.group_data(keys, gps, use_cov=False)
+        newkeys, dsCv_Cr = dsv_Cr.group_data(keys, gps)
+        newkeys, dsIv_Cr = dsv_Cr.group_data(keys, gps, use_cov=False)
     else:  # no groups (slower)
         newkeys = keys
         dsIv, dsCv = dsv, dsv  # identity and covariance case dataset is the same
@@ -207,11 +213,15 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True):
         dsIe, dsCe = dse, dse
         dsIr, dsCr = dsr, dsr
         dsIs, dsCs = dss, dss
+        dsIe_Cr, dsCe_Cr = dse_Cr, dse_Cr
+        dsIv_Cr, dsCv_Cr = dsv_Cr, dsv_Cr
     pCvs = []; pIvs = []
     pCns = []; pIns = []
     pCes = []; pIes = []
     pCrs = []; pIrs = []
     pCss = []; pIss = []
+    pCes_Cr = []; pIes_Cr = []
+    pCvs_Cr = []; pIvs_Cr = []
     for k, key1 in enumerate(newkeys):
         if k == 1 and len(newkeys) == 2: # NGPS = 1 (skip 'odd' with 'even' if we already did 'even' with 'odd')
             continue
@@ -276,6 +286,29 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True):
                 pIs = dsIs.p_hat(MIs, qIs, scalar=scalar)
                 pCss.append(pCs)
                 pIss.append(pIs)
+
+                FCe_Cr = dsCe_Cr.get_F(key1, key2, cov_flagging=False)
+                FIe_Cr = dsIe_Cr.get_F(key1, key2, use_cov=False, cov_flagging=False)
+                qCe_Cr = dsCe_Cr.q_hat(key1, key2, cov_flagging=False)
+                qIe_Cr = dsIe_Cr.q_hat(key1, key2, use_cov=False, cov_flagging=False)
+                MCe_Cr, WCe_Cr = dsCe_Cr.get_MW(FCe_Cr, mode=opts.weight)
+                MIe_Cr, WIe_Cr = dsIe_Cr.get_MW(FIe_Cr, mode='I')
+                pCe_Cr = dsCe_Cr.p_hat(MCe_Cr, qCe_Cr, scalar=scalar)
+                pIe_Cr = dsIe_Cr.p_hat(MIe_Cr, qIe_Cr, scalar=scalar)
+                pCes_Cr.append(pCe_Cr)
+                pIes_Cr.append(pIe_Cr)
+
+                FCv_Cr = dsCv_Cr.get_F(key1, key2, cov_flagging=False)
+                FIv_Cr = dsIv_Cr.get_F(key1, key2, use_cov=False, cov_flagging=False)
+                qCv_Cr = dsCv_Cr.q_hat(key1, key2, cov_flagging=False)
+                qIv_Cr = dsIv_Cr.q_hat(key1, key2, use_cov=False, cov_flagging=False)
+                MCv_Cr, WCv_Cr = dsCv_Cr.get_MW(FCv_Cr, mode=opts.weight)
+                MIv_Cr, WIv_Cr = dsIv_Cr.get_MW(FIv_Cr, mode='I')
+                pCv_Cr = dsCv_Cr.p_hat(MCv_Cr, qCv_Cr, scalar=scalar)
+                pIv_Cr = dsIv_Cr.p_hat(MIv_Cr, qIv_Cr, scalar=scalar)
+                pCvs_Cr.append(pCv_Cr)
+                pIvs_Cr.append(pIv_Cr)
+
     if PLOT:
         p.subplot(121)
         capo.arp.waterfall(FCv, drng=4)
@@ -307,7 +340,7 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True):
         p.plot(kpl, n.average(pIv.real, axis=1), 'k.-', label='pI')
         p.legend()
         p.show()
-    return n.array(pCvs), n.array(pIvs), n.array(pCns), n.array(pIns), n.array(pCes), n.array(pIes), n.array(pCrs), n.array(pIrs), n.array(pCss), n.array(pIss)
+    return n.array(pCvs), n.array(pIvs), n.array(pCns), n.array(pIns), n.array(pCes), n.array(pIes), n.array(pCrs), n.array(pIrs), n.array(pCss), n.array(pIss), n.array(pCes_Cr), n.array(pIes_Cr), n.array(pCvs_Cr), n.array(pIvs_Cr)
 
 # --------------------------------------------------------------------
 
@@ -482,13 +515,39 @@ dsv.set_data(dsets=data_dict_v, conj=conj_dict, wgts=flg_dict)
 dsn.set_data(dsets=data_dict_n, conj=conj_dict, wgts=flg_dict)
 
 """
-# Jack-Knife: create (even-odd) and (even+odd) datasets instead
+# NULL TEST: EVEN/ODD
 new_dict = {}
 for key in data_dict_v:
     if key[0] == 'even': 
         new = data_dict_v[key] + data_dict_v[('odd',key[1],key[2])]
     if key[0] == 'odd': 
         new = data_dict_v[('even',key[1],key[2])] - data_dict_v[key]
+    new_dict[key] = new
+dsv.add_data(dsets=new_dict)
+"""
+"""
+# NULL TEST: BASELINES
+new_dict = {}
+for k,key in enumerate(data_dict_v):
+    bl = key[1]
+    num = [bb for bb in range(N) if bls_master[bb] == bl][0]
+    if num % 2 == 0: # make negative
+        new = -data_dict_v[key]
+    else: new = data_dict_v[key] # else leave the same
+    new_dict[key] = new
+dsv.add_data(dsets=new_dict)
+"""
+
+"""
+# NULL TEST: LST
+new_dict = {}
+for key in data_dict_v:
+    lst1 = n.append(data_dict_v[('even',key[1],key[2])][:nlst/2],data_dict_v[('odd',key[1],key[2])][:nlst/2],axis=0)
+    lst2 = n.append(data_dict_v[('even',key[1],key[2])][nlst/2:],data_dict_v[('odd',key[1],key[2])][nlst/2:],axis=0)
+    if key[0] == 'even': # first half of LSTs from both even and odd
+        new = lst1+lst2
+    if key[0] == 'odd': # last half of LSTs from both even and odd
+        new = lst1-lst2
     new_dict[key] = new
 dsv.add_data(dsets=new_dict)
 """
@@ -514,13 +573,16 @@ if PLOT and False:
         capo.arp.waterfall(dsv.C(key))
         p.colorbar()
         p.title('C')
+        U,S,V = n.linalg.svd(n.conj(dsv.C(key)))
+        p.subplot(324); p.plot(S); p.yscale('log'); p.grid()
+        p.title('Eigenspectrum')
         # p.subplot(324); p.plot(n.einsum('ij,jk',n.diag(S),V).T.real)
         p.subplot(313)
         capo.arp.waterfall(n.dot(dsv.iC(key), dsv.x[key]),
                            mode='real')  # ,drng=6000,mx=3000)
         p.colorbar()
         p.title('C^-1 x')
-        p.suptitle(key)
+        #p.suptitle(key)
         p.tight_layout()
         p.show()
 
@@ -567,13 +629,28 @@ for boot in xrange(opts.nboot):
         dsr = DataSet()
         dse = DataSet()
         dss = DataSet()
+        dse_Cr = DataSet()
+        dsv_Cr = DataSet()
     else:
         dsr = oqe.DataSet(lmode=LMODE)  # data + eor
         dse = oqe.DataSet(lmode=LMODE)  # just eor
         dss = oqe.DataSet(lmode=LMODE)  # noise + eor
+        dse_Cr = oqe.DataSet(lmode=LMODE) # just eor, but with C_r
+        dsv_Cr = oqe.DataSet(lmode=LMODE) # just data, but with C_r
+
     dsr.set_data(dsets=data_dict_r, conj=conj_dict, wgts=flg_dict)
     dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
     dss.set_data(dsets=data_dict_s, conj=conj_dict, wgts=flg_dict)
+    dse_Cr.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
+    dsv_Cr.set_data(dsets=data_dict_v, conj=conj_dict, wgts=flg_dict)
+
+    # Over-write C's for some of the datasets
+    for key in data_dict_e.keys():
+        C_r = dsr.C(key)
+        U,S,V = n.linalg.svd(C_r.conj()) 
+        iS = 1./S
+        dse_Cr.set_iC({key:n.einsum('ij,j,jk', V.T, iS, U.T)})
+        dsv_Cr.set_iC({key:n.einsum('ij,j,jk', V.T, iS, U.T)})
 
     # Make groups
     if opts.nboot > 1: # sample baselines w/replacement
@@ -588,7 +665,7 @@ for boot in xrange(opts.nboot):
         NGPS = 1 # over-ride NGPS for proper sensitivity calculation later
 
     # Compute power spectra
-    pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs = make_PS(keys, dsv, dsn, dse, dsr, dss, grouping=True)
+    pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs, pCe_Cr, _, pCv_Cr, _ = make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, grouping=True)
     
     print '     Data:         pCv =', n.median(pCv.real),
     print 'pIv =', n.median(pIv.real)
@@ -619,8 +696,8 @@ for boot in xrange(opts.nboot):
         outpath = '/pspec_bootsigloss%04d.npz' % boot
     print '   Writing ' + outpath
     n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
-            pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe,
-            pIe=pIe, pCn=pCn, pIn=pIn, pCs=pCs, pIs=pIs,
+            pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe, pCe_Cr=pCe_Cr,
+            pIe=pIe, pCn=pCn, pIn=pIn, pCs=pCs, pIs=pIs, pCv_Cr=pCv_Cr,
             sep=sep_type, uvw=uvw,
             frf_inttime=frf_inttime, inttime=inttime,
             inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
