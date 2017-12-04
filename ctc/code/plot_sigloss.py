@@ -53,7 +53,7 @@ plt.subplot(121)
 #plt.plot(10**bins,10**n.polyval(coeff,bins),'r-',label="Polynomial Fit")
 plt.pcolormesh(10**bins,10**bins,M,cmap='hot_r')
 plt.plot([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
-plt.hlines(y=bins_concat[n.argmax(old_pCs)],xmin=pklo,xmax=pkhi,color='0.5',linewidth=3) # peak of original distribution
+plt.hlines(y=n.abs(bins_concat[n.argmax(old_pCs)]),xmin=pklo,xmax=pkhi,color='0.5',linewidth=3) # peak of original distribution
 #plt.legend(numpoints=1,prop={'size':10},loc='best')
 #plt.grid()
 plt.yscale('log')
@@ -77,6 +77,8 @@ plt.plot([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
 #plt.grid()
 plt.yscale('log')
 plt.xscale('log')
+#plt.yscale('symlog',linthreshy=5e7)
+#plt.xscale('symlog',linthreshx=5e7)
 ttl = plt.title("Unweighted, k = " + str(n.round(k,3)) + " h Mpc$^{-1}$")
 ttl.set_position([.5, 1.03])
 plt.xlabel('$P_{in}$ $[mK^{2}(h^{-1} Mpc)^{3}]$')

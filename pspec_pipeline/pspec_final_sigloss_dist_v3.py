@@ -44,6 +44,8 @@ for count in range(2):
     Pins_fold = {}
     pCs = {}; pCs_fold = {}
     pIs = {}; pIs_fold = {}
+    #pCes_Cr_fold = {}
+    #pCvs_Cr_fold = {}
     for inject in glob.glob('inject_sep'+opts.sep+'*'):
         print 'Reading', inject
         file_2d = n.load(inject + '/pspec_2d_to_1d.npz')
@@ -62,6 +64,8 @@ for count in range(2):
             linecolor='0.5'
             Pout_fold = file_2d['pCr-pCv_fold'] # shape (#boots, #kpl)
             Pout_I_fold = file_2d['pIr-pIv_fold']  # pI case
+            #pCe_Cr_fold = file_2d['pCe_Cr_fold']
+            #pCv_Cr_fold = file_2d['pCv_Cr_fold']
             pC = file_2d['pCv']
             pC_fold = file_2d['pCv_fold']
             pI = file_2d['pIv']
@@ -76,12 +80,16 @@ for count in range(2):
                 Pins_fold[kpl_fold[ind]].append(Pin_fold[:,ind])
                 pCs_fold[kpl_fold[ind]] = [pC_fold[:,ind]] # no appending because it's the same for every inject
                 pIs_fold[kpl_fold[ind]] = [pI_fold[:,ind]]
+                #pCes_Cr_fold[kpl_fold[ind]].append(pCe_Cr_fold[:,ind])
+                #pCvs_Cr_fold[kpl_fold[ind]].append(pCv_Cr_fold[:,ind])
             except:
                 Pouts_fold[kpl_fold[ind]] = [Pout_fold[:,ind]]
                 Pouts_I_fold[kpl_fold[ind]] = [Pout_I_fold[:,ind]]
                 Pins_fold[kpl_fold[ind]] = [Pin_fold[:,ind]]
                 pCs_fold[kpl_fold[ind]] = [pC_fold[:,ind]]
                 pIs_fold[kpl_fold[ind]] = [pI_fold[:,ind]]
+                #pCes_Cr_fold[kpl_fold[ind]] = [pCe_Cr_fold[:,ind]]
+                #pCvs_Cr_fold[kpl_fold[ind]] = [pCv_Cr_fold[:,ind]]
    
         for ind in range(len(kpl)): # loop through k for P(k)
                 pCs[kpl[ind]] = [pC[:,ind]] # no appending because it's the same for every inject
@@ -172,7 +180,32 @@ for count in range(2):
         bins_size = bin_size(bins)
         bins_concat = n.concatenate((-10**bins[::-1],10**bins)) # full length, real numbers
         return bins, bins_concat # bins is n.log10, bins_concat is not
-
+    """
+    # Grid data 
+    def grid_data(xs,ys):
+        threshx=1 # threshold going from linear bins to log bins
+        threshy=1
+        dmax = n.max(Pins_fold.values())
+        nbins = 100 # number of bins
+        n_linbins = nbins/50 # number of linear bins
+        n_logbins = nbins - (nbins/50) # number of log bins
+        matrix = n.zeros((nbins*2,nbins*2))
+        linbinsx= n.linspace(0,threshx,n_linbins)
+        linbinsy= n.linspace(0,threshy,n_linbins)
+        logbinsx = n.logspace(n.log10(threshx),n.log10(dmax),n_logbins)
+        logbinsy = n.logspace(n.log10(threshy),n.log10(dmax),n_logbins)
+        binsx = n.concatenate((linbinsx,logbinsx))      
+        binsy = n.concatenate((linbinsy,logbinsy))      
+        binsx = n.concatenate((-binsx[::-1],binsx))  
+        binsy = n.concatenate((-binsy[::-1],binsy))  
+        xs_grid = n.digitize(xs,binsx)
+        ys_grid = n.digitize(ys,binsy)
+        ygrid,xgrid = n.meshgrid(n.linspace(0,nbins*2,nbins*2,endpoint=False),n.linspace(0,nbins*2,nbins*2,endpoint=False))
+        positions = n.vstack([xgrid.ravel(),ygrid.ravel()])
+        kernel = scipy.stats.gaussian_kde((xs_grid,ys_grid),bw_method='scott')
+        matrix[xs_grid,ys_grid] += 1
+        return binsx, binsy, matrix
+    """
     # Fit polynomial to signal loss curve and translate it into a P_in vs. P_out matrix where there's one P_out value for every P_in
     def curve_to_matrix(x,y):
         m = n.zeros((len(bins),len(bins))) # matrix that will be populated
@@ -212,8 +245,11 @@ for count in range(2):
         convolve_curve = {}
         for kk,k in enumerate(kpl_fold): # only positive k's
             xs = n.abs(n.array(Pins_fold[k]).flatten())
+            #xs = n.array(Pins_fold[k]).flatten()
             ys_C = n.abs(n.array(Pouts_fold[k]).flatten())
+            #ys_C = n.array(Pouts_fold[k]).flatten()
             ys_I = n.abs(n.array(Pouts_I_fold[k]).flatten())
+            #ys_I = n.array(Pouts_I_fold[k]).flatten()
             # Kernel Density Estimator
             ygrid,xgrid = n.meshgrid(bins,bins) # create grid on which to sample
             positions = n.vstack([xgrid.ravel(),ygrid.ravel()])
@@ -236,8 +272,9 @@ for count in range(2):
                 convolve_curve[k][:,col] = n.fft.fftshift(make_gaussian(result.x[0],0))
             # Plot 2D distribution (KDE)
             if False and kk == 0: # just one k-value
-                p.plot(n.log10(xs), n.log10(ys),'k.')
-                p.pcolormesh(bins_in,bins_out,M_matrix_C[k]);p.colorbar()
+                #p.plot(n.log10(xs), n.log10(ys_C),'k.')
+                p.pcolormesh(10**bins,10**bins,M_matrix_C[k],cmap='hot_r')
+                p.xscale('log'); p.yscale('log')
                 p.title('k='+str(k))
                 p.xlabel('$P_{in}$ (log)');p.ylabel('$P_{out}$ (log)');p.show()
         return convolve_curve
@@ -249,12 +286,12 @@ for count in range(2):
         M_matrix = {}
         for kk,k in enumerate(kpl_fold): # only positive k's
             # Average signal loss curves together
-            xs = n.array(Pins_fold[k]).flatten()
-            if identity == True: ys = n.array(Pouts_I_fold[k]).flatten()
-            if identity == False: ys = n.array(Pouts_fold[k]).flatten()
-            #xs = n.mean(n.array(Pins_fold[k]),axis=1)
-            #if identity == True: ys = n.mean(n.array(Pouts_I_fold[k]),axis=1)
-            #if identity == False: ys = n.mean(n.array(Pouts_fold[k]),axis=1)
+            #xs = n.array(Pins_fold[k]).flatten()
+            #if identity == True: ys = n.array(Pouts_I_fold[k]).flatten()
+            #if identity == False: ys = n.array(Pouts_fold[k]).flatten()
+            xs = n.mean(n.array(Pins_fold[k]),axis=1)
+            if identity == True: ys = n.mean(n.array(Pouts_I_fold[k]),axis=1)
+            if identity == False: ys = n.mean(n.array(Pouts_fold[k]),axis=1)
             M_matrix[k] = curve_to_matrix(xs,ys)
             if identity == False: # do convolution here
                 for col in range(M_matrix[k].shape[1]):
@@ -299,7 +336,7 @@ for count in range(2):
     ### SIGNAL LOSS CODE
 
     bins, bins_concat = make_bins() # bins are where to sample distributions
-   
+
     # Get distributions of original data 
     old_pCs = data_dist(pCs)
     old_pCs_fold = data_dist(pCs_fold)

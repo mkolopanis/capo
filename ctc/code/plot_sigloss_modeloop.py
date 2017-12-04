@@ -96,8 +96,10 @@ ps_add = n.abs(f['pCv'][k_ind]) + 2*f['pCv_err'][k_ind]
 
 # Plot
 p.figure(figsize=(12,8))
-p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_i) + n.array(PS_i_up), color='0.5', linewidth=3, label='Pre-signal loss correction')
-p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_f) + n.array(PS_f_up), 'k-', linewidth=3, label='Post-signal loss correction')
+#p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_f), 'r.')
+#p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_i), 'm.')
+p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_i) + n.array(PS_i_up), color='0.5', linewidth=3, label='Pre-signal loss estimation')
+p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_f) + n.array(PS_f_up), 'k-', linewidth=3, label='Post-signal loss estimation')
 p.axhline(file_f['pIv'][k_ind]+2*file_f['pIv_err'][k_ind],color='b',linestyle='--',linewidth=3,label='Unweighted')
 p.axhline(ps_mult,color='r',linestyle='-',linewidth=3,label='$\hat{C} = \hat{C} \circ I$')
 p.axhline(ps_add,color='c',linestyle='-',linewidth=3,label='$\hat{C} = \hat{C} + 5000I$')
