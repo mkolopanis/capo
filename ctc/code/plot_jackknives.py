@@ -18,10 +18,10 @@ noise = 4436767.36822 # XXX
 
 p.axhline(0,color='k',linestyle='--')
 p.axhspan(-noise*2,noise*2,facecolor='0.5',edgecolor="none",alpha=0.5,label='Estimated $2\sigma$ Error')
-p.legend(numpoints=1,prop={'size':12})
-p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$')
-p.xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]')
-p.ylim(-3.5e8,7e8)
+p.legend(numpoints=1,prop={'size':14},ncol=2)
+p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=14)
+p.xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]',fontsize=14)
+p.ylim(-3.5e8,10e8)
 p.grid()
 p.show()
 

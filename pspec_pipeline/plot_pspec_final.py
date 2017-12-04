@@ -178,7 +178,7 @@ for filename in args.files:
             #   Tsys
             #S.Tsys = 551e3  #set to match 21cmsense exactly
             #S.Tsys = 505e3 #Ali et al, at 164MHz
-            S.Tsys = (200 + 180.*(f/.180)**-2.55)*1e3 #set to match noise realization
+            S.Tsys = (144 + 180.*(f/.180)**-2.55)*1e3 #set to match noise realization
             print "Tsys = ",S.Tsys
 
             S.t_int = inttime
@@ -462,6 +462,9 @@ if ymax_pk > ymax_d2:
     ymax_d2 = ymax_pk.copy()
     max_val_d2 = max_val_pk.copy()
 
+#ymax_d2 = 5e10 # XXX
+#max_val_d2 = np.log10(ymax_d2) # XXX
+
 ax1[0].set_ylim([1e-1, ymax_d2])
 ax1[0].set_xlim([0.0, 0.6])
 ax2[0].set_ylim([1e-1, ymax_pk])
@@ -493,14 +496,14 @@ for axes in pk_list:
         ax.set_yticks(ytick_pk)
         ax.locator_params(nbins=10, axis='x')
 
-handles, labels = ax1[-1].get_legend_handles_labels()
-ax1[-1].legend(handles, labels, loc='lower right', numpoints=1)
-handles, labels = ax2[-1].get_legend_handles_labels()
-ax2[-1].legend(handles, labels, loc='lower right', numpoints=1)
-handles, labels = ax3[-1].get_legend_handles_labels()
-ax3[-1].legend(handles, labels, loc='lower right', numpoints=1)
-handles, labels = ax4[-1].get_legend_handles_labels()
-ax4[-1].legend(handles, labels, loc='lower right', numpoints=1)
+#handles, labels = ax1[-1].get_legend_handles_labels()
+#ax1[-1].legend(handles, labels, loc='lower right', numpoints=1)
+#handles, labels = ax2[-1].get_legend_handles_labels()
+#ax2[-1].legend(handles, labels, loc='lower right', numpoints=1)
+#handles, labels = ax3[-1].get_legend_handles_labels()
+#ax3[-1].legend(handles, labels, loc='lower right', numpoints=1)
+#handles, labels = ax4[-1].get_legend_handles_labels()
+#ax4[-1].legend(handles, labels, loc='lower right', numpoints=1)
 handles, labels = ax5[-1].get_legend_handles_labels()
 ax5[-1].legend(handles, labels, loc='lower right', numpoints=1)
 handles, labels = ax6[-1].get_legend_handles_labels()
