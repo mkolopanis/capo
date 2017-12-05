@@ -675,7 +675,8 @@ def read_bootstraps_dcj(filenames, verbose=False):
                 accumulated_power_spectra[thing] = [F[thing]]
     power_spectrum_channels = ['pC', 'pI', 'err', 'pCv', 'var', 'pIv',
                                'pCe', 'pIe', 'pIr', 'pCr', 'pCr-pCv', 'pIr-pIv',
-                               'pCn', 'pIn', 'pCs', 'pIs', 'pCs-pCn', 'pIs-pIn']
+                               'pCn', 'pIn', 'pCs', 'pIs', 'pCs-pCn', 'pIs-pIn',
+                               'pCe_Cr', 'pCv_Cr']
     # stack up the various power spectrum channels
     for key in accumulated_power_spectra:
         if key in power_spectrum_channels:
@@ -714,7 +715,9 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100, version=4)
                       'pCs-pCn': 'pCs-pCn',
                       'pCr-pCv': 'pCr-pCv',
                       'pIs-pIn': 'pIs-pIn',
-                      'pIr-pIv': 'pIr-pIv'}
+                      'pIr-pIv': 'pIr-pIv',
+                      'pCe_Cr': 'pCe_Cr',
+                      'pCv_Cr': 'pCv_Cr'}
     outdata = {}
     vals = {} # for all values  
     for inname in indata:
@@ -795,12 +798,9 @@ def scramble_avg_bootstrap_array_v2(X, func=n.median):
     bboots = n.ma.masked_invalid(n.array(bboots))
     if func == n.median: return pspec_median(bboots, axis=-1)
     else: return func(bboots, axis=-1)
-    bboots = n.ma.masked_invalid(n.array(bboots))
-    return bboots
     """
     if func == n.median: return pspec_median(X, axis=-1)
-    else: return func(X, axis=-1)
-
+    else: return func(X, axis=-1)   
 
 def scramble_avg_bootstrap_array_v3(X, func=n.median, Nboots=100):
     """Collapse (baseline, k, time) array in baseline and time 
