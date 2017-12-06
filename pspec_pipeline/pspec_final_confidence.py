@@ -59,12 +59,18 @@ def fit_prob_to_tanh(probs, pIs):
     # tanh fit is VERY sensitive to initial conditions
     p0 = np.zeros(4)
     mean_ind = np.argmin(abs(probs - .5))
-    p0[0] = pIs[mean_ind]  # set mean and width to entral value of pspecs
-    p0[1] = pIs[mean_ind]  # set mean and width to central value of pspecs
+    p0[0] = np.log10(pIs[mean_ind])  # set mean and width to entral value of pspecs
+    #p0[1] = np.log10(pIs[mean_ind])  # set mean and width to central value of pspecs
+    p0[1] = 2  # set mean and width to central value of pspecs
     p0[2] = .25 + np.min(probs)  # offest of guess is min value + .25
-    p0[3] = (np.max(probs) - np.min(probs)) * 3 / 4.
+    p0[3] = (np.max(probs) - np.min(probs)) *1/2.
     # scale is  3/4 differnce in probabilities
-    parms, cov = curve_fit(tanh, pIs, probs, p0=p0, maxfev=50000)
+    sigma = np.ones_like(pIs)
+    min_ind=np.argmin(probs)
+    mean_ind=np.argmin(np.abs(probs-.5))
+    max_ind=np.argmax(probs)
+    sigma[[0,mean_ind, max_ind]]= .1
+    parms, cov = curve_fit(tanh, pIs, probs, p0=p0, maxfev=50000, sigma=sigma)
     return parms
 
 
@@ -73,7 +79,7 @@ def get_pk_k3pk(prob, ks, parms):
     nk = len(ks)
     upper_limits = []
     upper_limits.append([atanh(prob, *ps) for ps in parms])
-    upper_limits = np.array(upper_limits).squeeze()
+    upper_limits = np.power(10, np.array(upper_limits).squeeze())
     k3pk = np.tile(1e-5, nk)
     k3err = upper_limits * k**3 / (2 * np.pi**2)
     Pk = np.tile(1e-5, nk)
@@ -175,10 +181,11 @@ for inj in xrange(Ninj):
 tanh_parms_data = []
 tanh_parms_noise = []
 for k_ind in xrange(Nk):
-    tanh_parms_data.append(fit_prob_to_tanh(probs_data[:, k_ind],
-                                            pspecs['pIe_fold'][:, k_ind]))
-    tanh_parms_noise.append(fit_prob_to_tanh(probs_noise[:, k_ind],
-                                             pspecs['pIe_fold'][:, k_ind]))
+    inds = pspecs['pIe_fold'][:,k_ind] >=0
+    tanh_parms_data.append(fit_prob_to_tanh(probs_data[inds, k_ind],
+                                            np.log10(pspecs['pIe_fold'][inds, k_ind])))
+    tanh_parms_noise.append(fit_prob_to_tanh(probs_noise[inds, k_ind],
+                                             np.log10(pspecs['pIe_fold'][inds, k_ind])))
 
 
 figure()
@@ -194,18 +201,18 @@ savefig(args.outfile + 'p_inj_prob.png', format='png')
 # pI and pIn values are not dependen on probability
 pIn, pIn_up = pspecs['pIn_fold'][0, :], pspecs['pIn_fold_err'][0, :]
 pIn_fold = pspecs['pIn_fold'][0, :]
-pIn_fold_up = pspecs['pIn_fold_err'][0, :]
+pIn_fold_up = pspecs['pIn_fold_err'][0, :] * 2
 # Added multiplication by two for "2-sigma" upper bounds
-pIn_fold = k**3 / (2 * np.pi**2) * pIn_fold * 2
+pIn_fold = k**3 / (2 * np.pi**2) * pIn_fold
 pIn_fold_up = k**3 / (2 * np.pi**2) * pIn_fold_up * 2
 
 pI, pI_up = pspecs['pIv_fold'][0, :], pspecs['pIv_fold_err'][0, :]
 pI_fold = pspecs['pIv_fold'][0, :]
-pI_fold_up = pspecs['pIv_fold_err'][0, :]
-pI_fold = k**3 / (2 * np.pi**2) * pI_fold * 2
+pI_fold_up = pspecs['pIv_fold_err'][0, :] * 2
+pI_fold = k**3 / (2 * np.pi**2) * pI_fold
 pI_fold_up = k**3 / (2 * np.pi**2) * pI_fold_up * 2
 
-prob_limits = [.2, .25, .3, .35, .4, .5, .68, .85, .9, .95, .97, .99]
+prob_limits = [.2, .25, .3, .35, .4, .5, .68, .85, .89,.9, .95, .97, .99]
 
 # all of the probabilities will be the same
 # generate a list of all the names of probs with and without folds
