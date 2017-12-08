@@ -18,11 +18,11 @@ ODD_FILES=${DATA}'/odd/sep'${SEP}'/*.uvGAL'
 DIRNAME=$2
 EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
-CHAN='30_50'
+CHAN='30_50 95_115 127_147'
 #CHAN=' 30_50 51_71 78_98 95_115 103_123 127_147' #psa64 multiz bands
 NBOOT=20
 POL='I'
-weight='L^-1'
+weight='QR'
 WINDOW='none'
 FRF='--frf'
 LMODE='' #'--lmode=12'
@@ -30,6 +30,8 @@ CHANGEC='--changeC' #throw out off diagonal terms of covariance.
 NGPS=5
 NGPS_LST=2
 VERSION=2
+#RMBLS='0_7,3_49,4_5,5_14,6_42,6_62,7_40,11_15,12_14,13_24,16_33,16_36,17_48,18_40,21_43,42_61,44_52,45_53,60_62'
+#RMBLS='0_46,1_3,1_18,2_15,2_20,4_25,8_21,9_61,10_58,12_26,13_30,17_32,22_63,23_56,25_41,27_28,27_59,29_55,32_54,33_63,34_57,35_58,38_54,39_44,47_48,55_56'
 
 else
 if false
@@ -91,14 +93,14 @@ echo Making Directory ${DIRNAME}
 for chan in ${CHAN}; do
     if [ $(wc -w <<< ${CHAN}) -gt 1 ]; then
         mkdir -p ${DIRNAME}/$chan
-        out_dir=${chan}/inject_sep${SEP}
+        out_name=${chan}/inject_sep${SEP}
     else
-        out_dir=chan_${chan}_inject_sep${SEP}
+        out_name=chan_${chan}_inject_sep${SEP}
     fi
     
     # Stage 1: pspec_oqe_2d.py over range of injection levels
-    for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-2,3,1)))"` ; do
-        out_dir=${out_dir}_${inject}
+    for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-3,4,40)))"` ; do
+        out_dir=${out_name}_${inject}
         mkdir -p ${DIRNAME}/${out_dir}
         echo SIGNAL_LEVEL=${inject}
     
