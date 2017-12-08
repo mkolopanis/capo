@@ -14,7 +14,7 @@ import sys
 import random
 from capo import zsa, oqe, cosmo_units, frf_conv as fringe
 import capo
-
+import itertools
 o = optparse.OptionParser()
 a.scripting.add_standard_options(o, ant=True, pol=True, chan=True, cal=True)
 o.add_option('-b', '--nboot', type='int', default=1,
@@ -130,7 +130,57 @@ class DataSet(oqe.DataSet):
             except(TypeError,KeyError): pass
         self.avgx = n.average(avgx, axis=0)
         self.avgC = n.average(avgC, axis=0)
-
+    def get_MW(self, F, mode='F^-1'):
+        if type(F) is dict: # recursive case for many F's at once
+            M,W = {}, {}
+            for key in F: M[key],W[key] = self.get_MW(F[key], mode=mode)
+            return M,W
+        modes = ['F^-1', 'F^-1/2', 'I', 'L^-1','QR']; assert(mode in modes)
+        if mode == 'F^-1':
+            M = n.linalg.pinv(F, rcond=1e-12)
+            #U,S,V = np.linalg.svd(F)
+            #M = np.einsum('ij,j,jk', V.T, 1./S, U.T)
+        elif mode == 'F^-1/2':
+            U,S,V = n.linalg.svd(F)
+            M = n.einsum('ij,j,jk', V.T, 1./n.sqrt(S), U.T)
+        elif mode == 'I':
+            M = n.identity(F.shape[0], dtype=F.dtype)
+        elif mode =='L^-1':
+            #Cholesky decomposition to get M
+            num_modes = F.shape[0]
+            order = n.arange(num_modes)
+            o1, o2 = order[num_modes/2:], order[:num_modes/2][::-1]
+            iters = [iter(o1), iter(o2)]
+            order = list(it.next() for it in itertools.cycle(iters))
+#             order = np.array([10,11,9,12,8,20,0,13,7,14,6,15,5,16,4,17,3,18,2,19,1]) # XXX needs generalizing
+            iorder = n.argsort(order)
+            F_o = n.take(n.take(F,order, axis=0), order, axis=1)
+            L_o = n.linalg.cholesky(F_o)
+            U,S,V = n.linalg.svd(L_o.conj())
+            M_o = n.dot(n.transpose(V), n.dot(n.diag(1./S), n.transpose(U)))
+            M = n.take(n.take(M_o,iorder, axis=0), iorder, axis=1)
+        elif mode == 'QR':
+            #Cholesky-LIKE decomposition to get M via QR decomp
+            num_modes = F.shape[0]
+            order = n.arange(num_modes)
+            o1, o2 = order[num_modes/2:], order[:num_modes/2][::-1]
+            iters = [iter(o1), iter(o2)]
+            order = list(it.next() for it in itertools.cycle(iters))
+#             order = np.array([10,11,9,12,8,20,0,13,7,14,6,15,5,16,4,17,3,18,2,19,1]) # XXX needs generalizing
+            iorder = n.argsort(order)
+            F_o = n.take(n.take(F,order, axis=0), order, axis=1)
+            U,S,V = n.linalg.svd(F_o)
+            S[S<=0] = n.inf
+            temp = n.dot(n.diag(n.sqrt(S)).T, V)
+            Q_o, R_o = n.linalg.qr(temp, mode='complete')
+            L_eff =  R_o.T.conj()
+            U,S,V = n.linalg.svd(L_eff.conj())
+            M_o = n.dot(n.transpose(V), n.dot(n.diag(1./S), n.transpose(U)))
+            M = n.take(n.take(M_o,iorder, axis=0), iorder, axis=1)
+        W = n.dot(M, F)
+        norm  = W.sum(axis=-1); norm.shape += (1,)
+        M /= norm; W = n.dot(M, F)
+        return M,W
 
 def complex_noise(size, noiselev):
     """Generate complex noise of given size and noiselevel."""
@@ -309,6 +359,14 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, grouping=True):
                 pCvs_Cr.append(pCv_Cr)
                 pIvs_Cr.append(pIv_Cr)
 
+    if PLOT:
+        p.subplot(121)
+        capo.arp.waterfall(MCv, drng=3)
+        p.title('Mc')
+        p.subplot(122)
+        capo.arp.waterfall(WCv, drng=3)
+        p.title('WC')
+        p.show()
     if PLOT:
         p.subplot(121)
         capo.arp.waterfall(FCv, drng=4)
