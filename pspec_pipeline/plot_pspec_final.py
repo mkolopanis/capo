@@ -11,6 +11,7 @@ import argparse
 import py21cmsense as py21cm
 import capo
 from capo.cosmo_units import f212z
+from capo.eor_results import posterior
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import itertools
@@ -357,6 +358,9 @@ for filename in args.files:
                     '--', color='black', label='pCn {0:02}%'.format(int(prob))) 
     ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pIn_up),
                     '--', color='blue', label='pIn {0:02}%'.format(int(prob)))
+    #posterior(pspec_dict['kpl'], pCv , pCv_up, pkfold=pCv_fold,
+     #         errfold=pCv_fold_up, f0=pspec_dict['freq'], umag=16.,
+      #        theo_noise=S.Delta2_N(k))
 
 # set up some parameters to make the figures pretty
 for gs_ind in xrange(Nzs):
