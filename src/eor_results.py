@@ -560,7 +560,7 @@ def posterior(kpl, pk, err, pkfold=None, errfold=None, f0=.151, umag=16.,
     err = errfold
     err_omit = err.copy()
     # s = n.logspace(1,3.5,100)
-    s = n.linspace(-5000, 5000, 10000)
+    s = n.linspace(-100000, 100000, 1000000)
     #    print s
     data = []
     data_omit = []
@@ -579,7 +579,7 @@ def posterior(kpl, pk, err, pkfold=None, errfold=None, f0=.151, umag=16.,
     # data/=n.sum(data)
     data /= n.max(data)
     data_omit /= n.max(data_omit)
-    p.figure(5, figsize=(6.5, 5.5))
+    p.figure(figsize=(6.5, 5.5))
     p.plot(s, data, 'k', linewidth=2)
     # p.plot(s, data_omit, 'k--', linewidth=1)
     # use a spline interpolator to get the 1 and 2 sigma limits.
@@ -621,10 +621,11 @@ def posterior(kpl, pk, err, pkfold=None, errfold=None, f0=.151, umag=16.,
             print('Noise level: {0:0>5.3f} mk^2'.format(s2l_theo))
     p.xlabel(r'$k^3/2\pi^2\ P(k)\ [{\rm mK}^2]$', fontsize='large')
     p.ylabel('Posterior Distribution', fontsize='large')
-    p.xlim(0, 700)
+    p.ylim(0, 1)
     p.title('z = {0:.2f}'.format(z))
     if (s2lo > 700) or (s2hi > 1000):
         p.xlim(0, 1500)
+    p.xlim(0, 100000)
     p.grid(1)
     p.subplots_adjust(left=.15, top=.95, bottom=.15, right=.95)
     p.savefig('posterior_{0:.2f}.png'.format(z))
