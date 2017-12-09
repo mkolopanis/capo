@@ -59,9 +59,9 @@ def fit_prob_to_tanh(probs, pIs):
     # tanh fit is VERY sensitive to initial conditions
     p0 = np.zeros(4)
     mean_ind = np.argmin(abs(probs - .5))
-    p0[0] = np.log10(pIs[mean_ind])  # set mean and width to entral value of pspecs
-    #p0[1] = np.log10(pIs[mean_ind])  # set mean and width to central value of pspecs
-    p0[1] = 2  # set mean and width to central value of pspecs
+    p0[0] = pIs[mean_ind]  # set mean and width to entral value of pspecs
+    p0[1] = pIs[mean_ind]  # set mean and width to central value of pspecs
+    #p0[1] = 2  # set mean and width to central value of pspecs
     p0[2] = .25 + np.min(probs)  # offest of guess is min value + .25
     p0[3] = (np.max(probs) - np.min(probs)) *1/2.
     # scale is  3/4 differnce in probabilities
