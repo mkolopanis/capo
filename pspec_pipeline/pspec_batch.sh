@@ -18,15 +18,16 @@ ODD_FILES=${DATA}'/odd/sep'${SEP}'/*.uvGAL'
 DIRNAME=$2
 EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
-CHAN='30_50 95_115 127_147'
+CHAN='30_146 78_156'
 #CHAN=' 30_50 51_71 78_98 95_115 103_123 127_147' #psa64 multiz bands
 NBOOT=20
 POL='I'
-weight='QR'
+weight='I'
 WINDOW='none'
 FRF='--frf'
 LMODE='' #'--lmode=12'
 CHANGEC='--changeC' #throw out off diagonal terms of covariance.
+NEIG='--neig=0'
 NGPS=5
 NGPS_LST=2
 VERSION=2
@@ -99,12 +100,12 @@ for chan in ${CHAN}; do
     fi
     
     # Stage 1: pspec_oqe_2d.py over range of injection levels
-    for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-3,4,40)))"` ; do
+    for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-3,5,1)))"` ; do
         out_dir=${out_name}_${inject}
         mkdir -p ${DIRNAME}/${out_dir}
         echo SIGNAL_LEVEL=${inject}
     
-        ~/src/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${chan} \
+        ~/src/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${chan} ${NEIG}\
         -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/${out_dir} -b ${NBOOT} \
         ${EVEN_FILES} ${ODD_FILES} --NGPS=${NGPS} --rmbls=${RMBLS}
     
