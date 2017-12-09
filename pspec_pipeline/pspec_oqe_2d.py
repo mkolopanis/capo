@@ -49,6 +49,8 @@ o.add_option('--changeC', action='store_true',
             help='Change covariance matrix C.')
 o.add_option('--mode_num', default=None,
             help='Number to dial if changing regularization strength in pspec_batch_modeloop.py')
+o.add_option('--neig', type='int', default=0,
+             help='number of eigenmodes to downweight in covariance')
 opts, args = o.parse_args(sys.argv[1:])
 
 # Basic parameters
@@ -63,6 +65,7 @@ PLOT = opts.plot
 INJECT_SIG = opts.inject
 LMODE = opts.lmode
 
+print 'Using This many eigenmodes:', opts.neig
 try:
     rmbls = []
     rmbls_list = opts.rmbls.split(',')
@@ -81,35 +84,51 @@ class DataSet(oqe.DataSet):
     def iC(self, k, t=None, rcond=1e-12):
         assert(t == None)
         if not self._iC.has_key(k):
-            C = self.C(k)
-            ### CHANGE C HERE ###
-            # OPTION 1: identity multiplication
-            C = C * n.identity(len(C))
-            # OPTION 2: identity addition
-            #C = C + n.identity(len(C))*int(opts.mode_num)
-            # OPTION 3: multiplication by identity + 2 diagonals
-            """
-            C2 = n.zeros_like(C)
-            for i in range(C.shape[0]):
-                for j in range(C.shape[1]):
-                    if n.abs(j-i) <= 1: C2[i,j] = 1.0
-            C = C * C2 
-            """
-            # OPTION 4: use 'average C', where it is computed based on average data
-            #avgx = self.x[k] - self.avgx
-            #C = oqe.cov(avgx, self.w[k])
-            # OPTION 5: subtract average C off of C
-            #C = C - self.avgC
-            # OPTION 6: add identity at strength of median(eigenvalues)
-            #U,S,V = n.linalg.svd(C.conj())
-            #C = C + n.identity(len(C)) * n.median(S)
-            # svd 
-            U,S,V = n.linalg.svd(C.conj()) # conj in advance of next step
-            iS = 1./S
-            ### OR CHANGE iS HERE ###
-            #iS[:3] = 0.0
-            #iS[int(opts.mode_num):] = 1.0
-            self.set_iC({k:n.einsum('ij,j,jk', V.T, iS, U.T)})
+            if opts.neig == 0:
+                C = self.C(k)
+                ### CHANGE C HERE ###
+                # OPTION 1: identity multiplication
+                C = C * n.identity(len(C))
+                # OPTION 2: identity addition
+                #C = C + n.identity(len(C))*int(opts.mode_num)
+                # OPTION 3: multiplication by identity + 2 diagonals
+                """
+                C2 = n.zeros_like(C)
+                for i in range(C.shape[0]):
+                    for j in range(C.shape[1]):
+                        if n.abs(j-i) <= 1: C2[i,j] = 1.0
+                C = C * C2 
+                """
+                # OPTION 4: use 'average C', where it is computed based on average data
+                #avgx = self.x[k] - self.avgx
+                #C = oqe.cov(avgx, self.w[k])
+                # OPTION 5: subtract average C off of C
+                #C = C - self.avgC
+                # OPTION 6: add identity at strength of median(eigenvalues)
+                #U,S,V = n.linalg.svd(C.conj())
+                #C = C + n.identity(len(C)) * n.median(S)
+                # svd 
+                U,S,V = n.linalg.svd(C.conj()) # conj in advance of next step
+                iS = 1./S
+                ### OR CHANGE iS HERE ###
+                #iS[:3] = 0.0
+                #iS[int(opts.mode_num):] = 1.0
+                self.set_iC({k:n.einsum('ij,j,jk', V.T, iS, U.T)})
+            else:
+                C = self.C(k)
+                U, S, V = n.linalg.svd(C)
+                S = n.ma.masked_array(S)
+                S.mask = n.zeros_like(S)
+                S[opts.neig:] = 0
+                S.fill_value = 0
+                C_hat = n.einsum('ij,j,jk', U, S.filled(), V)
+                diag = n.diagonal(C).copy()
+                for cnt in xrange(opts.neig):
+                    C_hat[cnt,cnt] = 0
+                C_hat += n.diag(diag)
+                U, S, V = n.linalg.svd(C_hat.conj())
+                iC = n.einsum('ij,j,jk', V.T, 1./S , U.T)
+                self.set_iC({k:iC})
         return self._iC[k]
     def set_data(self, dsets, wgts=None, conj=None):
         if type(dsets.values()[0]) == dict:
