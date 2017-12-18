@@ -48,7 +48,33 @@ inds = np.argsort(freqs)
 files = np.take(files, inds)
 freqs = np.take(freqs, inds)
 redshifts = f212z(freqs*1e9)  # Frequencies are in GHz
-for index, file in enumerate(files):
+
+print "Quick look at best upper lims:"
+for redshift,filename in zip(redshifts,files):
+    pspec_dict = np.load(filename)
+    try: # find from signal loss results
+        delta2_value = pspec_dict['pC_fold']
+        bootstrap_error = pspec_dict['pC_fold_up']
+    except: # find from pspec_2d_to_1d results
+        fold_factor = pspec_dict['k']**3/(2*np.pi**2)
+        delta2_value = pspec_dict['pCv_fold']*fold_factor
+        bootstrap_error = pspec_dict['pCv_fold_err']*2*fold_factor
+
+    good_k = pspec_dict['k'] < .1
+    upperlims = delta2_value + bootstrap_error
+    upperlims = np.ma.masked_array(upperlims)
+    upperlims.mask = good_k
+    min_k = upperlims.argmin(fill_value=1e20)
+
+    abs_lims = np.abs(delta2_value) + bootstrap_error
+    abs_lims = np.ma.masked_array(abs_lims)
+    abs_lims.mask = good_k
+    min_k_abs = abs_lims.argmin(fill_value=1e20)
+
+    print "\tz={0:5.2f} at k={1:.2f}: ({2:7.3f} mk)^2 ".format(redshift, pspec_dict['k'][min_k], np.sqrt(np.abs(upperlims))[min_k])
+    print "\t{0:<7s}Abs k={1:.2f}: ({2:7.3f} mk)^2".format('', pspec_dict['k'][min_k_abs], np.sqrt(abs_lims)[min_k_abs])
+
+for index, filename in enumerate(files):
     redshift = redshifts[index]
     pspec_dict = np.load(file)
     inttime = pspec_dict['frf_inttime']

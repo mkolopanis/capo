@@ -31,6 +31,9 @@ NEIG='--neig=0'
 NGPS=5
 NGPS_LST=2
 VERSION=2
+#RMBLS='3_10,3_25,15_16,16_62,7_52,14_40,0_226,0_44,42_63,36_60,6_33,41_49,9_58' #"O"
+#RMBLS='0_7,0_46,1_3,3_49,16_33,16_36,7_40,27_28,6_42,42_61,2_15,55_56' # "E+"
+#RMBLS='0_38,0_60,3_9,3_47,7_62,8_16,11_62,16_52,21_31,32_40,43_63,18_42,17_55' # "E-"
 #RMBLS='0_7,3_49,4_5,5_14,6_42,6_62,7_40,11_15,12_14,13_24,16_33,16_36,17_48,18_40,21_43,42_61,44_52,45_53,60_62'
 #RMBLS='0_46,1_3,1_18,2_15,2_20,4_25,8_21,9_61,10_58,12_26,13_30,17_32,22_63,23_56,25_41,27_28,27_59,29_55,32_54,33_63,34_57,35_58,38_54,39_44,47_48,55_56'
 
@@ -100,7 +103,7 @@ for chan in ${CHAN}; do
     fi
     
     # Stage 1: pspec_oqe_2d.py over range of injection levels
-    for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-3,5,1)))"` ; do
+    for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-3,5,40)))"` ; do
         out_dir=${out_name}_${inject}
         mkdir -p ${DIRNAME}/${out_dir}
         echo SIGNAL_LEVEL=${inject}
