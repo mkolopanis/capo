@@ -656,10 +656,8 @@ for boot in xrange(opts.nboot):
     if opts.nboot > 1: # sample baselines w/replacement
         gps = dsv.gen_gps(bls_master, ngps=NGPS)
         nbls_g = n.int(n.round(N/NGPS))  # number of baselines per group
- 
-    elif opts.nboot == 1: # divide up baselines into groups
-        gps = [bls_master[i::NGPS] for i in range(NGPS)]
-        # no repeated baselines between or within groups
+    elif opts.nboot == 1: # no sampling w/replacement (no bootstrapping) 
+        gps = [bls_master[i::NGPS] for i in range(NGPS)] # no repeated baselines between or within groups
         nbls_g = n.int(n.round(N/NGPS)) # number of baselines per group
         nbls = nbls_g # over-ride nbls for proper sensitivity calculation later
         NGPS = 1 # over-ride NGPS for proper sensitivity calculation later
@@ -690,10 +688,12 @@ for boot in xrange(opts.nboot):
         p.show()
     
     # Save Output
-    if len(opts.output) > 0:
-        outpath = opts.output + '/pspec_bootsigloss%04d.npz' % boot 
+    if len(opts.output) > 0:    
+        if opts.nboot == 1: outpath = opts.output + '/pspec_noboot.npz'
+        else: outpath = opts.output + '/pspec_bootsigloss%04d.npz' % boot 
     else:
-        outpath = '/pspec_bootsigloss%04d.npz' % boot
+        if opts.nboot == 1: outpath = '/pspec_noboot.npz'
+        else: outpath = '/pspec_bootsigloss%04d.npz' % boot
     print '   Writing ' + outpath
     n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
             pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe, pCe_Cr=pCe_Cr,
