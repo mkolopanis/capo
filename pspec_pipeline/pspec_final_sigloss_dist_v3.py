@@ -430,19 +430,19 @@ for count in range(2):
     #    pI_fold,pI_fold_err = compute_stats(bins_concat,old_pIs_fold)
         
     if count == 0: # data case
-        pCv = pC    
-        pCv_fold = pC_fold
-        pIv = pI
-        pIv_fold = pI_fold
+        pCv = file['pCv'] #pC    
+        pCv_fold = file['pCv_fold'] #pC_fold
+        pIv = file['pIv'] #pI
+        pIv_fold = file['pIv_fold'] #pI_fold
         pCv_err = pC_err
         pCv_fold_err = pC_fold_err
         pIv_err = pI_err
         pIv_fold_err = pI_fold_err
     if count == 1: # noise case
-        pCn = pC
-        pCn_fold = pC_fold
-        pIn = pI
-        pIn_fold = pI_fold
+        pCn = file['pCn'] #pC
+        pCn_fold = file['pCn_fold'] #pC_fold
+        pIn = file['pIn'] #pI
+        pIn_fold = file['pIn_fold'] #pI_fold
         pCn_err = pC_err
         pCn_fold_err = pC_fold_err
         pIn_err = pI_err
