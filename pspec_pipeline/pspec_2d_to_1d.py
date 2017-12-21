@@ -106,6 +106,16 @@ pk_pspecs, vals = average_bootstraps(pspecs, Nt_eff=Neff_lst,
                                      Nboots=args.nboots,
                                      avg_func=eval(args.avg_func),
                                      version=args.version)
+
+# Over-write PS points from "pspec_noboot.npz" file
+pspec_noboot = np.load('/'.join(args.files[0].split('/')[:-1])+'/pspec_noboot.npz')
+for key in pk_pspecs:
+    if len(key) == 3 and key[0] == 'p': # "pIn, pCv, etc."
+        points = np.mean(pspec_noboot[key],axis=0) # average along cross-multiplication axis
+        points = np.mean(points,axis=1) # average along time
+        pk_pspecs[key] = points # function of k only
+
+# Save 
 outname = 'pspec_2d_to_1d.npz'
 print '   Saving', outname  # save all values used in bootstrapping
 np.savez(args.output + outname, **vals)
