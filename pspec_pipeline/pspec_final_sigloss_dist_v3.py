@@ -367,7 +367,7 @@ for count in range(2):
             percents = [n.sum((data[key]*bin_size(bins_concat))[:i]) for i in range(len(data[key]))]
             left = n.interp(0.025,percents,bins)
             right = n.interp(0.975,percents,bins)
-            errs.append((right-left)/2) # 1-sigma
+            errs.append((right-left)/4) # 1-sigma
         return pts,errs
     
     pC, pC_err = compute_stats(bins_concat, new_pCs)
