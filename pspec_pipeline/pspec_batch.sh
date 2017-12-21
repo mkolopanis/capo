@@ -6,7 +6,7 @@
 echo "Welcome to the power spectrum pipeline!"
 
 #PSA64
-if true
+if false
 then
 echo "Danny and Matt PSA64!"
 CALFILE='psa6240_v003'
@@ -61,21 +61,22 @@ else
 echo "CARINA PSA64!"
 ### PSA64 Options ###
 POL='I'
-weight='I' #'L^-1'
+weight='L^-1'
 WINDOW='none'
 FRF='--frf'
 LMODE='' #'--lmode=12'
-CHANGEC='' #'--changeC'
+CHANGEC='--changeC'
 NBOOT=20 # use 1 if doing version 4 (pspec_banana)
 NGPS=5
 NGPS_LST=2 # only matters for version 4 (otherwise it's not used)
 VERSION=2 # version 4 is pspec_banana
-EVEN_FILES='/home/cacheng/capo/ctc/matt_data/even/*uvGAL'
-ODD_FILES='/home/cacheng/capo/ctc/matt_data/odd/*uvGAL'
+EVEN_FILES='/data4/paper/ctc/PSA64/even/*uvGAL'
+ODD_FILES='/data4/paper/ctc/PSA64/odd/*uvGAL'
 CALFILE='psa6240_v003'
 CHAN='95_115'
 SEP='0,1'
 RA='0.5_8.6'
+TRCVR=144
 RMBLS=''
 EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
@@ -93,22 +94,30 @@ for chan in ${CHAN}; do
         mkdir -p ${DIRNAME}/$chan
         out_dir=${chan}/inject_sep${SEP}
     else
-        out_dir=chan_${chan}_inject_sep${SEP}
+        #out_dir=chan_${chan}_inject_sep${SEP}
+        out_dir=inject_sep${SEP}
     fi
     
     # Stage 1: pspec_oqe_2d.py over range of injection levels
-    for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-2,3,1)))"` ; do
-        out_dir=${out_dir}_${inject}
-        mkdir -p ${DIRNAME}/${out_dir}
+    #for inject in `python -c "import numpy; print ' '.join(map(str,-numpy.logspace(-3,3,20))) + ' ' + ' '.join(map(str,numpy.logspace(-3,3,20)))"`; do
+    for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-2,3,20)))"` ; do
+        out_dir_inject=${out_dir}_${inject}
+        mkdir -p ${DIRNAME}/${out_dir_inject}
         echo SIGNAL_LEVEL=${inject}
-    
-        ~/src/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${chan} \
-        -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/${out_dir} -b ${NBOOT} \
-        ${EVEN_FILES} ${ODD_FILES} --NGPS=${NGPS} --rmbls=${RMBLS}
+   
+        # Run with no bootstrapping once to get PS points 
+        ~/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${chan} \
+        -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/${out_dir_inject} -b 1 \
+        ${EVEN_FILES} ${ODD_FILES} --NGPS=${NGPS} --rmbls=${RMBLS} --Trcvr=${TRCVR}
+
+        # Bootstrap to get errors
+        ~/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${chan} \
+        -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/${out_dir_inject} -b ${NBOOT} \
+        ${EVEN_FILES} ${ODD_FILES} --NGPS=${NGPS} --rmbls=${RMBLS} --Trcvr=${TRCVR}
     
         # Stage 2: pspec_2d_to_1d.py
-        ~/src/capo/pspec_pipeline/pspec_2d_to_1d.py \
-        --output=${DIRNAME}/${out_dir}/ --NGPS_LST=${NGPS_LST} -v ${VERSION} ${DIRNAME}/${out_dir}/*bootsigloss*.npz
+        ~/capo/pspec_pipeline/pspec_2d_to_1d.py \
+        --output=${DIRNAME}/${out_dir_inject}/ --NGPS_LST=${NGPS_LST} -v ${VERSION} ${DIRNAME}/${out_dir_inject}/*bootsigloss*.npz
         
     done
 done
