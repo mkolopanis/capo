@@ -248,9 +248,10 @@ class DataSet:
     def gen_gps(self, bls, ngps=5):
         random.shuffle(bls)
         gps = [bls[i::ngps] for i in range(ngps)]
-        #gps = [[random.choice(gp) for bl in gp] for gp in gps] #sample w/replacement inside each group
-        # All independent baselines within a group, except the last one which is sampled randomly
-        gps = [[gps[gp][i] for i in np.append(np.arange(0,len(gps[gp])-1), random.choice(np.arange(0,len(gps[gp]))))] for gp,G in enumerate(gps)]
+        gps = [[random.choice(gp) for bl in gp] for gp in gps] #sample w/replacement inside each group
+        # All independent baselines within a group, except for the last "num_draw" number of slots which are filled randomly
+        #num_draw = 1
+        #gps = [[gps[gp][i] if i < len(gps[gp])-num_draw else gps[gp][np.random.choice(np.arange(0,len(gps[gp])))] for i in range(len(gps[gp]))] for gp,G in enumerate(gps)]
         return gps
     def group_data(self, keys, gps, use_cov=True): #XXX keys have format (k,bl,POL)
         # XXX avoid duplicate code for use_cov=True vs False (i.e. no separate dsC & dsI)
@@ -264,7 +265,7 @@ class DataSet:
             for gp in range(len(gps)):
                 newkey = (s,gp)
                 newkeys.append(newkey)
-                """ # Jack-Knife Test: change sign of baselines going into each group
+                """# Jack-Knife Test: change sign of baselines going into each group
                 gps[gp] = gps[gp][:(len(gps[gp])/2)*2] # ensure even number of baselines per group
                 factors = []
                 for b in range(len(gps[gp])): 
