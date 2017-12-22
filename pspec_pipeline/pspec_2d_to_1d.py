@@ -154,6 +154,7 @@ print "   Total number of lsts = ", Neff_lst
 print "      number of lst groups = ", NGPS_LST
 print "      nlsts in a group  = ", pk_pspecs['nlsts_g']
 
+""" # Commented out because not sure if this expression is correct
 # Scale for error on error
 if pk_pspecs['nPS'] != 1:
     scaling = 1. + (1. / np.sqrt(2 * (pk_pspecs['nPS'] - 1)))
@@ -168,6 +169,7 @@ print '   ... Therefore, we correct for error on error using factor =', scaling
 for key in pk_pspecs:
     if key[0] == 'p' and key[-3:] == 'err':
         pk_pspecs[key] = pk_pspecs[key] * scaling
+"""
 
 # Save values
 for key in pk_pspecs.keys():
