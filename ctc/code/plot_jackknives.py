@@ -21,6 +21,7 @@ p.axhspan(-noise*2,noise*2,facecolor='0.5',edgecolor="none",alpha=0.5,label='Est
 p.legend(numpoints=1,prop={'size':14},ncol=2)
 p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=14)
 p.xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]',fontsize=14)
+p.tick_params(axis='both', which='major', labelsize=14)
 p.ylim(-3.5e8,10e8)
 p.grid()
 p.show()

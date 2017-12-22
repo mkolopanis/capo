@@ -17,16 +17,17 @@ red = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115
 noise = 4436767.36822 # XXX
 
 # Plot
-plt.plot(blue['kpl'], blue['pIv_err']*2, color='blue', label='Bootstrap baselines only; suboptimal baseline sampling')
-plt.plot(black['kpl'], black['pIv_err']*2, color='black', label='Bootstrap baselines only; optimal baseline sampling')
-plt.plot(red['kpl'], red['pIv_err']*2, color='red', label='Bootstrap baselines and times; optimal baseline sampling')
+plt.plot(blue['kpl'], blue['pIv_err']*2, color='blue', label='Bootstrap baselines only')
+#plt.plot(black['kpl'], black['pIv_err']*2, color='black', label='Bootstrap baselines only; optimal baseline sampling')
+plt.plot(red['kpl'], red['pIv_err']*2, color='red', label='Bootstrap baselines and times')
 plt.axhline(y=noise*2, color='green', linestyle='-', label='Analytic')
-plt.legend(numpoints=1,prop={'size':13},loc='best')
+plt.legend(numpoints=1,prop={'size':14},loc='best')
 plt.grid()
 plt.yscale('log')
 #plt.title('2$\sigma$ errors for PAPER-64 using different bootstrapping methods')
 plt.xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]',fontsize=14)
 plt.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=14)
+plt.tick_params(axis='both', which='major', labelsize=14)
 plt.ylim(1e6,7e9)
 plt.show()
 

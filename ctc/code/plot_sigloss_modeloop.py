@@ -87,7 +87,7 @@ if True:
 """
 
 # Best PS (Identity Mult)
-f = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_IDENTITYMULTWEIGHT/pspec_final_sep0,1_final.npz')
+f = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_IDENTITYMULTWEIGHT_WEIGHTI/pspec_final_sep0,1.npz')
 ps_mult = n.abs(f['pCv'][k_ind]) + 2*f['pCv_err'][k_ind]
 
 # Best PS (Identity Add)
@@ -111,6 +111,7 @@ p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=14)
 p.legend(prop={'size':14}, loc='best')
 #p.title('k = ' +str(round(k,3))+' & N$_{samples}$ = '+str(N_ind))
 p.title('k = ' +str(round(k,3)),fontsize=14)
+p.tick_params(axis='both', which='major', labelsize=14)
 p.yscale('log')
 #p.ylim(1e4,1e10)
 if flipx == True: 
