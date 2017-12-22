@@ -246,11 +246,11 @@ class DataSet:
             yield gps
         return
     def gen_gps(self, bls, ngps=5):
-        random.shuffle(bls)
-        gps = [bls[i::ngps] for i in range(ngps)]
-        gps = [[random.choice(gp) for bl in gp] for gp in gps] #sample w/replacement inside each group
+        #np.random.shuffle(bls)
+        gps = [bls[i::ngps] for i in range(ngps)] # Should be the same for every bootstrap! This is baseline groups with no repeated baselines per group. Same as nboot=1.
+        gps = [[gp[np.random.choice(np.arange(0,len(gp)))] for bl in gp] for gp in gps] #sample w/replacement inside each group
         # All independent baselines within a group, except for the last "num_draw" number of slots which are filled randomly
-        #num_draw = 1
+        #num_draw = 10
         #gps = [[gps[gp][i] if i < len(gps[gp])-num_draw else gps[gp][np.random.choice(np.arange(0,len(gps[gp])))] for i in range(len(gps[gp]))] for gp,G in enumerate(gps)]
         return gps
     def group_data(self, keys, gps, use_cov=True): #XXX keys have format (k,bl,POL)
