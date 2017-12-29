@@ -72,7 +72,7 @@ for count in range(2):
             pI_fold = file_2d['pIv_fold']
 
         Pin_fold = file_2d['pIe_fold']
-
+        
         for ind in range(len(kpl_fold)): # loop through k for Delta^2(k)
             try:
                 Pouts_fold[kpl_fold[ind]].append(Pout_fold[:,ind])
@@ -94,7 +94,6 @@ for count in range(2):
         for ind in range(len(kpl)): # loop through k for P(k)
                 pCs[kpl[ind]] = [pC[:,ind]] # no appending because it's the same for every inject
                 pIs[kpl[ind]] = [pI[:,ind]]
-    
 
     # Values of interest are contained within dictionaries indexed by kpl_fold:
     #     Pins_fold
@@ -168,7 +167,7 @@ for count in range(2):
     def make_bins():
         # lin-log grid-spacing
         nbins = 101 # XXX hard-coded number of bins for grid upon which to estimate kernels (must be odd for fftshift to do the right thing)
-        dmax = n.max(Pins_fold.values())
+        dmax = max(n.max(Pins_fold.values()),n.max(pIs.values())) # maximum is determined from whichever is largest: EoR injection or "I" value
         dg = 1 # spacing in linear regime
         G = n.logspace(0,n.log10(dmax),nbins)[-1]/n.logspace(0,n.log10(dmax),nbins)[-2] # way to estimate multiplicative factor in log regime (~1.3) 
         grid = [] # grid spacing that's linear at low regime and log at high regime 
