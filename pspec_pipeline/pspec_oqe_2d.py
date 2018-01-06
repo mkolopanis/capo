@@ -498,12 +498,23 @@ if opts.frf:
         #nij = n.tile(data_dict_n[key].flatten(), 3).reshape((3*size,nchan)) # add padding
         nij = data_dict_n[key].copy()
         wij = n.ones(nij.shape, dtype=bool)
+        fir_size = fir.values()[0].shape[1]
+        if size < fir_size:
+            diff = fir_size - size
+            nij = n.pad(nij, (diff,0), mode='constant', constant_values=0)
+            nij = nij[:,diff:]
+            wij = n.ones_like(nij)
+        else:
+            diff = None
         if conj_dict[key[1]] is True: # apply frf using the conj of data and the conj fir
             nij_frf = fringe_rate_filter(aa, n.conj(nij), wij, ij[0], ij[1], POL, bins, fir_conj)
         else:
             nij_frf = fringe_rate_filter(aa, nij, wij, ij[0], ij[1], POL, bins, fir)
         #data_dict_n[key] = nij_frf[size:2*size,:]
-        data_dict_n[key] = nij_frf.copy()
+        if diff:
+            data_dict_n[key] = nij_frf[diff:].copy()
+        else:
+            data_dict_n[key] = nij_frf.copy()
 
 # Set data
 if opts.changeC:
