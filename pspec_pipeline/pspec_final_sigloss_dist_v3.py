@@ -377,7 +377,7 @@ for count in range(2):
     # Save values to use for plotting sigloss plots
     if count == 0:
         ind = -3 # one k-value
-        k = kpl[-3]
+        k = kpl[ind]
         print "Saving pspec_sigloss.npz, which contains data values for k=",k
         n.savez('pspec_sigloss.npz', k=k, bins=bins, bins_concat=bins_concat, pC=pC[ind], pC_err=pC_err[ind], pI=pI[ind], pI_err=pI_err[ind], new_pCs=new_pCs[k], new_pIs=new_pIs[k], old_pCs=old_pCs[k], old_pIs=old_pIs[k], Pins=Pins_fold[k], Pouts=Pouts_fold[k], Pouts_I=Pouts_I_fold[k])    
     
