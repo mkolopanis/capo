@@ -7,7 +7,7 @@ from scipy.optimize import curve_fit
 # Reads in power spectrum results from projecting out 0,1,2... modes
 # Plots power spectrum results before and after signal loss correction as a function of modes removed
 
-if True: # eigenmodes set to 1
+if False: # eigenmodes set to 1
     path = '/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_RANGEOFPROJECTEDMODES'
     startmode=0
     nmodes=21
@@ -27,12 +27,12 @@ if False: # eigenmodes set to 0
     f2 = '_modes'
     flipx = False
 
-if False: # added identity
-    path = '/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_RANGEOFADDEDIDENTITY'
+if True: # added identity
+    path = '/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity_trace'
     startmode=0 
-    nmodes=100000 
-    deltamode=5000 
-    xlabel='Strength of identity added'
+    nmodes=0.2 #20000 
+    deltamode=0.01 #1000
+    xlabel='Strength of identity added (percentage of Tr(C) added to C)'
     f1 = '/add_'
     f2 = '_identity'
     flipx = True
@@ -46,6 +46,7 @@ PS_f = []
 for mode_num in n.arange(startmode,nmodes,deltamode):
     filename = path + f1 + str(mode_num) + f2
     print 'Reading', filename
+    print mode_num
     #file_i = n.load(filename + '/inject_sep0,1_0.001/pspec_pk_k3pk.npz')
     file_i = n.load(filename + '/pspec_final_sep0,1_nosigloss.npz')
     file_f = n.load(filename + '/pspec_final_sep0,1.npz')
@@ -91,7 +92,7 @@ f = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_S
 ps_mult = n.abs(f['pCv'][k_ind]) + 2*f['pCv_err'][k_ind]
 
 # Best PS (Identity Add)
-f = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_RANGEOFADDEDIDENTITY/add_5000_identity/pspec_final_sep0,1.npz')
+f = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity/add_2000_identity/pspec_final_sep0,1.npz')
 ps_add = n.abs(f['pCv'][k_ind]) + 2*f['pCv_err'][k_ind]
 
 # Plot
@@ -102,7 +103,7 @@ p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_i) + n.array(PS_i_up), c
 p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_f) + n.array(PS_f_up), 'k-', linewidth=3, label='Post-signal loss estimation')
 p.axhline(file_f['pIv'][k_ind]+2*file_f['pIv_err'][k_ind],color='b',linestyle='--',linewidth=3,label='Unweighted')
 p.axhline(ps_mult,color='r',linestyle='-',linewidth=3,label='$\hat{C} = \hat{C} \circ I$')
-p.axhline(ps_add,color='c',linestyle='-',linewidth=3,label='$\hat{C} = \hat{C} + 5000I$')
+#p.axhline(ps_add,color='c',linestyle='-',linewidth=3,label='$\hat{C} = \hat{C} + 2000I$')
 p.axhline(sense,color='g',linestyle='-',linewidth=3,label='Analytical $2\sigma$ Error')
 #p.plot(n.arange(fixmode,nmodes,1), err_theory_firstterm, 'b--', label='Theory from Switzer et al., only frequency modes')
 #p.plot(n.arange(fixmode,nmodes,1), err_theory_fit, 'b-', label='Theory from Switzer et al., both frequency and time modes')

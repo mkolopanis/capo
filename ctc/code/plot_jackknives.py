@@ -3,10 +3,13 @@
 import numpy as n
 import pylab as p
 
-file_eo = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_JACKKNIFE_EVENODD/pspec_final_sep0,1.npz')
-file_bl = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_JACKKNIFE_BASELINES/pspec_final_sep0,1.npz')
-file_lst = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_JACKKNIFE_LST_FIRSTLAST/pspec_final_sep0,1.npz')
-data = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_IDENTITYMULTWEIGHT/pspec_final_sep0,1_final.npz')
+#file_eo = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_JACKKNIFE_EVENODD/pspec_final_sep0,1.npz')
+#file_bl = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_JACKKNIFE_BASELINES/pspec_final_sep0,1.npz')
+#file_lst = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_JACKKNIFE_LST_FIRSTLAST/pspec_final_sep0,1.npz')
+file_eo = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_evenodd/pspec_final_sep0,1_nosigloss.npz')
+file_bl = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_baselines/pspec_final_sep0,1_nosigloss.npz')
+file_lst = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_lst/pspec_final_sep0,1_nosigloss.npz')
+data = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_IDENTITYMULTWEIGHT/pspec_final_sep0,1.npz')
 
 
 p.errorbar(file_eo['kpl'],file_eo['pCv'],file_eo['pCv_err']*2,linestyle='',marker='.',color='b',label='Even/Odd Null Test')
@@ -22,7 +25,7 @@ p.legend(numpoints=1,prop={'size':14},ncol=2)
 p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=14)
 p.xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]',fontsize=14)
 p.tick_params(axis='both', which='major', labelsize=14)
-p.ylim(-3.5e8,10e8)
+p.ylim(-4e8,1.3e9)
 p.grid()
 p.show()
 
