@@ -6,15 +6,19 @@ from scipy import stats
 
 # Read file and get data
 file = n.load('pspec_sigloss.npz')
-k = file['k'] 
-pC = file['pC'] # final PS value
-pI = file['pI']
-pC_err = file['pC_err']
-pI_err = file['pI_err']
-new_pCs = file['new_pCs'] # distributions of PS values (after sigloss correction)
-new_pIs = file['new_pIs']
-old_pCs = file['old_pCs'] # distribution of PS values (before sigloss correction)
-old_pIs = file['old_pIs']
+k = file['k']
+file2 = n.load('inject_sep0,1_0.001/pspec_pk_k3pk.npz')
+file_pts = file2['pCv']
+file_pts_I = file2['pIv']
+k_pts_ind = n.where(file2['kpl'] == k)[0][0]
+#pC = file['pC'] # final PS value
+#pI = file['pI']
+#pC_err = file['pC_err']
+#pI_err = file['pI_err']
+#new_pCs = file['new_pCs'] # distributions of PS values (after sigloss correction)
+#new_pIs = file['new_pIs']
+#old_pCs = file['old_pCs'] # distribution of PS values (before sigloss correction)
+#old_pIs = file['old_pIs']
 Pins = file['Pins'] # P_in
 Pouts = file['Pouts'] # P_out
 Pouts_I = file['Pouts_I'] # P_out for I case
@@ -53,7 +57,7 @@ plt.subplot(121)
 #plt.plot(10**bins,10**n.polyval(coeff,bins),'r-',label="Polynomial Fit")
 plt.pcolormesh(10**bins,10**bins,M,cmap='hot_r')
 plt.plot([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
-plt.hlines(y=n.abs(bins_concat[n.argmax(old_pCs)]),xmin=pklo,xmax=pkhi,color='0.5',linewidth=3) # peak of original distribution
+plt.hlines(y=n.abs(file_pts[k_pts_ind]),xmin=pklo,xmax=pkhi,color='0.5',linewidth=3) # peak of original distribution
 #plt.legend(numpoints=1,prop={'size':10},loc='best')
 #plt.grid()
 plt.yscale('log')
@@ -71,7 +75,7 @@ plt.grid()
 plt.subplot(122)
 #plt.plot(n.abs(Pins.flatten()),n.abs(Pouts_I.flatten()),'k.',label="All bootstraps")
 #plt.plot(10**bins,10**n.polyval(coeff_I,bins),'r-',label="Polynomial Fit")
-plt.hlines(y=bins_concat[n.argmax(old_pIs)],xmin=pklo,xmax=pkhi,color='0.5',linewidth=3)
+plt.hlines(y=file_pts_I[k_pts_ind],xmin=pklo,xmax=pkhi,color='0.5',linewidth=3)
 plt.pcolormesh(10**bins,10**bins,M_I,cmap='hot_r')
 plt.plot([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
 #plt.legend(numpoints=1,prop={'size':10},loc='best')
