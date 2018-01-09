@@ -359,6 +359,7 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve_Cr,
 
 # --------------------------------------------------------------------
 
+
 # Read even&odd data
 if 'even' in args[0] or 'odd' in args[0]:
     dsets = {'even': [x for x in args if 'even' in x],
@@ -385,7 +386,7 @@ afreqs = freqs.take(chans)
 nchan = chans.size
 fq = n.average(afreqs)
 z = capo.pspec.f2z(fq)
-aa = a.cal.get_aa(opts.cal, freqs) # all freqs
+aa = a.cal.get_aa(opts.cal, freqs)  # all freqs
 bls, conj = capo.red.group_redundant_bls(aa.ant_layout)
 sep2ij, blconj, bl2sep = capo.zsa.grid2ij(aa.ant_layout)
 jy2T = capo.pspec.jy2T(afreqs)
@@ -407,7 +408,7 @@ etas = n.fft.fftshift(capo.pspec.f2eta(afreqs))
 kpl = etas * capo.pspec.dk_deta(z)
 if True:
     bm = n.polyval(capo.pspec.PAPER_BEAM_POLY, fq) * 2.35
-    if opts.frf: bm *= 1.3 # correction factor for FRF omega_pp = .32/.24 = 1.3
+    if opts.frf: bm *= 1.3  # correction factor for FRF omega_pp = .32/.24 = 1.3
     # correction for beam^2
     scalar = capo.pspec.X2Y(z) * bm * B
 else:
@@ -428,8 +429,9 @@ sys.stdout.flush()
 antstr = 'cross'
 _, blconj, _ = zsa.grid2ij(aa.ant_layout)
 days = dsets.keys()
-s,d,f = capo.miriad.read_files([dsets[days[0]][0]], antstr=antstr, polstr=POL) # read first file
-ij = d.keys()[0] # use first baseline
+s, d, f = capo.miriad.read_files([dsets[days[0]][0]],
+                                 antstr=antstr, polstr=POL)  # read first file
+ij = d.keys()[0]  # use first baseline
 if blconj[a.miriad.ij2bl(ij[0], ij[1])]:
     # makes sure FRP will be the same whether bl is a conjugated one or not
     if ij[0] < ij[1]:
@@ -439,16 +441,18 @@ sep_type = bl2sep[a.miriad.ij2bl(ij[0], ij[1])]
 # convert uvw in light-nanoseconds to m, (cosmo_units.c in m/s)
 uvw = aa.get_baseline(ij[0], ij[1], src='z') * cosmo_units.c * 1e-9
 bins = fringe.gen_frbins(inttime)
-mychan = 101 # XXX use this to match frf_filter.py
+mychan = 101  # XXX use this to match frf_filter.py
 frp, bins = fringe.aa_to_fr_profile(aa, ij, mychan, bins=bins)
 timebins, firs = fringe.frp_to_firs(frp, bins, aa.get_freqs(),
                                     fq0=aa.get_freqs()[mychan])
-firs = firs[int(opts.chan.split('_')[0]):int(opts.chan.split('_')[1])+1,:] # chop firs to frequency range of interest
+# chop firs to frequency range of interest
+firs = firs[int(opts.chan.split('_')[0]):int(opts.chan.split('_')[1])+1, :]
 fir = {(ij[0], ij[1], POL): firs}
-fir_conj = {} # fir for conjugated baselines
+fir_conj = {}  # fir for conjugated baselines
 for key in fir:
     fir_conj[key] = n.conj(fir[key])
-aa = a.cal.get_aa(opts.cal, afreqs) # aa is now subset of freqs, for use in apply_frf later
+# aa is now subset of freqs, for use in apply_frf later
+aa = a.cal.get_aa(opts.cal, afreqs)
 
 # Acquire data
 data_dict_v = {}
@@ -471,9 +475,9 @@ for k in days:
         print '\n'
     print 'Generating noise for day: ' + str(k)
     for bl in data[k]:
-        d = n.array(data[k][bl][POL])[:, chans] * jy2T # extract freq range
+        d = n.array(data[k][bl][POL])[:, chans] * jy2T  # extract freq range
         n_ = make_noise(d, stats[k]['cnt'][:, chans], inttime, sdf)
-        flg = n.array(flgs[k][bl][POL])[:, chans] # extract freq range
+        flg = n.array(flgs[k][bl][POL])[:, chans]  # extract freq range
         key = (k, bl, POL)
         data_dict_v[key] = d
         data_dict_n[key] = n_
@@ -509,22 +513,25 @@ if opts.frf:
     print 'Fringe-rate-filtering noise'
     for key in data_dict_n:
         size = data_dict_n[key].shape[0]
-        #nij = n.tile(data_dict_n[key].flatten(), 3).reshape((3*size,nchan)) # add padding
+        # nij = n.tile(data_dict_n[key].flatten(), 3).reshape((3*size,nchan))
+        # add padding
         nij = data_dict_n[key].copy()
         wij = n.ones(nij.shape, dtype=bool)
         fir_size = fir.values()[0].shape[1]
         if size < fir_size:
             diff = fir_size - size
-            nij = n.pad(nij, (diff,0), mode='constant', constant_values=0)
-            nij = nij[:,diff:]
+            nij = n.pad(nij, (diff, 0), mode='constant', constant_values=0)
+            nij = nij[:, diff:]
             wij = n.ones_like(nij)
         else:
             diff = None
-        if conj_dict[key[1]] is True: # apply frf using the conj of data and the conj fir
-            nij_frf = fringe_rate_filter(aa, n.conj(nij), wij, ij[0], ij[1], POL, bins, fir_conj)
+        if conj_dict[key[1]] is True:  # apply frf using the conj of data and the conj fir
+            nij_frf = fringe_rate_filter(aa, n.conj(nij), wij, ij[0], ij[1],
+                                         POL, bins, fir_conj)
         else:
-            nij_frf = fringe_rate_filter(aa, nij, wij, ij[0], ij[1], POL, bins, fir)
-        #data_dict_n[key] = nij_frf[size:2*size,:]
+            nij_frf = fringe_rate_filter(aa, nij, wij, ij[0], ij[1],
+                                         POL, bins, fir)
+        # data_dict_n[key] = nij_frf[size:2*size,:]
         if diff:
             data_dict_n[key] = nij_frf[diff:].copy()
         else:
@@ -599,8 +606,11 @@ if PLOT and False:
         capo.arp.waterfall(dsv.C(key))
         p.colorbar()
         p.title('C')
-        U,S,V = n.linalg.svd(n.conj(dsv.C(key)))
-        p.subplot(324); p.plot(S); p.yscale('log'); p.grid()
+        U, S, V = n.linalg.svd(n.conj(dsv.C(key)))
+        p.subplot(324)
+        p.plot(S)
+        p.yscale('log')
+        p.grid()
         p.title('Eigenspectrum')
         # p.subplot(324); p.plot(n.einsum('ij,jk',n.diag(S),V).T.real)
         p.subplot(313)
@@ -608,7 +618,7 @@ if PLOT and False:
                            mode='real')  # ,drng=6000,mx=3000)
         p.colorbar()
         p.title('C^-1 x')
-        #p.suptitle(key)
+        # p.suptitle(key)
         p.tight_layout()
         p.show()
 
