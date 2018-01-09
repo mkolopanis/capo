@@ -676,7 +676,7 @@ def read_bootstraps_dcj(filenames, verbose=False):
     power_spectrum_channels = ['pC', 'pI', 'err', 'pCv', 'var', 'pIv',
                                'pCe', 'pIe', 'pIr', 'pCr', 'pCr-pCv', 'pIr-pIv',
                                'pCn', 'pIn', 'pCs', 'pIs', 'pCs-pCn', 'pIs-pIn',
-                               'pCe_Cr', 'pCv_Cr']
+                               'pCe_Cr', 'pCv_Cr', 'pCve_Cr']
     # stack up the various power spectrum channels
     for key in accumulated_power_spectra:
         if key in power_spectrum_channels:
@@ -717,7 +717,8 @@ def average_bootstraps(indata, Nt_eff, avg_func=n.median, Nboots=100, version=4)
                       'pIs-pIn': 'pIs-pIn',
                       'pIr-pIv': 'pIr-pIv',
                       'pCe_Cr': 'pCe_Cr',
-                      'pCv_Cr': 'pCv_Cr'}
+                      'pCv_Cr': 'pCv_Cr',
+                      'pCve_Cr': 'pCve_Cr'}
     outdata = {}
     vals = {} # for all values  
     for inname in indata:
