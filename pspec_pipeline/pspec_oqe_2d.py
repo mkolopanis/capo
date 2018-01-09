@@ -30,7 +30,9 @@ o.add_option('--sep', default='sep0,1', action='store',
 o.add_option('-i', '--inject', type='float', default=0.,
              help='EOR injection level.')
 o.add_option('--frf', action='store_true',
-             help='The data to be analyzed has been fringe-rate-filtered. Consequently, the injected EoR will be FRF twice and noise will be FRF once.')
+             help=('The data to be analyzed has been fringe-rate-filtered.'
+                   ' Consequently, the injected EoR will be FRF twice '
+                   'and noise will be FRF once.'))
 o.add_option('--output', type='string', default='',
              help='Output directory for pspec_boot files (default "")')
 o.add_option('--weight', type='string', default='L^-1',
@@ -43,22 +45,24 @@ o.add_option('--rmbls', dest='rmbls', type='string',
                    'to remove from the power spectrum analysis.'))
 o.add_option('--NGPS', type='int', default=5,
              help='Number of Groups used in bootstrapping (default 5)')
-o.add_option('--lmode',type='int', default=None,
-             help='Eigenvalue mode of C (in decreasing order) to be the minimum value used in C^-1')
+o.add_option('--lmode', type='int', default=None,
+             help=('Eigenvalue mode of C (in decreasing order)'
+                   ' to be the minimum value used in C^-1'))
 o.add_option('--changeC', action='store_true',
-            help='Change covariance matrix C.')
+             help='Change covariance matrix C.')
 o.add_option('--mode_num', default=None,
-            help='Number to dial if changing regularization strength in pspec_batch_modeloop.py')
+             help=('Number to dial if changing regularization'
+                   ' strength in pspec_batch_modeloop.py'))
 opts, args = o.parse_args(sys.argv[1:])
 
 # Basic parameters
-random.seed(0) # for oqe.py (eor generator)
-n.random.seed(0) # for noise generator
+random.seed(0)  # for oqe.py (eor generator)
+n.random.seed(0)  # for noise generator
 POL = opts.pol
 if POL == 'xx' or POL == 'yy': NPOL = 1
 else: NPOL = 2
 DELAY = False
-NGPS = opts.NGPS # number of groups to break the random sampled bls into
+NGPS = opts.NGPS  # number of groups to break the random sampled bls into
 PLOT = opts.plot
 INJECT_SIG = opts.inject
 LMODE = opts.lmode
@@ -94,7 +98,7 @@ class DataSet(oqe.DataSet):
             for i in range(C.shape[0]):
                 for j in range(C.shape[1]):
                     if n.abs(j-i) <= 1: C2[i,j] = 1.0
-            C = C * C2 
+            C = C * C2
             """
             # OPTION 4: use 'average C', where it is computed based on average data
             #avgx = self.x[k] - self.avgx
@@ -104,7 +108,7 @@ class DataSet(oqe.DataSet):
             # OPTION 6: add identity at strength of median(eigenvalues)
             #U,S,V = n.linalg.svd(C.conj())
             #C = C + n.identity(len(C)) * n.median(S)
-            # svd 
+            # svd
             U,S,V = n.linalg.svd(C.conj()) # conj in advance of next step
             iS = 1./S
             ### OR CHANGE iS HERE ###
@@ -125,7 +129,7 @@ class DataSet(oqe.DataSet):
             try:
                 if conj[k[1]]: self.x[k] = n.conj(self.x[k])
             except(TypeError,KeyError): pass
-            try: 
+            try:
                 avgx.append(self.x[k])
                 avgC.append(oqe.cov(self.x[k], self.w[k]))
             except(TypeError,KeyError): pass
@@ -230,7 +234,7 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr,dsve_Cr,grouping=True)
         #print '   ',k+1,'/',len(newkeys)
         for key2 in newkeys[k:]:
             if len(newkeys) > 2 and (key1[0] == key2[0] or key1[1] == key2[1]): # NGPS > 1
-                continue  
+                continue
             if key1[0] == key2[0]: # don't do 'even' with 'even', for example
                 continue
             else:
@@ -238,7 +242,7 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr,dsve_Cr,grouping=True)
                 FIv = dsIv.get_F(key1, key2, use_cov=False, cov_flagging=False)
                 qCv = dsCv.q_hat(key1, key2, cov_flagging=False)
                 qIv = dsIv.q_hat(key1, key2, use_cov=False, cov_flagging=False)
-                MCv, WCv = dsCv.get_MW(FCv, mode=opts.weight)  
+                MCv, WCv = dsCv.get_MW(FCv, mode=opts.weight)
                 MIv, WIv = dsIv.get_MW(FIv, mode='I')
                 pCv = dsCv.p_hat(MCv, qCv, scalar=scalar)
                 pIv = dsIv.p_hat(MIv, qIv, scalar=scalar)
@@ -249,7 +253,7 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr,dsve_Cr,grouping=True)
                 FIn = dsIn.get_F(key1, key2, use_cov=False, cov_flagging=False)
                 qCn = dsCn.q_hat(key1, key2, cov_flagging=False)
                 qIn = dsIn.q_hat(key1, key2, use_cov=False, cov_flagging=False)
-                MCn, WCn = dsCn.get_MW(FCn, mode=opts.weight)  
+                MCn, WCn = dsCn.get_MW(FCn, mode=opts.weight)
                 MIn, WIn = dsIn.get_MW(FIn, mode='I')
                 pCn = dsCv.p_hat(MCn, qCn, scalar=scalar)
                 pIn = dsIv.p_hat(MIn, qIn, scalar=scalar)
@@ -260,7 +264,7 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr,dsve_Cr,grouping=True)
                 FIe = dsIe.get_F(key1, key2, use_cov=False, cov_flagging=False)
                 qCe = dsCe.q_hat(key1, key2, cov_flagging=False)
                 qIe = dsIe.q_hat(key1, key2, use_cov=False, cov_flagging=False)
-                MCe, WCe = dsCe.get_MW(FCe, mode=opts.weight) 
+                MCe, WCe = dsCe.get_MW(FCe, mode=opts.weight)
                 MIe, WIe = dsIe.get_MW(FIe, mode='I')
                 pCe = dsCe.p_hat(MCe, qCe, scalar=scalar)
                 pIe = dsIe.p_hat(MIe, qIe, scalar=scalar)
@@ -271,7 +275,7 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr,dsve_Cr,grouping=True)
                 FIr = dsIr.get_F(key1, key2, use_cov=False, cov_flagging=False)
                 qCr = dsCr.q_hat(key1, key2, cov_flagging=False)
                 qIr = dsIr.q_hat(key1, key2, use_cov=False, cov_flagging=False)
-                MCr, WCr = dsCr.get_MW(FCr, mode=opts.weight)  
+                MCr, WCr = dsCr.get_MW(FCr, mode=opts.weight)
                 MIr, WIr = dsIr.get_MW(FIr, mode='I')
                 pCr = dsCr.p_hat(MCr, qCr, scalar=scalar)
                 pIr = dsIr.p_hat(MIr, qIr, scalar=scalar)
@@ -282,7 +286,7 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr,dsve_Cr,grouping=True)
                 FIs = dsIs.get_F(key1, key2, use_cov=False, cov_flagging=False)
                 qCs = dsCs.q_hat(key1, key2, cov_flagging=False)
                 qIs = dsIs.q_hat(key1, key2, use_cov=False, cov_flagging=False)
-                MCs, WCs = dsCs.get_MW(FCs, mode=opts.weight)  
+                MCs, WCs = dsCs.get_MW(FCs, mode=opts.weight)
                 MIs, WIs = dsIs.get_MW(FIs, mode='I')
                 pCs = dsCs.p_hat(MCs, qCs, scalar=scalar)
                 pIs = dsIs.p_hat(MIs, qIs, scalar=scalar)
@@ -527,9 +531,9 @@ dsn.set_data(dsets=data_dict_n, conj=conj_dict, wgts=flg_dict)
 # NULL TEST: EVEN/ODD
 new_dict = {}
 for key in data_dict_v:
-    if key[0] == 'even': 
+    if key[0] == 'even':
         new = data_dict_v[key] + data_dict_v[('odd',key[1],key[2])]
-    if key[0] == 'odd': 
+    if key[0] == 'odd':
         new = data_dict_v[('even',key[1],key[2])] - data_dict_v[key]
     new_dict[key] = new
 dsv.add_data(dsets=new_dict)
@@ -599,7 +603,7 @@ if PLOT and False:
 for boot in xrange(opts.nboot):
     print '\nBootstrap %d / %d' % (boot + 1, opts.nboot)
 
-    # Create fake eor signal    
+    # Create fake eor signal
     print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
     eij = make_eor((nlst*3, nchan))
     size = nlst
@@ -618,7 +622,7 @@ for boot in xrange(opts.nboot):
     data_dict_s = {}
     for key in data_dict_v:
         if conj_dict[key[1]] is True:
-            eorinject = eor_conj 
+            eorinject = eor_conj
         else:
             eorinject = eor
         # track eor in separate dict
@@ -658,7 +662,7 @@ for boot in xrange(opts.nboot):
     # Edit data for cross-term
     data_cross = {}
     for key in data_dict_v.keys():
-        if key[0] == 'even': # keep as data 
+        if key[0] == 'even': # keep as data
             data_cross[key] = data_dict_v[key]
         elif key[0] == 'odd': # change to eor data
             data_cross[key] = data_dict_e[key]
@@ -667,7 +671,7 @@ for boot in xrange(opts.nboot):
     # Over-write C's for some of the datasets
     for key in data_dict_e.keys():
         C_r = dsr.C(key)
-        U,S,V = n.linalg.svd(C_r.conj()) 
+        U,S,V = n.linalg.svd(C_r.conj())
         iS = 1./S
         dse_Cr.set_iC({key:n.einsum('ij,j,jk', V.T, iS, U.T)})
         dsv_Cr.set_iC({key:n.einsum('ij,j,jk', V.T, iS, U.T)})
@@ -677,7 +681,7 @@ for boot in xrange(opts.nboot):
     if opts.nboot > 1: # sample baselines w/replacement
         gps = dsv.gen_gps(bls_master, ngps=NGPS)
         nbls_g = n.int(n.round(N/NGPS))  # number of baselines per group
-    elif opts.nboot == 1: # no sampling w/replacement (no bootstrapping) 
+    elif opts.nboot == 1: # no sampling w/replacement (no bootstrapping)
         gps = [bls_master[i::NGPS] for i in range(NGPS)] # no repeated baselines between or within groups
         nbls_g = n.int(n.round(N/NGPS)) # number of baselines per group
         nbls = nbls_g # over-ride nbls for proper sensitivity calculation later
@@ -685,7 +689,7 @@ for boot in xrange(opts.nboot):
 
     # Compute power spectra
     pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs, pCe_Cr, pCv_Cr, pCve_Cr = make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve_Cr, grouping=True)
-    
+
     print '     Data:         pCv =', n.median(pCv.real),
     print 'pIv =', n.median(pIv.real)
     print '     EoR:          pCe =', n.median(pCe.real),
@@ -707,11 +711,11 @@ for boot in xrange(opts.nboot):
         p.plot(kpl, n.average(pIr.real, axis=1), 'k.-')
         p.title('Data + EoR')
         p.show()
-    
+
     # Save Output
-    if len(opts.output) > 0:    
+    if len(opts.output) > 0:
         if opts.nboot == 1: outpath = opts.output + '/pspec_noboot.npz'
-        else: outpath = opts.output + '/pspec_bootsigloss%04d.npz' % boot 
+        else: outpath = opts.output + '/pspec_bootsigloss%04d.npz' % boot
     else:
         if opts.nboot == 1: outpath = '/pspec_noboot.npz'
         else: outpath = '/pspec_bootsigloss%04d.npz' % boot
