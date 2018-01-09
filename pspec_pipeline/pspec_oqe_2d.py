@@ -153,21 +153,21 @@ def complex_noise(size, noiselev):
     return noise
 
 
-def make_noise(d, cnt, inttime, df): #, freqs, jy2T=None):
+def make_noise(d, cnt, inttime, df):  # , freqs, jy2T=None):
     """Create noise with T_rms matching data from T_rcvr and uv['cnt']."""
-    #if jy2T is None:
+    # if jy2T is None:
     #    jy2T = capo.pspec.jy2T(freqs)
     Tsys = 180. * n.power(afreqs/0.18, -2.55) + opts.Trcvr  # system temp in K
     Tsys *= 1e3  # system temp in mK
     Trms = Tsys/n.sqrt(df * 1e9 * inttime * cnt * NPOL)  # convert sdf to Hz
-                        # Bchan, inttime, counts (times 2 if even&odd), Npol
-    Vrms = Trms#/jy2T  # jy2T is in units of mK/Jy
+    #                     Bchan, inttime, counts (times 2 if even&odd), Npol
+    Vrms = Trms  # /jy2T  # jy2T is in units of mK/Jy
     # The following transposes are to create noise correlated in time not
     # frequency. Maybe there is a better way to do it?
     # The masking and filling is to be able to parallelize the noise draws
     # Setting the mask back later and filling zeros out where Vrms ~ inf or < 0
     size = Vrms.shape[0]
-    #if opts.frf: # triple size
+    # if opts.frf: # triple size
     #    Vrms = n.repeat(Vrms, 3, axis=0)
     Vrms = n.ma.masked_invalid(Vrms)
     Vrms.mask = n.ma.mask_or(Vrms.mask, Vrms.filled() < 0)
@@ -177,17 +177,20 @@ def make_noise(d, cnt, inttime, df): #, freqs, jy2T=None):
     noise.mask = Vrms.mask
     n.ma.set_fill_value(noise, 0 + 0j)
     noise = noise.filled()
-    #wij = n.ones(noise.shape, dtype=bool) # XXX flags are all true (times,freqs)
-    #if opts.frf: # FRF noise
-    #    noise = fringe_rate_filter(aa, noise, wij, ij[0], ij[1], POL, bins, fir)
-    #noise = noise[int(size):2*int(size),:]
-    #noise.shape = d.shape
+    # wij = n.ones(noise.shape, dtype=bool)
+    # XXX flags are all true (times,freqs)
+    # if opts.frf: # FRF noise
+    #    noise = fringe_rate_filter(aa, noise, wij, ij[0], ij[1],
+    #                               POL, bins, fir)
+    # noise = noise[int(size):2*int(size),:]
+    # noise.shape = d.shape
     return noise
 
 
 def fringe_rate_filter(aa, dij, wij, i, j, pol, bins, fir):
-    """ Apply frf."""
-    _d, _w, _, _ = fringe.apply_frf(aa, dij, wij, i, j, pol=pol, bins=bins, firs=fir)
+    """Apply frf."""
+    _d, _w, _, _ = fringe.apply_frf(aa, dij, wij, i, j,
+                                    pol=pol, bins=bins, firs=fir)
     return _d
 
 
@@ -197,7 +200,8 @@ def make_eor(shape):  # Create and fringe rate filter noise
     return dij
 
 
-def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr,dsve_Cr,grouping=True):
+def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve_Cr,
+            grouping=True):
     """Use OQE formalism to generate power spectrum.
 
     Output weighted and identity weightings.
@@ -218,7 +222,8 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr,dsve_Cr,grouping=True)
         newkeys, dsCve_Cr = dsve_Cr.group_data(keys, gps, use_cov=False)
     else:  # no groups (slower)
         newkeys = keys
-        dsIv, dsCv = dsv, dsv  # identity and covariance case dataset is the same
+        # identity and covariance case dataset is the same
+        dsIv, dsCv = dsv, dsv
         dsIn, dsCn = dsn, dsn
         dsIe, dsCe = dse, dse
         dsIr, dsCr = dsr, dsr
@@ -226,22 +231,24 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr,dsve_Cr,grouping=True)
         dsCe_Cr = dse_Cr
         dsCv_Cr = dsv_Cr
         dsCve_Cr = dsve_Cr
-    pCvs = []; pIvs = []
-    pCns = []; pIns = []
-    pCes = []; pIes = []
-    pCrs = []; pIrs = []
-    pCss = []; pIss = []
+    pCvs, pIvs = [], []
+    pCns, pIns = [], []
+    pCes, pIes = [], []
+    pCrs, pIrs = [], []
+    pCss, pIss = [], []
     pCes_Cr = []
     pCvs_Cr = []
     pCves_Cr = []
     for k, key1 in enumerate(newkeys):
-        if k == 1 and len(newkeys) == 2: # NGPS = 1 (skip 'odd' with 'even' if we already did 'even' with 'odd')
+        if k == 1 and len(newkeys) == 2:
+            # NGPS = 1 (skip 'odd' with 'even' if we already did 'even' with 'odd')
             continue
-        #print '   ',k+1,'/',len(newkeys)
+        # print '   ',k+1,'/',len(newkeys)
         for key2 in newkeys[k:]:
-            if len(newkeys) > 2 and (key1[0] == key2[0] or key1[1] == key2[1]): # NGPS > 1
+            if len(newkeys) > 2 and (key1[0] == key2[0] or key1[1] == key2[1]):
+                # NGPS > 1
                 continue
-            if key1[0] == key2[0]: # don't do 'even' with 'even', for example
+            if key1[0] == key2[0]:  # don't do 'even' with 'even', for example
                 continue
             else:
                 FCv = dsCv.get_F(key1, key2, cov_flagging=False)
