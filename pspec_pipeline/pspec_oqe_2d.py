@@ -630,16 +630,19 @@ for boot in xrange(opts.nboot):
     print '  INJECTING SIMULATED SIGNAL @ LEVEL', INJECT_SIG
     eij = make_eor((nlst*3, nchan))
     size = nlst
-    #eij = n.tile(eij.flatten(), 3).reshape((3*nlst,nchan)) # add padding
+    # eij = n.tile(eij.flatten(), 3).reshape((3*nlst,nchan)) # add padding
     wij = n.ones(eij.shape, dtype=bool)
     eij_frf = fringe_rate_filter(aa, eij, wij, ij[0], ij[1], POL, bins, fir)
-    eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1], POL, bins, fir_conj) # conjugated eor with conjugated FIR
-    if opts.frf: # double frf eor
-        eij_frf = fringe_rate_filter(aa, eij_frf, wij, ij[0], ij[1], POL, bins, fir)
-        eij_conj_frf = fringe_rate_filter(aa, eij_conj_frf, wij, ij[0], ij[1], POL, bins, fir_conj)
+    eij_conj_frf = fringe_rate_filter(aa, n.conj(eij), wij, ij[0], ij[1],
+                                      POL, bins, fir_conj) # conjugated eor with conjugated FIR
+    if opts.frf:  # double frf eor
+        eij_frf = fringe_rate_filter(aa, eij_frf, wij, ij[0], ij[1],
+                                     POL, bins, fir)
+        eij_conj_frf = fringe_rate_filter(aa, eij_conj_frf, wij, ij[0], ij[1],
+                                          POL, bins, fir_conj)
 
-    eor = eij_frf[size:2*size,:]*n.abs(INJECT_SIG)
-    eor_conj = eij_conj_frf[size:2*size,:]*n.abs(INJECT_SIG)
+    eor = eij_frf[size:2*size, :]*n.abs(INJECT_SIG)
+    eor_conj = eij_conj_frf[size:2*size, :]*n.abs(INJECT_SIG)
     data_dict_r = {}
     data_dict_e = {}
     data_dict_s = {}
@@ -654,8 +657,8 @@ for boot in xrange(opts.nboot):
         data_dict_r[key] = data_dict_v[key].copy() + eorinject
         # add injected signal to noise
         data_dict_s[key] = data_dict_n[key].copy() + eorinject
-        if INJECT_SIG < 0.: # negative injects
-            if key[0] == 'even': # XXX hard-coded way to subtract e for negative injects
+        if INJECT_SIG < 0.:  # negative injects
+            if key[0] == 'even':  # XXX hard-coded way to subtract e for negative injects
                 data_dict_e[key] = -eorinject
                 data_dict_r[key] = data_dict_v[key].copy() - eorinject
                 data_dict_s[key] = data_dict_n[key].copy() - eorinject
@@ -672,9 +675,9 @@ for boot in xrange(opts.nboot):
         dsr = oqe.DataSet(lmode=LMODE)  # data + eor
         dse = oqe.DataSet(lmode=LMODE)  # just eor
         dss = oqe.DataSet(lmode=LMODE)  # noise + eor
-        dse_Cr = oqe.DataSet(lmode=LMODE) # just eor, but with C_r
-        dsv_Cr = oqe.DataSet(lmode=LMODE) # just data, but with C_r
-        dsve_Cr = oqe.DataSet(lmode=LMODE) # cross-term x with e, with C_r
+        dse_Cr = oqe.DataSet(lmode=LMODE)  # just eor, but with C_r
+        dsv_Cr = oqe.DataSet(lmode=LMODE)  # just data, but with C_r
+        dsve_Cr = oqe.DataSet(lmode=LMODE)  # cross-term x with e, with C_r
 
     dsr.set_data(dsets=data_dict_r, conj=conj_dict, wgts=flg_dict)
     dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
@@ -685,30 +688,30 @@ for boot in xrange(opts.nboot):
     # Edit data for cross-term
     data_cross = {}
     for key in data_dict_v.keys():
-        if key[0] == 'even': # keep as data
+        if key[0] == 'even':  # keep as data
             data_cross[key] = data_dict_v[key]
-        elif key[0] == 'odd': # change to eor data
+        elif key[0] == 'odd':  # change to eor data
             data_cross[key] = data_dict_e[key]
     dsve_Cr.set_data(dsets=data_cross, conj=conj_dict, wgts=flg_dict)
 
     # Over-write C's for some of the datasets
     for key in data_dict_e.keys():
         C_r = dsr.C(key)
-        U,S,V = n.linalg.svd(C_r.conj())
+        U, S, V = n.linalg.svd(C_r.conj())
         iS = 1./S
-        dse_Cr.set_iC({key:n.einsum('ij,j,jk', V.T, iS, U.T)})
-        dsv_Cr.set_iC({key:n.einsum('ij,j,jk', V.T, iS, U.T)})
-        dsve_Cr.set_iC({key:n.einsum('ij,j,jk', V.T, iS, U.T)})
+        dse_Cr.set_iC({key: n.einsum('ij,j,jk', V.T, iS, U.T)})
+        dsv_Cr.set_iC({key: n.einsum('ij,j,jk', V.T, iS, U.T)})
+        dsve_Cr.set_iC({key: n.einsum('ij,j,jk', V.T, iS, U.T)})
 
     # Make groups
-    if opts.nboot > 1: # sample baselines w/replacement
+    if opts.nboot > 1:  # sample baselines w/replacement
         gps = dsv.gen_gps(bls_master, ngps=NGPS)
         nbls_g = n.int(n.round(N/NGPS))  # number of baselines per group
-    elif opts.nboot == 1: # no sampling w/replacement (no bootstrapping)
-        gps = [bls_master[i::NGPS] for i in range(NGPS)] # no repeated baselines between or within groups
-        nbls_g = n.int(n.round(N/NGPS)) # number of baselines per group
-        nbls = nbls_g # over-ride nbls for proper sensitivity calculation later
-        NGPS = 1 # over-ride NGPS for proper sensitivity calculation later
+    elif opts.nboot == 1:  # no sampling w/replacement (no bootstrapping)
+        gps = [bls_master[i::NGPS] for i in range(NGPS)]  # no repeated baselines between or within groups
+        nbls_g = n.int(n.round(N/NGPS))  # number of baselines per group
+        nbls = nbls_g  # over-ride nbls for proper sensitivity calculation later
+        NGPS = 1  # over-ride NGPS for proper sensitivity calculation later
 
     # Compute power spectra
     pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs, pCe_Cr, pCv_Cr, pCve_Cr = make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve_Cr, grouping=True)
