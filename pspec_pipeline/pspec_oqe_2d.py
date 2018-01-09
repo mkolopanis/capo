@@ -82,43 +82,49 @@ except:
 # CLASSES & FUNCTIONS #
 
 class DataSet(oqe.DataSet):
+    """Extention of oqe.DataSet to include some covariance regularization."""
+
     def iC(self, k, t=None, rcond=1e-12):
-        assert(t == None)
-        if not self._iC.has_key(k):
+        """Regularize covariance before inverting."""
+        assert(t is None)
+        if k not in self._iC.keys(k):
             C = self.C(k)
-            ### CHANGE C HERE ###
+            # CHANGE C HERE ###
             # OPTION 1: identity multiplication
             C = C * n.identity(len(C))
             # OPTION 2: identity addition
-            #C = C + n.identity(len(C))*n.trace(C)*float(opts.mode_num)
-            #C = C + n.identity(len(C))*int(opts.mode_num)
+            # C = C + n.identity(len(C))*n.trace(C)*float(opts.mode_num)
+            # C = C + n.identity(len(C))*int(opts.mode_num)
             # OPTION 3: multiplication by identity + 2 diagonals
-            """
-            C2 = n.zeros_like(C)
-            for i in range(C.shape[0]):
-                for j in range(C.shape[1]):
-                    if n.abs(j-i) <= 1: C2[i,j] = 1.0
-            C = C * C2
-            """
-            # OPTION 4: use 'average C', where it is computed based on average data
-            #avgx = self.x[k] - self.avgx
-            #C = oqe.cov(avgx, self.w[k])
+
+            # C2 = n.zeros_like(C)
+            # for i in range(C.shape[0]):
+            #     for j in range(C.shape[1]):
+            #         if n.abs(j-i) <= 1: C2[i,j] = 1.0
+            # C = C * C2
+
+            # OPTION 4: use 'average C',
+            # where it is computed based on average data
+            # avgx = self.x[k] - self.avgx
+            # C = oqe.cov(avgx, self.w[k])
             # OPTION 5: subtract average C off of C
-            #C = C - self.avgC
+            # C = C - self.avgC
             # OPTION 6: add identity at strength of median(eigenvalues)
-            #U,S,V = n.linalg.svd(C.conj())
-            #C = C + n.identity(len(C)) * n.median(S)
+            # U,S,V = n.linalg.svd(C.conj())
+            # C = C + n.identity(len(C)) * n.median(S)
             # svd
-            U,S,V = n.linalg.svd(C.conj()) # conj in advance of next step
+            U, S, V = n.linalg.svd(C.conj())  # conj in advance of next step
             iS = 1./S
-            ### OR CHANGE iS HERE ###
-            #iS[:3] = 0.0
-            #iS[int(opts.mode_num):] = 1.0
-            self.set_iC({k:n.einsum('ij,j,jk', V.T, iS, U.T)})
+            # OR CHANGE iS HERE ###
+            # iS[:3] = 0.0
+            # iS[int(opts.mode_num):] = 1.0
+            self.set_iC({k: n.einsum('ij,j,jk', V.T, iS, U.T)})
         return self._iC[k]
+
     def set_data(self, dsets, wgts=None, conj=None):
+        """Set data inside of object, also computes average over bls."""
         if type(dsets.values()[0]) == dict:
-            dsets,wgts = self.flatten_data(dsets), self.flatten_data(wgts)
+            dsets, wgts = self.flatten_data(dsets), self.flatten_data(wgts)
         self.x, self.w = {}, {}
         avgx = []
         avgC = []
@@ -128,11 +134,11 @@ class DataSet(oqe.DataSet):
             except(TypeError): self.w[k] = n.ones_like(self.x[k])
             try:
                 if conj[k[1]]: self.x[k] = n.conj(self.x[k])
-            except(TypeError,KeyError): pass
+            except(TypeError, KeyError): pass
             try:
                 avgx.append(self.x[k])
                 avgC.append(oqe.cov(self.x[k], self.w[k]))
-            except(TypeError,KeyError): pass
+            except(TypeError, KeyError): pass
         self.avgx = n.average(avgx, axis=0)
         self.avgC = n.average(avgC, axis=0)
 
