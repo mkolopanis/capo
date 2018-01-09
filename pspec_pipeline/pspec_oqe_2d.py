@@ -200,7 +200,7 @@ def make_eor(shape):  # Create and fringe rate filter noise
     return dij
 
 
-def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve_Cr,
+def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve,
             grouping=True):
     """Use OQE formalism to generate power spectrum.
 
@@ -219,7 +219,8 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve_Cr,
         newkeys, dsIs = dss.group_data(keys, gps, use_cov=False)
         newkeys, dsCe_Cr = dse_Cr.group_data(keys, gps)
         newkeys, dsCv_Cr = dsv_Cr.group_data(keys, gps)
-        newkeys, dsCve_Cr = dsve_Cr.group_data(keys, gps, use_cov=False)
+        newkeys, dsCve = dsve.group_data(keys, gps)
+        newkeys, dsIve = dsve.group_data(keys, gps, use_cov=False)
     else:  # no groups (slower)
         newkeys = keys
         # identity and covariance case dataset is the same
@@ -230,7 +231,7 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve_Cr,
         dsIs, dsCs = dss, dss
         dsCe_Cr = dse_Cr
         dsCv_Cr = dsv_Cr
-        dsCve_Cr = dsve_Cr
+        dsCve,dsIve = dsve, dsve
     pCvs, pIvs = [], []
     pCns, pIns = [], []
     pCes, pIes = [], []
@@ -238,7 +239,7 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve_Cr,
     pCss, pIss = [], []
     pCes_Cr = []
     pCvs_Cr = []
-    pCves_Cr = []
+    pCves, pIves = [], []
     for k, key1 in enumerate(newkeys):
         if k == 1 and len(newkeys) == 2:
             # NGPS = 1 (skip 'odd' with 'even' if we already did 'even' with 'odd')
@@ -318,11 +319,16 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve_Cr,
                 pCv_Cr = dsCv_Cr.p_hat(MCv_Cr, qCv_Cr, scalar=scalar)
                 pCvs_Cr.append(pCv_Cr)
 
-                FCve_Cr = dsCve_Cr.get_F(key1, key2, cov_flagging=False)
-                qCve_Cr = dsCve_Cr.q_hat(key1, key2, cov_flagging=False)
-                MCve_Cr, WCve_Cr = dsCve_Cr.get_MW(FCve_Cr, mode=opts.weight)
-                pCve_Cr = dsCve_Cr.p_hat(MCve_Cr, qCve_Cr, scalar=scalar)
-                pCves_Cr.append(pCve_Cr)
+                FCve = dsCve.get_F(key1, key2, cov_flagging=False)
+                FIve = dsIve.get_F(key1, key2, use_cov=False, cov_flagging=False)
+                qCve = dsCve.q_hat(key1, key2, cov_flagging=False)
+                qIve = dsIve.q_hat(key1, key2, use_cov=False, cov_flagging=False)
+                MCve, WCve = dsCve.get_MW(FCve, mode=opts.weight)
+                MIve, WIve = dsIve.get_MW(FIve, mode='I')
+                pCve = dsCve.p_hat(MCve, qCve, scalar=scalar)
+                pIve = dsIve.p_hat(MIve, qIve, scalar=scalar)
+                pCves.append(pCve)
+                pIves.append(pIve)
 
     if PLOT:
         p.subplot(121)
@@ -355,7 +361,7 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve_Cr,
         p.plot(kpl, n.average(pIv.real, axis=1), 'k.-', label='pI')
         p.legend()
         p.show()
-    return n.array(pCvs), n.array(pIvs), n.array(pCns), n.array(pIns), n.array(pCes), n.array(pIes), n.array(pCrs), n.array(pIrs), n.array(pCss), n.array(pIss), n.array(pCes_Cr), n.array(pCvs_Cr), n.array(pCves_Cr)
+    return n.array(pCvs), n.array(pIvs), n.array(pCns), n.array(pIns), n.array(pCes), n.array(pIes), n.array(pCrs), n.array(pIrs), n.array(pCss), n.array(pIss), n.array(pCes_Cr), n.array(pCvs_Cr), n.array(pCves), n.array(pIves)
 
 # --------------------------------------------------------------------
 
@@ -670,14 +676,14 @@ for boot in xrange(opts.nboot):
         dss = DataSet()
         dse_Cr = DataSet()
         dsv_Cr = DataSet()
-        dsve_Cr = DataSet()
+        dsve = DataSet()
     else:
         dsr = oqe.DataSet(lmode=LMODE)  # data + eor
         dse = oqe.DataSet(lmode=LMODE)  # just eor
         dss = oqe.DataSet(lmode=LMODE)  # noise + eor
         dse_Cr = oqe.DataSet(lmode=LMODE)  # just eor, but with C_r
         dsv_Cr = oqe.DataSet(lmode=LMODE)  # just data, but with C_r
-        dsve_Cr = oqe.DataSet(lmode=LMODE)  # cross-term x with e, with C_r
+        dsve = oqe.DataSet(lmode=LMODE)  # cross-term x with e, with C_r
 
     dsr.set_data(dsets=data_dict_r, conj=conj_dict, wgts=flg_dict)
     dse.set_data(dsets=data_dict_e, conj=conj_dict, wgts=flg_dict)
@@ -692,7 +698,7 @@ for boot in xrange(opts.nboot):
             data_cross[key] = data_dict_v[key]
         elif key[0] == 'odd':  # change to eor data
             data_cross[key] = data_dict_e[key]
-    dsve_Cr.set_data(dsets=data_cross, conj=conj_dict, wgts=flg_dict)
+    dsve.set_data(dsets=data_cross, conj=conj_dict, wgts=flg_dict)
 
     # Over-write C's for some of the datasets
     for key in data_dict_e.keys():
@@ -701,7 +707,7 @@ for boot in xrange(opts.nboot):
         iS = 1./S
         dse_Cr.set_iC({key: n.einsum('ij,j,jk', V.T, iS, U.T)})
         dsv_Cr.set_iC({key: n.einsum('ij,j,jk', V.T, iS, U.T)})
-        dsve_Cr.set_iC({key: n.einsum('ij,j,jk', V.T, iS, U.T)})
+        dsve.set_iC({key: n.einsum('ij,j,jk', V.T, iS, U.T)})
 
     # Make groups
     if opts.nboot > 1:  # sample baselines w/replacement
@@ -714,7 +720,7 @@ for boot in xrange(opts.nboot):
         NGPS = 1  # over-ride NGPS for proper sensitivity calculation later
 
     # Compute power spectra
-    pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs, pCe_Cr, pCv_Cr, pCve_Cr = make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve_Cr, grouping=True)
+    pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs, pCe_Cr, pCv_Cr, pCve, pIve = make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve, grouping=True)
 
     print '     Data:         pCv =', n.median(pCv.real),
     print 'pIv =', n.median(pIv.real)
@@ -749,7 +755,7 @@ for boot in xrange(opts.nboot):
     n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
             pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe, pCe_Cr=pCe_Cr,
             pIe=pIe, pCn=pCn, pIn=pIn, pCs=pCs, pIs=pIs, pCv_Cr=pCv_Cr,
-            pCve_Cr=pCve_Cr, sep=sep_type, uvw=uvw,
+            pCve=pCve, pIve=pIve, sep=sep_type, uvw=uvw,
             frf_inttime=frf_inttime, inttime=inttime,
             inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
             cnt_eff=cnt_eff, nbls=nbls, ngps=NGPS, nbls_g=nbls_g,
