@@ -86,9 +86,9 @@ pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 # average LSTs within groups if given NGPS_LST (default is no averaging)
 if args.NGPS_LST == 0 and args.version == 4: NGPS_LST = Neff_lst
 elif args.NGPS_LST != 0 and args.version == 4: NGPS_LST = args.NGPS_LST
-else: NGPS_LST = 1 # 1 LST group if not version 4
+else: NGPS_LST = 1  # 1 LST group if not version 4
 
-if args.version == 4: # average in LST if version 4
+if args.version == 4:  # average in LST if version 4
     for pspec in pspecs:
         if pspec[0] == 'p':
             temp_pspec = []
@@ -115,18 +115,19 @@ pspec_noboot['pIr-pIv'] = pspec_noboot['pIr'] - pspec_noboot['pIv']
 pspec_noboot['pIs-pIn'] = pspec_noboot['pIs'] - pspec_noboot['pIn']
 for key in pk_pspecs: # loop over all keys that will get saved in pspec_pk_k3pk file
     overwrite = False
-    if len(key) == 3 and key[0] == 'p': # "pIn", "pCv", etc.
-        points = pspec_noboot[key][0,:,:,:] # only one file so take that one
+    if len(key) == 3 and key[0] == 'p':  # "pIn", "pCv", etc.
+        points = pspec_noboot[key][0, :, :, :]  # only one file so take that one
         overwrite = True
-    if key[-4:] == "fold" and key != "kpl_fold": # "pIn_fold", "pCv_fold", etc.
-        _,points = split_stack_kpl(pspec_noboot[key[:-5]][0,:,:,:], pspec_noboot['kpl'])
+    if key[-4:] == "fold" and key != "kpl_fold":  # "pIn_fold", "pCv_fold", etc.
+        _, points = split_stack_kpl(pspec_noboot[key[:-5]][0, :, :, :],
+                                    pspec_noboot['kpl'])
         overwrite = True
-    if overwrite == True:
-        points = np.mean(points,axis=0) # average along cross-multiplication axis
-        points = np.mean(points,axis=1) # average along time
-        pk_pspecs[key] = points # function of k only
+    if overwrite is True:
+        points = np.mean(points, axis=0) # average along cross-multiplication axis
+        points = np.mean(points, axis=1)  # average along time
+        pk_pspecs[key] = points  # function of k only
 
-# Save 
+# Save
 outname = 'pspec_2d_to_1d.npz'
 print '   Saving', outname  # save all values used in bootstrapping
 np.savez(args.output + outname, **vals)
