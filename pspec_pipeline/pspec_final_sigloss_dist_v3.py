@@ -44,8 +44,12 @@ for count in range(2):
     Pins_fold = {}
     pCs = {}; pCs_fold = {}
     pIs = {}; pIs_fold = {}
-    #pCes_Cr_fold = {}
-    #pCvs_Cr_fold = {}
+    pCes_Cr_fold = {}
+    pCvs_Cr_fold = {}
+    pCves_fold = {}
+    pIves_fold = {}
+    pCrs_fold = {}
+
     for inject in glob.glob('inject_sep'+opts.sep+'*'):
         print 'Reading', inject
         file_2d = n.load(inject + '/pspec_2d_to_1d.npz')
@@ -64,8 +68,11 @@ for count in range(2):
             linecolor='0.5'
             Pout_fold = file_2d['pCr-pCv_fold'] # shape (#boots, #kpl)
             Pout_I_fold = file_2d['pIr-pIv_fold']  # pI case
-            #pCe_Cr_fold = file_2d['pCe_Cr_fold']
-            #pCv_Cr_fold = file_2d['pCv_Cr_fold']
+            pCe_Cr_fold = file_2d['pCe_Cr_fold']
+            pCv_Cr_fold = file_2d['pCv_Cr_fold']
+            pCve_fold = file_2d['pCve_fold']
+            pIve_fold = file_2d['pIve_fold']
+            pCr_fold = file_2d['pCr_fold']
             pC = file_2d['pCv']
             pC_fold = file_2d['pCv_fold']
             pI = file_2d['pIv']
@@ -80,17 +87,22 @@ for count in range(2):
                 Pins_fold[kpl_fold[ind]].append(Pin_fold[:,ind])
                 pCs_fold[kpl_fold[ind]] = [pC_fold[:,ind]] # no appending because it's the same for every inject
                 pIs_fold[kpl_fold[ind]] = [pI_fold[:,ind]]
-                #pCes_Cr_fold[kpl_fold[ind]].append(pCe_Cr_fold[:,ind])
-                #pCvs_Cr_fold[kpl_fold[ind]].append(pCv_Cr_fold[:,ind])
+                pCes_Cr_fold[kpl_fold[ind]].append(pCe_Cr_fold[:,ind])
+                pCvs_Cr_fold[kpl_fold[ind]].append(pCv_Cr_fold[:,ind])
+                pCves_fold[kpl_fold[ind]].append(pCve_fold[:,ind])
+                pIves_fold[kpl_fold[ind]].append(pIve_fold[:,ind])
+                pCrs_fold[kpl_fold[ind]].append(pCr_fold[:,ind])
             except:
                 Pouts_fold[kpl_fold[ind]] = [Pout_fold[:,ind]]
                 Pouts_I_fold[kpl_fold[ind]] = [Pout_I_fold[:,ind]]
                 Pins_fold[kpl_fold[ind]] = [Pin_fold[:,ind]]
                 pCs_fold[kpl_fold[ind]] = [pC_fold[:,ind]]
                 pIs_fold[kpl_fold[ind]] = [pI_fold[:,ind]]
-                #pCes_Cr_fold[kpl_fold[ind]] = [pCe_Cr_fold[:,ind]]
-                #pCvs_Cr_fold[kpl_fold[ind]] = [pCv_Cr_fold[:,ind]]
-   
+                pCes_Cr_fold[kpl_fold[ind]] = [pCe_Cr_fold[:,ind]]
+                pCvs_Cr_fold[kpl_fold[ind]] = [pCv_Cr_fold[:,ind]]
+                pCves_fold[kpl_fold[ind]] = [pCve_fold[:,ind]]
+                pIves_fold[kpl_fold[ind]] = [pIve_fold[:,ind]]
+                pCrs_fold[kpl_fold[ind]] = [pCr_fold[:,ind]]
         for ind in range(len(kpl)): # loop through k for P(k)
                 pCs[kpl[ind]] = [pC[:,ind]] # no appending because it's the same for every inject
                 pIs[kpl[ind]] = [pI[:,ind]]
@@ -243,6 +255,12 @@ for count in range(2):
         M_matrix_I = {}
         convolve_curve = {}
         for kk,k in enumerate(kpl_fold): # only positive k's
+ 
+            if kk == 8 and count == 0: # save values out
+                # Save values to use for plotting sigloss terms
+                print "Saving pspec_sigloss_terms.npz, which contains data values for k=",k
+                n.savez('pspec_sigloss_terms.npz', k=k, pCv=file['pCv'][n.where(kpl==k)[0][0]], pIv=file['pIv'][n.where(kpl==k)[0][0]], Pins=Pins_fold[k], Pouts=Pouts_fold[k], Pouts_I=Pouts_I_fold[k], pCrs_fold=pCrs_fold[k], pCvs_Cr_fold=pCvs_Cr_fold[k], pCes_Cr_fold=pCes_Cr_fold[k], pCves_fold=pCves_fold[k], pIves_fold=pIves_fold[k])
+ 
             xs = n.abs(n.array(Pins_fold[k]).flatten())
             #xs = n.array(Pins_fold[k]).flatten()
             ys_C = n.abs(n.array(Pouts_fold[k]).flatten())
