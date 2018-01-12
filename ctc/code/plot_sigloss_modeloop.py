@@ -114,42 +114,52 @@ f = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity/add_2000_i
 ps_add = n.abs(f['pCv'][k_ind]) + 2*f['pCv_err'][k_ind]
 
 # Plot
-fig, ax1 = p.subplots(figsize=(12,8))
+p.figure(figsize=(8,10))    
+p.subplot(211)
     # plot before/after for # eigenmodes down-weighted
-ax1.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_i) + n.array(PS_i_up), color='0.5', linewidth=3, label='Pre-signal loss estimation (bottom axis)')
-ax1.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_f) + n.array(PS_f_up), 'k-', linewidth=3, label='Post-signal loss estimation (bottom axis)')
-p.xlabel(xlabel,fontsize=14)
-p.tick_params(axis='both', which='major', labelsize=14)
-p.legend(prop={'size':14}, loc=3, numpoints=1)
+p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_i) + n.array(PS_i_up), color='0.5', linewidth=2, label='Pre-signal loss estimation')
+p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_f) + n.array(PS_f_up), 'k-', linewidth=2, label='Post-signal loss estimation')
 p.xlim(n.arange(startmode,nmodes,deltamode)[0], n.arange(startmode,nmodes,deltamode)[-1])
-
-#p.title('k = ' +str(round(k,3)),fontsize=14)
-#ttl = ax1.title
-#ttl.set_position([.5, 1])
-p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=18)
+     # plot unweighted
+p.axhline(file_f['pIv'][k_ind]+2*file_f['pIv_err'][k_ind],color='b',linestyle='--',linewidth=2)
+    # plot inverse variance
+p.axhline(ps_mult,color='r',linestyle='-',linewidth=2)
+    # plot analytic
+p.axhline(sense,color='g',linestyle='-',linewidth=2)
+p.xlabel(xlabel,fontsize=12)
+p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=16)
+p.ylim(1e5,1e10)
+p.legend(prop={'size':12}, loc=2, numpoints=1)
+p.tick_params(axis='both', which='major', labelsize=12)
+p.yscale('log')
+p.grid()
+p.title('k = ' +str(round(k,3)))
+   
+p.subplot(212)
     # plot before/after for added identity
-ax2 = p.twiny(ax1)
-ax2.plot(n.arange(startmode_add,nmodes_add,deltamode_add), n.array(PS_i_add) + n.array(PS_i_up_add), color='0.5', linewidth=3, linestyle='-.', label='Pre-signal loss estimation (top axis)')
-ax2.plot(n.arange(startmode_add,nmodes_add,deltamode_add), n.array(PS_f_add) + n.array(PS_f_up_add), color='k', linewidth=3, linestyle='-.', label='Post-signal loss estimation (top axis)')
+p.plot(n.arange(startmode_add,nmodes_add,deltamode_add), n.array(PS_i_add) + n.array(PS_i_up_add), color='0.5', linewidth=2, linestyle='-.', label='Pre-signal loss estimation')
+p.plot(n.arange(startmode_add,nmodes_add,deltamode_add), n.array(PS_f_add) + n.array(PS_f_up_add), color='k', linewidth=2, linestyle='-.', label='Post-signal loss estimation')
 p.xlim(n.arange(startmode_add,nmodes_add,deltamode_add)[0], n.arange(startmode_add,nmodes_add,deltamode_add)[-1])
 p.gca().invert_xaxis()
     # plot unweighted
-p.axhline(file_f['pIv'][k_ind]+2*file_f['pIv_err'][k_ind],color='b',linestyle='--',linewidth=3,label='Unweighted')
+p.axhline(file_f['pIv'][k_ind]+2*file_f['pIv_err'][k_ind],color='b',linestyle='--',linewidth=2,label='Unweighted')
     # plot inverse variance
-p.axhline(ps_mult,color='r',linestyle='-',linewidth=3,label='$\hat{C} = \hat{C} \circ I$')
+p.axhline(ps_mult,color='r',linestyle='-',linewidth=2,label='$\hat{C} = \hat{C} \circ I$')
     # plot best added identity
 #p.axhline(ps_add,color='c',linestyle='-',linewidth=3,label='$\hat{C} = \hat{C} + 2000I$')
     # plot analytic
-p.axhline(sense,color='g',linestyle='-',linewidth=3,label='Analytical $2\sigma$ Error')
+p.axhline(sense,color='g',linestyle='-',linewidth=2,label='Analytical $2\sigma$ Error')
     # plot theory
 #p.plot(n.arange(fixmode,nmodes,1), err_theory_firstterm, 'b--', label='Theory from Switzer et al., only frequency modes')
 #p.plot(n.arange(fixmode,nmodes,1), err_theory_fit, 'b-', label='Theory from Switzer et al., both frequency and time modes')
-p.xlabel(xlabel_add,fontsize=14)
-p.legend(prop={'size':14}, loc=2, numpoints=1)
-#p.title('k = ' +str(round(k,3))+' & N$_{samples}$ = '+str(N_ind))
-p.tick_params(axis='both', which='major', labelsize=14)
+p.xlabel(xlabel_add,fontsize=12)
+p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=16)
+p.legend(prop={'size':12}, loc=2, numpoints=1, ncol=2)
+p.tick_params(axis='both', which='major', labelsize=12)
 p.yscale('log')
-#p.ylim(1e4,1e10)
+p.ylim(1e5,1e10)
 p.grid()
+p.subplots_adjust(hspace=0.3)
+#p.tight_layout()
 p.show()
 
