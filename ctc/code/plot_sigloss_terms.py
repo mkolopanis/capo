@@ -119,7 +119,7 @@ p.plot(Pins,blue,'b-',linewidth=3,label='$\propto xC_{r}^{-1}QC_{r}^{-1}x$')
 p.plot(Pins_red_neg,red_neg,'r-',linewidth=3,label='$\propto xC_{r}^{-1}QC_{r}^{-1}e$')
 p.plot(Pins_red_pos[pos_1],red_pos_1,'r-',linewidth=3)
 p.plot(Pins_red_pos[pos_2],red_pos_2,'r-',linewidth=3)
-p.plot(Pins,mag,'m-',linewidth=3,label='$\propto eC_{r}^{-1}QC_{r}^{-1}e$')
+p.plot(Pins,mag,'g-',linewidth=3,label='$\propto eC_{r}^{-1}QC_{r}^{-1}e$')
 p.axhline(pCv,color='0.5',linestyle='-',linewidth=3,label='$\propto xC_{x}^{-1}QC_{x}^{-1}x$')
 #p.plot(Pins, blue + 2*red + magenta - pCv, 'k--')
 #p.plot(Pins,yellow,'y-',linewidth=3,label='$\propto rC_{r}^{-1}QC_{r}^{-1}r$')
@@ -132,8 +132,8 @@ p.xlabel('$P_{in}$ $[mK^{2}(h^{-1} Mpc)^{3}]$', fontsize=14)
 p.ylabel('$P_{out} $ $[mK^{2}(h^{-1} Mpc)^{3}]$', fontsize=14)
 p.xscale('log');p.yscale('symlog',linthreshy=1e2)
 p.xlim(low,high);p.ylim(-high,high)
-p.plot([low,high], [low,high], 'k-')  # diagonal line
-p.plot([low,high], [-low,-high], 'k-')  # diagonal line
+p.plot([low,high], [low,high], 'k:')  # diagonal line
+p.plot([low,high], [-low,-high], 'k:')  # diagonal line
 p.tick_params(axis='both', which='major', labelsize=14)
 ttl = p.title("Inverse Covariance Weighting, k = " + str(n.round(k,3)) + " h Mpc$^{-1}$", fontsize=14)
 ttl.set_position([.5, 1.03])
@@ -144,14 +144,14 @@ p.subplot(122)
 p.plot(Pins,black_I,'k-',label='$P_{out}$',linewidth=3)
 p.plot(Pins_red_pos_I,red_I_pos,'r-',linewidth=3,label='$\propto xIQIe$')
 p.plot(Pins_red_neg_I,red_I_neg,'r-',linewidth=3)
-p.plot(Pins,Pins,'m-',linewidth=3,label='$\propto eIQIe$')
+p.plot(Pins,Pins,'g-',linewidth=3,label='$\propto eIQIe$')
 p.axhline(pIv,color='0.5',linestyle='-',linewidth=3,label='$\propto xIQIx$')
 p.xlabel('$P_{in}$ $[mK^{2}(h^{-1} Mpc)^{3}]$', fontsize=14)
 p.ylabel('$P_{out} $ $[mK^{2}(h^{-1} Mpc)^{3}]$', fontsize=14)
 p.xscale('log');p.yscale('symlog',linthreshy=1e2)
 p.xlim(low,high);p.ylim(-high,high)
-p.plot([low,high], [low,high], 'k-')  # diagonal line
-p.plot([low,high], [-low,-high], 'k-')  # diagonal line
+p.plot([low,high], [low,high], 'k:')  # diagonal line
+p.plot([low,high], [-low,-high], 'k:')  # diagonal line
 p.tick_params(axis='both', which='major', labelsize=14)
 p.legend(prop={'size':14},loc=3,numpoints=1,ncol=2)
 p.grid()
