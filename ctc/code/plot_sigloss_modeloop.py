@@ -7,7 +7,7 @@ from scipy.optimize import curve_fit
 # Reads in power spectrum results from projecting out 0,1,2... modes
 # Plots power spectrum results before and after signal loss correction as a function of modes removed
 
-if False: # eigenmodes set to 1
+if True: # eigenmodes set to 1
     path = '/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_RANGEOFPROJECTEDMODES'
     startmode=0
     nmodes=21
@@ -27,7 +27,7 @@ if False: # eigenmodes set to 0
     f2 = '_modes'
     flipx = False
 
-if True: # added identity
+if False: # added identity
     path = '/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity_trace'
     startmode=0 
     nmodes=0.2 #20000 
@@ -103,12 +103,12 @@ p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_i) + n.array(PS_i_up), c
 p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_f) + n.array(PS_f_up), 'k-', linewidth=3, label='Post-signal loss estimation')
 p.axhline(file_f['pIv'][k_ind]+2*file_f['pIv_err'][k_ind],color='b',linestyle='--',linewidth=3,label='Unweighted')
 p.axhline(ps_mult,color='r',linestyle='-',linewidth=3,label='$\hat{C} = \hat{C} \circ I$')
-#p.axhline(ps_add,color='c',linestyle='-',linewidth=3,label='$\hat{C} = \hat{C} + 2000I$')
+p.axhline(ps_add,color='c',linestyle='-',linewidth=3,label='$\hat{C} = \hat{C} + 2000I$')
 p.axhline(sense,color='g',linestyle='-',linewidth=3,label='Analytical $2\sigma$ Error')
 #p.plot(n.arange(fixmode,nmodes,1), err_theory_firstterm, 'b--', label='Theory from Switzer et al., only frequency modes')
 #p.plot(n.arange(fixmode,nmodes,1), err_theory_fit, 'b-', label='Theory from Switzer et al., both frequency and time modes')
 p.xlabel(xlabel,fontsize=14)
-p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=14)
+p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=18)
 p.legend(prop={'size':14}, loc='best')
 #p.title('k = ' +str(round(k,3))+' & N$_{samples}$ = '+str(N_ind))
 p.title('k = ' +str(round(k,3)),fontsize=14)
