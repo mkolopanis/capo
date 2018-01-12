@@ -87,13 +87,13 @@ class DataSet(oqe.DataSet):
     def iC(self, k, t=None, rcond=1e-12):
         """Regularize covariance before inverting."""
         assert(t is None)
-        if k not in self._iC.keys(k):
+        if not self._iC.has_key(k):
             C = self.C(k)
             # CHANGE C HERE ###
             # OPTION 1: identity multiplication
-            C = C * n.identity(len(C))
+            #C = C * n.identity(len(C))
             # OPTION 2: identity addition
-            # C = C + n.identity(len(C))*n.trace(C)*float(opts.mode_num)
+            C = C + n.identity(len(C))*n.trace(C)*float(opts.mode_num)
             # C = C + n.identity(len(C))*int(opts.mode_num)
             # OPTION 3: multiplication by identity + 2 diagonals
 
