@@ -10,12 +10,11 @@ from scipy.optimize import curve_fit
 if True: # eigenmodes set to 1
     path = '/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_RANGEOFPROJECTEDMODES'
     startmode=0
-    nmodes=21
+    nmodes=22
     deltamode=1
     xlabel='Number of modes down-weighted using inverse covariance weighting'
     f1 = '/project_'
     f2 = '_modes'
-    flipx = False
 
 if False: # eigenmodes set to 0
     path = '/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_RANGEOFPROJECTEDMODES_v2'
@@ -25,17 +24,15 @@ if False: # eigenmodes set to 0
     xlabel='Number of modes down-weighted'
     f1 = '/project_'
     f2 = '_modes'
-    flipx = False
 
-if False: # added identity
-    path = '/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity_trace'
-    startmode=0 
-    nmodes=0.2 #20000 
-    deltamode=0.01 #1000
-    xlabel='Strength of identity added (percentage of Tr(C) added to C)'
-    f1 = '/add_'
-    f2 = '_identity'
-    flipx = True
+if True: # added identity
+    path_add = '/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity_trace'
+    startmode_add=0 
+    nmodes_add=0.2 #20000 
+    deltamode_add=0.01 #1000
+    xlabel_add='Strength of identity added: $\widehat{C} + xTr(\widehat{C}$)'
+    f1_add = '/add_'
+    f2_add = '_identity'
 
 # Read files
 sense=4436767.36822*2 # XXX from plotting one of the "project_#_modes" directories
@@ -59,6 +56,27 @@ for mode_num in n.arange(startmode,nmodes,deltamode):
     PS_f.append(n.abs(file_f['pCv'])[k_ind])
     #if mode_num == 0:
     #    PS_f_up[0] = PS_i_up[0]
+
+#""" # Read in added identity case as a second curve being plotted
+PS_i_up_add = []
+PS_f_up_add = []
+PS_i_add = []
+PS_f_add = []
+for mode_num in n.arange(startmode_add,nmodes_add,deltamode_add):
+    filename = path_add + f1_add + str(mode_num) + f2_add
+    print 'Reading', filename
+    print mode_num
+    #file_i = n.load(filename + '/inject_sep0,1_0.001/pspec_pk_k3pk.npz')
+    file_i = n.load(filename + '/pspec_final_sep0,1_nosigloss.npz')
+    file_f = n.load(filename + '/pspec_final_sep0,1.npz')
+    kpl = file_i['kpl']
+    k_ind = -3 # XXX hard-coded k index for k = 0.344
+    k = kpl[k_ind] 
+    PS_i_up_add.append(2*file_i['pCv_err'][k_ind]) # 2-sigma err
+    PS_f_up_add.append(2*file_f['pCv_err'][k_ind]) # 2-sigma err
+    PS_i_add.append(n.abs(file_i['pCv'])[k_ind])
+    PS_f_add.append(n.abs(file_f['pCv'])[k_ind])
+#"""
 
 """
 # Theory from Switzer et al. - first term only
@@ -96,27 +114,42 @@ f = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity/add_2000_i
 ps_add = n.abs(f['pCv'][k_ind]) + 2*f['pCv_err'][k_ind]
 
 # Plot
-p.figure(figsize=(12,8))
-#p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_f), 'r.')
-#p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_i), 'm.')
-p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_i) + n.array(PS_i_up), color='0.5', linewidth=3, label='Pre-signal loss estimation')
-p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_f) + n.array(PS_f_up), 'k-', linewidth=3, label='Post-signal loss estimation')
+fig, ax1 = p.subplots(figsize=(12,8))
+    # plot before/after for # eigenmodes down-weighted
+ax1.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_i) + n.array(PS_i_up), color='0.5', linewidth=3, label='Pre-signal loss estimation (bottom axis)')
+ax1.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_f) + n.array(PS_f_up), 'k-', linewidth=3, label='Post-signal loss estimation (bottom axis)')
+p.xlabel(xlabel,fontsize=14)
+p.tick_params(axis='both', which='major', labelsize=14)
+p.legend(prop={'size':14}, loc=3, numpoints=1)
+p.xlim(n.arange(startmode,nmodes,deltamode)[0], n.arange(startmode,nmodes,deltamode)[-1])
+
+#p.title('k = ' +str(round(k,3)),fontsize=14)
+#ttl = ax1.title
+#ttl.set_position([.5, 1])
+p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=18)
+    # plot before/after for added identity
+ax2 = p.twiny(ax1)
+ax2.plot(n.arange(startmode_add,nmodes_add,deltamode_add), n.array(PS_i_add) + n.array(PS_i_up_add), color='0.5', linewidth=3, linestyle='-.', label='Pre-signal loss estimation (top axis)')
+ax2.plot(n.arange(startmode_add,nmodes_add,deltamode_add), n.array(PS_f_add) + n.array(PS_f_up_add), color='k', linewidth=3, linestyle='-.', label='Post-signal loss estimation (top axis)')
+p.xlim(n.arange(startmode_add,nmodes_add,deltamode_add)[0], n.arange(startmode_add,nmodes_add,deltamode_add)[-1])
+p.gca().invert_xaxis()
+    # plot unweighted
 p.axhline(file_f['pIv'][k_ind]+2*file_f['pIv_err'][k_ind],color='b',linestyle='--',linewidth=3,label='Unweighted')
+    # plot inverse variance
 p.axhline(ps_mult,color='r',linestyle='-',linewidth=3,label='$\hat{C} = \hat{C} \circ I$')
-p.axhline(ps_add,color='c',linestyle='-',linewidth=3,label='$\hat{C} = \hat{C} + 2000I$')
+    # plot best added identity
+#p.axhline(ps_add,color='c',linestyle='-',linewidth=3,label='$\hat{C} = \hat{C} + 2000I$')
+    # plot analytic
 p.axhline(sense,color='g',linestyle='-',linewidth=3,label='Analytical $2\sigma$ Error')
+    # plot theory
 #p.plot(n.arange(fixmode,nmodes,1), err_theory_firstterm, 'b--', label='Theory from Switzer et al., only frequency modes')
 #p.plot(n.arange(fixmode,nmodes,1), err_theory_fit, 'b-', label='Theory from Switzer et al., both frequency and time modes')
-p.xlabel(xlabel,fontsize=14)
-p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=18)
-p.legend(prop={'size':14}, loc='best')
+p.xlabel(xlabel_add,fontsize=14)
+p.legend(prop={'size':14}, loc=2, numpoints=1)
 #p.title('k = ' +str(round(k,3))+' & N$_{samples}$ = '+str(N_ind))
-p.title('k = ' +str(round(k,3)),fontsize=14)
 p.tick_params(axis='both', which='major', labelsize=14)
 p.yscale('log')
 #p.ylim(1e4,1e10)
-if flipx == True: 
-    p.gca().invert_xaxis()
 p.grid()
 p.show()
 
