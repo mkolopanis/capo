@@ -3,7 +3,7 @@
     -Reads in pspec_2d_to_1d.npz (contains PS points for all bootstraps)
     -Finds distribution of Pin vs. Pout curve (using absolute values of points and 2D kernel density estimator) = M
     -Finds distribution of PS points = p (using 1D KDE)
-    -Multilpies p element-wise for every column of M (for every Pin)
+    -Multiplies p element-wise for every column of M (for every Pin)
     -Sums up each row of M, yielding one final distribution along Pin
     -Computes power spectrum points and errors from the distribution
 """
@@ -68,6 +68,9 @@ for count in range(2):
             linecolor='0.5'
             Pout_fold = file_2d['pCr-pCv_fold'] # shape (#boots, #kpl)
             Pout_I_fold = file_2d['pIr-pIv_fold']  # pI case
+            # for non-subtracted version:
+            #Pout_fold = file_2d['pCr_fold'] # shape (#boots, #kpl)
+            #Pout_I_fold = file_2d['pIr_fold']  # pI case 
             pCe_Cr_fold = file_2d['pCe_Cr_fold']
             pCv_Cr_fold = file_2d['pCv_Cr_fold']
             pCve_fold = file_2d['pCve_fold']
@@ -239,7 +242,7 @@ for count in range(2):
         x = n.fft.fftshift(n.arange(-bins.size/2,bins.size/2))
         g = n.exp(-x**2/(2*sigma**2))
         g /= n.sum(g)
-        g = n.fft.ifft(n.fft.fft(g)*n.exp(-2j*n.pi*x*offset))
+        g = n.fft.ifft(n.fft.fft(g)*n.exp(-2j*n.pi*x*offset)) # XXX offset doesn't seem to work
         return g
 
     # Function to fit for a sigma and offset (convolves "I" curve with a gaussian of some sigma to "fatten" it up, and shifts it to best match "C" curve)
@@ -285,7 +288,8 @@ for count in range(2):
             for col in range(M_matrix_C[k].shape[1]): # doing this for every column of P_in seems overkill and makes the code slow
                 curveC = M_matrix_C[k][:,col]
                 curveI = M_matrix_I[k][:,col]
-                result = scipy.optimize.least_squares(find_sigma,(0,0),bounds=([0,-n.inf],[n.inf,n.inf]),args=(curveC,curveI)) # minimize find_sigma function
+                result = scipy.optimize.least_squares(find_sigma,(0,0),bounds=([0,-n.inf],[n.inf,n.inf]),args=(curveC,curveI)) # minimize find_sigma function XXX doesn't seem to work, gets stuck in minimum
+                
                 convolve_curve[k][:,col] = n.fft.fftshift(make_gaussian(result.x[0],0))
             # Plot 2D distribution (KDE)
             if False and kk == 0: # just one k-value
