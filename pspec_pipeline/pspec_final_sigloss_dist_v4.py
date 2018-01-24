@@ -72,8 +72,12 @@ for count in range(2):
             Pout_I_fold = file_2d['pIr-pIv_fold']  # pI case
             pCe_Cr_fold = file_2d['pCe_Cr_fold']
             pCv_Cr_fold = file_2d['pCv_Cr_fold']
-            pCve_fold = file_2d['pCve_fold']
-            pIve_fold = file_2d['pIve_fold']
+            try: 
+                pCve_fold = file_2d['pCve_fold']
+                pIve_fold = file_2d['pIve_fold']
+            except: 
+                pCve_fold = n.zeros_like(pCv_Cr_fold)
+                pIve_fold = n.zeros_like(pCv_Cr_fold)
             pCr_fold = file_2d['pCr_fold']
             pC = file_2d['pCv']
             pC_fold = file_2d['pCv_fold']
