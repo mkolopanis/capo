@@ -195,21 +195,19 @@ for count in range(2):
         binsy_full = n.concatenate((-binsy[::-1],binsy)) # for pos and neg
         return binsx, binsy, binsy_full, bins_concat # bins is n.log10, bins_concat is not
    
-    # Fit polynomial to signal loss curve and translate it into a P_in vs. P_out matrix where there's one P_out value for every P_in
+    # Interpolate signal loss curve to translate it into a P_in vs. P_out matrix where there's one P_out value for every P_in
     def curve_to_matrix(x,y):
         m = n.zeros((len(binsx),len(binsy))) # matrix that will be populated
         xs = n.log10(n.abs(x)) # absolute value since symmetric
         ys = n.log10(n.abs(y))
-        xs = n.append(n.repeat(0,100000),xs) # force fit to go through zero
-        ys = n.append(n.repeat(0,100000),ys)
+        xs = n.append(0,xs) # force fit to go through zero
+        ys = n.append(0,ys)
         order = n.argsort(xs) # re-order after padding
         xs = xs[order]
         ys = ys[order]
-        # find polyfit
-        coeff = n.polyfit(xs,ys,8) # coefficients from highest to lowest order
         for bb,b in enumerate(binsx): # walk through P_in
-            if b <= n.max(xs):
-                y_bin = n.interp(b,xs,n.polyval(coeff,xs)) # get P_out bin for given P_in bin
+            if b <= n.max(xs): # only fill out curve if there's data points there
+                y_bin = n.interp(b,xs,ys)
                 y_ind = n.argmin(n.abs(binsy-y_bin)) # get P_out index
                 m[y_ind][bb] = 1.0 # fill with 1
             else: m[y_ind][bb] = 0.0
