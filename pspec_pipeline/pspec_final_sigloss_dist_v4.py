@@ -27,6 +27,8 @@ o.add_option('--skip_sigloss',action='store_true',
             help='Save values without correcting for signal loss.')
 o.add_option('--sep',default='0,2',
             help='Separation to run script for.')
+o.add_option('--nosubtract',action='store_true',
+            help='Run for no-subtraction case (P_out = pCr).')
 opts,args = o.parse_args(sys.argv[1:])
 
 # read one pspec_pk_k3pk.npz file for k points
@@ -70,6 +72,9 @@ for count in range(2):
             linecolor='0.5'
             Pout_fold = file_2d['pCr-pCv_fold'] # shape (#boots, #kpl)
             Pout_I_fold = file_2d['pIr-pIv_fold']  # pI case
+            if opts.nosubtract:
+                Pout_fold = file_2d['pCr_fold']
+                Pout_I_fold = file_2d['pIr_fold']
             pCe_Cr_fold = file_2d['pCe_Cr_fold']
             pCv_Cr_fold = file_2d['pCv_Cr_fold']
             try: 
@@ -251,8 +256,10 @@ for count in range(2):
 
             if kk == 8 and count == 0: # save values out
                 # Save values to use for plotting sigloss terms
-                print "Saving pspec_sigloss_terms.npz, which contains data values for k =",k
-                n.savez('pspec_sigloss_terms.npz', k=k, pCv=file['pCv'][n.where(kpl==k)[0][0]], pIv=file['pIv'][n.where(kpl==k)[0][0]], Pins=Pins_fold[k], Pouts=Pouts_fold[k], Pouts_I=Pouts_I_fold[k], pCrs_fold=pCrs_fold[k], pCvs_Cr_fold=pCvs_Cr_fold[k], pCes_Cr_fold=pCes_Cr_fold[k], pCves_fold=pCves_fold[k], pIves_fold=pIves_fold[k])
+                if opts.nosubtract: fn = 'pspec_sigloss_terms_nosubtract.npz'
+                else: fn = 'pspec_sigloss_terms.npz'
+                print "Saving",fn,"which contains data values for k =",k
+                n.savez(fn, k=k, pCv=file['pCv'][n.where(kpl==k)[0][0]], pIv=file['pIv'][n.where(kpl==k)[0][0]], Pins=Pins_fold[k], Pouts=Pouts_fold[k], Pouts_I=Pouts_I_fold[k], pCrs_fold=pCrs_fold[k], pCvs_Cr_fold=pCvs_Cr_fold[k], pCes_Cr_fold=pCes_Cr_fold[k], pCves_fold=pCves_fold[k], pIves_fold=pIves_fold[k])
 
             xs = n.array(Pins_fold[k]).flatten()
             ys_C = n.array(Pouts_fold[k]).flatten()
@@ -262,11 +269,19 @@ for count in range(2):
             ygrid,xgrid = n.meshgrid(binsx,binsy) # create grid on which to sample
             positions = n.vstack([xgrid.ravel(),ygrid.ravel()])
             kernel_C_pos = scipy.stats.gaussian_kde((n.log10(xs_C_pos),n.log10(ys_C_pos)),bw_method='scott')
-            kernel_C_neg = scipy.stats.gaussian_kde((n.log10(xs_C_neg),n.log10(ys_C_neg)),bw_method=kernel_C_pos.factor)
             kernel_I_pos = scipy.stats.gaussian_kde((n.log10(xs_I_pos),n.log10(ys_I_pos)),bw_method=kernel_C_pos.factor)
-            kernel_I_neg = scipy.stats.gaussian_kde((n.log10(xs_I_neg),n.log10(ys_I_neg)),bw_method=kernel_C_pos.factor)
-            kde_C[k] = n.concatenate((n.reshape(kernel_C_neg(positions).T,(binsx.size,binsy.size)).T[::-1],n.reshape(kernel_C_pos(positions).T,(binsx.size,binsy.size)).T))
-            kde_I[k] = n.concatenate((n.reshape(kernel_I_neg(positions).T,(binsx.size,binsy.size)).T[::-1],n.reshape(kernel_I_pos(positions).T,(binsx.size,binsy.size)).T))
+            try: 
+                kernel_C_neg = scipy.stats.gaussian_kde((n.log10(xs_C_neg),n.log10(ys_C_neg)),bw_method=kernel_C_pos.factor)
+                neg_kern = n.reshape(kernel_C_neg(positions).T,(binsx.size,binsy.size)).T[::-1]
+            except: # no negative values at all
+                neg_kern = n.zeros((binsx.size,binsy.size))
+            try: 
+                kernel_I_neg = scipy.stats.gaussian_kde((n.log10(xs_I_neg),n.log10(ys_I_neg)),bw_method=kernel_C_pos.factor)
+                neg_kern_I = n.reshape(kernel_I_neg(positions).T,(binsx.size,binsy.size)).T[::-1]
+            except: # no negative values at all
+                neg_kern_I = n.zeros((binsx.size,binsy.size))
+            kde_C[k] = n.concatenate((neg_kern,n.reshape(kernel_C_pos(positions).T,(binsx.size,binsy.size)).T))
+            kde_I[k] = n.concatenate((neg_kern_I,n.reshape(kernel_I_pos(positions).T,(binsx.size,binsy.size)).T))
             # ensure columns sum to 1
             for col in range(kde_C[k].shape[1]):
                 if n.sum(kde_C[k][:,col]) > 0: # avoid nan values
@@ -286,16 +301,17 @@ for count in range(2):
                 pos_MC = kde_C[k][binsy.size:]
                 neg_MI = kde_I[k][:binsy.size]
                 pos_MI = kde_I[k][binsy.size:]
-                # take a column cut and normalize correctly
+                # take a column cut and normalize correctly, fit gaussian
                 curveC_i_pos = pos_MC[:,col] / n.sum(pos_MC[:,col]*bin_size(binsy))
-                curveC_i_neg = neg_MC[:,col] / n.sum(neg_MC[:,col]*bin_size(binsy))
-                curveI_i_pos = pos_MI[:,col] / n.sum(pos_MI[:,col]*bin_size(binsy))
-                curveI_i_neg = neg_MI[:,col] / n.sum(neg_MI[:,col]*bin_size(binsy))
-                # fit gaussian to each column
                 popt_C_pos,_ = scipy.optimize.curve_fit(gauss,binsy,curveC_i_pos,p0=[10,1]) # popt contains (mu,sigma)  
-                popt_C_neg,_ = scipy.optimize.curve_fit(gauss,binsy,curveC_i_neg,p0=[10,1]) 
+                curveI_i_pos = pos_MI[:,col] / n.sum(pos_MI[:,col]*bin_size(binsy))
                 popt_I_pos,_ = scipy.optimize.curve_fit(gauss,binsy,curveI_i_pos,p0=[10,1])
-                popt_I_neg,_ = scipy.optimize.curve_fit(gauss,binsy,curveI_i_neg,p0=[10,1])
+                if n.all(neg_MC == 0) == False: 
+                    curveC_i_neg = neg_MC[:,col] / n.sum(neg_MC[:,col]*bin_size(binsy))
+                    popt_C_neg,_ = scipy.optimize.curve_fit(gauss,binsy,curveC_i_neg,p0=[10,1]) 
+                if n.all(neg_MI == 0) == False:
+                    curveI_i_neg = neg_MI[:,col] / n.sum(neg_MI[:,col]*bin_size(binsy))
+                    popt_I_neg,_ = scipy.optimize.curve_fit(gauss,binsy,curveI_i_neg,p0=[10,1])
                 # Positive half
                 if n.abs(popt_C_pos[1]) > n.abs(popt_I_pos[1]): # if width of C is fatter than I
                     curveC = gauss(binsy,popt_C_pos[0],popt_C_pos[1])
@@ -307,15 +323,17 @@ for count in range(2):
                     convolve_pos[k][:,col] = n.zeros_like(curveC_i_pos)
                     convolve_pos[k][:,col][curveC_i_pos.size/2] = 1.0
                 # Negative half
-                if n.abs(popt_C_neg[1]) > n.abs(popt_I_neg[1]): 
-                    curveC = gauss(binsy,popt_C_neg[0],popt_C_neg[1])
-                    curveI = gauss(binsy,popt_I_neg[0],popt_I_neg[1])
-                    offset = n.argmax(curveC) - n.argmax(curveI) 
-                    sigma_diff = n.sqrt(popt_C_neg[1]**2-popt_I_neg[1]**2) 
-                    convolve_neg[k][:,col] = n.exp(-(n.fft.fftshift(n.arange(binsy.size)))**2/(2*sigma_diff**2)) 
-                else:
-                    convolve_neg[k][:,col] = n.zeros_like(curveC_i_neg)
-                    convolve_neg[k][:,col][curveC_i_neg.size/2] = 1.0
+                if n.all(neg_MC == 0) == False and n.all(neg_MI == 0) == False:
+                    if n.abs(popt_C_neg[1]) > n.abs(popt_I_neg[1]): 
+                        curveC = gauss(binsy,popt_C_neg[0],popt_C_neg[1])
+                        curveI = gauss(binsy,popt_I_neg[0],popt_I_neg[1])
+                        offset = n.argmax(curveC) - n.argmax(curveI) 
+                        sigma_diff = n.sqrt(popt_C_neg[1]**2-popt_I_neg[1]**2) 
+                        convolve_neg[k][:,col] = n.exp(-(n.fft.fftshift(n.arange(binsy.size)))**2/(2*sigma_diff**2)) 
+                    else:
+                        convolve_neg[k][:,col] = n.zeros_like(curveC_i_neg)
+                        convolve_neg[k][:,col][curveC_i_neg.size/2] = 1.0
+                else: convolve_neg[k] = n.zeros((binsx.size,binsy.size))
         return convolve_pos, convolve_neg
 
     # Average all bootstrapped points together to get one smooth signal loss curve
@@ -423,8 +441,10 @@ for count in range(2):
     if count == 0:
         ind = -3 # one k-value
         k = kpl[ind]
-        print "Saving pspec_sigloss.npz, which contains data values for k=",k
-        n.savez('pspec_sigloss.npz', k=k, binsx=binsx, binsy=binsy, bins_concat=bins_concat, pC=pC[ind], pC_err=pC_err[ind], pI=pI[ind], pI_err=pI_err[ind], new_pCs=new_pCs[k], new_pIs=new_pIs[k], old_pCs=old_pCs[k], old_pIs=old_pIs[k], Pins=Pins_fold[k], Pouts=Pouts_fold[k], Pouts_I=Pouts_I_fold[k])    
+        if opts.nosubtract: fn = 'pspec_sigloss_nosubtract.npz'
+        else: fn = 'pspec_sigloss.npz'
+        print "Saving",fn,"which contains data values for k =",k
+        n.savez(fn, k=k, binsx=binsx, binsy=binsy, bins_concat=bins_concat, pC=pC[ind], pC_err=pC_err[ind], pI=pI[ind], pI_err=pI_err[ind], new_pCs=new_pCs[k], new_pIs=new_pIs[k], old_pCs=old_pCs[k], old_pIs=old_pIs[k], Pins=Pins_fold[k], Pouts=Pouts_fold[k], Pouts_I=Pouts_I_fold[k])    
        
     if count == 0: # data case
         pCv = file['pCv'] #pC    
