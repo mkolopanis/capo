@@ -54,11 +54,23 @@ red_I_neg = -10**n.polyval(poly_cross_I_neg,n.log10(Pins_red_neg_I))
 poly_eor_Cr = n.polyfit(n.log10(n.abs(Pins)),n.log10(n.abs(pCes_Cr)),poly_dim)
 mag = 10**n.polyval(poly_eor_Cr,n.log10(Pins))
 
-poly_Pouts = n.polyfit(n.log10(n.abs(Pins)),n.log10(n.abs(Pouts)),poly_dim)
-black = 10**n.polyval(poly_Pouts,n.log10(Pins))
+black_ind_pos = n.where(Pouts>=0)[0] # where positive Pouts
+black_ind_neg = n.where(Pouts<0)[0] # where negative Pouts
+Pins_black_pos = Pins[black_ind_pos] # adjust Pins
+Pins_black_neg = Pins[black_ind_neg]
+poly_Pouts_pos = n.polyfit(n.log10(Pins_black_pos),n.log10(Pouts[black_ind_pos]),poly_dim)
+poly_Pouts_neg = n.polyfit(n.log10(Pins_black_neg),n.log10(-Pouts[black_ind_neg]),poly_dim)
+black_neg = -10**n.polyval(poly_Pouts_neg,n.log10(Pins_black_neg))
+black_pos = 10**n.polyval(poly_Pouts_pos,n.log10(Pins_black_pos))
 
-poly_Pouts_I = n.polyfit(n.log10(n.abs(Pins)),n.log10(n.abs(Pouts_I)),poly_dim)
-black_I = 10**n.polyval(poly_Pouts_I,n.log10(Pins))
+black_ind_pos_I = n.where(Pouts_I>=0)[0] # where positive Pouts_I
+black_ind_neg_I = n.where(Pouts_I<0)[0] # where negative Pouts_I
+Pins_black_pos_I = Pins[black_ind_pos_I] # adjust Pins
+Pins_black_neg_I = Pins[black_ind_neg_I]
+poly_Pouts_pos_I = n.polyfit(n.log10(Pins_black_pos_I),n.log10(Pouts_I[black_ind_pos_I]),poly_dim)
+poly_Pouts_neg_I = n.polyfit(n.log10(Pins_black_neg_I),n.log10(-Pouts_I[black_ind_neg_I]),poly_dim)
+black_neg_I = -10**n.polyval(poly_Pouts_neg_I,n.log10(Pins_black_neg_I))
+black_pos_I = 10**n.polyval(poly_Pouts_pos_I,n.log10(Pins_black_pos_I))
 
 poly_pCr = n.polyfit(n.log10(n.abs(Pins)),n.log10(n.abs(pCrs)),poly_dim)
 yellow = 10**n.polyval(poly_pCr,n.log10(Pins))
@@ -113,7 +125,8 @@ low=1e2;high=1e16
 
 p.subplot(121)
 
-p.plot(Pins,black,'k-',label='$P_{out}$',linewidth=3)
+p.plot(Pins_black_pos,black_pos,'k-',label='$P_{out}$',linewidth=3)
+p.plot(Pins_black_neg,black_neg,'k-',linewidth=3)
 p.plot(Pins,blue,'b-',linewidth=3,label='$\propto xC_{r}^{-1}QC_{r}^{-1}x$')
 #p.plot(Pins_red_pos,red_pos,'r-',linewidth=3,label='$\propto xC_{r}^{-1}QC_{r}^{-1}e$')
 p.plot(Pins_red_neg,red_neg,'r-',linewidth=3,label='$\propto xC_{r}^{-1}QC_{r}^{-1}e$')
@@ -141,7 +154,8 @@ p.legend(prop={'size':14},loc=3,numpoints=1,ncol=2)
 p.grid()
 
 p.subplot(122)
-p.plot(Pins,black_I,'k-',label='$P_{out}$',linewidth=3)
+p.plot(Pins_black_pos_I,black_pos_I,'k-',label='$P_{out}$',linewidth=3)
+p.plot(Pins_black_neg_I,black_neg_I,'k-',linewidth=3)
 p.plot(Pins_red_pos_I,red_I_pos,'r-',linewidth=3,label='$\propto xIQIe$')
 p.plot(Pins_red_neg_I,red_I_neg,'r-',linewidth=3)
 p.plot(Pins,Pins,'g-',linewidth=3,label='$\propto eIQIe$')
