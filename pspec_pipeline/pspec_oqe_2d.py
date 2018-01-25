@@ -55,6 +55,7 @@ o.add_option('--mode_num', default=None,
                    ' strength in pspec_batch_modeloop.py'))
 opts, args = o.parse_args(sys.argv[1:])
 
+
 # Basic parameters
 random.seed(0)  # for oqe.py (eor generator)
 n.random.seed(0)  # for noise generator
@@ -93,7 +94,12 @@ class DataSet(oqe.DataSet):
             # OPTION 1: identity multiplication
             #C = C * n.identity(len(C))
             # OPTION 2: identity addition
-            C = C + n.identity(len(C))*n.trace(C)*float(opts.mode_num)
+            try:
+                C = C + n.identity(len(C))*n.trace(C)*float(opts.mode_num)
+            except(ValueError):
+                print "Tried to use this mode_num: ", opts.mode_num
+                print "using instead 0 regularization"
+                C = C
             # C = C + n.identity(len(C))*int(opts.mode_num)
             # OPTION 3: multiplication by identity + 2 diagonals
 
