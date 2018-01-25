@@ -204,19 +204,23 @@ for count in range(2):
         binsy_full = n.concatenate((-binsy[::-1],binsy)) # for pos and neg
         return binsx, binsy, binsy_full, bins_concat # bins is n.log10, bins_concat is not
    
-    # Interpolate signal loss curve to translate it into a P_in vs. P_out matrix where there's one P_out value for every P_in
+    # Fit polynomial to signal loss curve to translate it into a P_in vs. P_out matrix where there's one P_out value for every P_in
     def curve_to_matrix(x,y):
         m = n.zeros((len(binsx),len(binsy))) # matrix that will be populated
         xs = n.log10(n.abs(x)) # absolute value since symmetric
         ys = n.log10(n.abs(y))
-        xs = n.append(0,xs) # force fit to go through zero
-        ys = n.append(0,ys)
+        xs = n.append(n.repeat(0,100000),xs) # force fit to go through zero
+        ys = n.append(n.repeat(0,100000),ys) 
+        #xs = n.append(0,xs) # force fit to go through zero
+        #ys = n.append(0,ys)
         order = n.argsort(xs) # re-order after padding
         xs = xs[order]
         ys = ys[order]
+        coeff = n.polyfit(xs,ys,8) # coefficients from highest to lowest order
         for bb,b in enumerate(binsx): # walk through P_in
             if b <= n.max(xs): # only fill out curve if there's data points there
-                y_bin = n.interp(b,xs,ys)
+                #y_bin = n.interp(b,xs,ys)
+                y_bin = n.interp(b,xs,n.polyval(coeff,xs)) # get P_out bin for given P_in bin
                 y_ind = n.argmin(n.abs(binsy-y_bin)) # get P_out index
                 m[y_ind][bb] = 1.0 # fill with 1
             else: m[y_ind][bb] = 0.0
@@ -269,14 +273,16 @@ for count in range(2):
             ygrid,xgrid = n.meshgrid(binsx,binsy) # create grid on which to sample
             positions = n.vstack([xgrid.ravel(),ygrid.ravel()])
             kernel_C_pos = scipy.stats.gaussian_kde((n.log10(xs_C_pos),n.log10(ys_C_pos)),bw_method='scott')
-            kernel_I_pos = scipy.stats.gaussian_kde((n.log10(xs_I_pos),n.log10(ys_I_pos)),bw_method=kernel_C_pos.factor)
+            factor = kernel_C_pos.factor#+0.2
+            kernel_C_pos = scipy.stats.gaussian_kde((n.log10(xs_C_pos),n.log10(ys_C_pos)),bw_method=factor)
+            kernel_I_pos = scipy.stats.gaussian_kde((n.log10(xs_I_pos),n.log10(ys_I_pos)),bw_method=factor)
             try: 
-                kernel_C_neg = scipy.stats.gaussian_kde((n.log10(xs_C_neg),n.log10(ys_C_neg)),bw_method=kernel_C_pos.factor)
+                kernel_C_neg = scipy.stats.gaussian_kde((n.log10(xs_C_neg),n.log10(ys_C_neg)),bw_method=factor)
                 neg_kern = n.reshape(kernel_C_neg(positions).T,(binsx.size,binsy.size)).T[::-1]
             except: # no negative values at all
                 neg_kern = n.zeros((binsx.size,binsy.size))
             try: 
-                kernel_I_neg = scipy.stats.gaussian_kde((n.log10(xs_I_neg),n.log10(ys_I_neg)),bw_method=kernel_C_pos.factor)
+                kernel_I_neg = scipy.stats.gaussian_kde((n.log10(xs_I_neg),n.log10(ys_I_neg)),bw_method=factor)
                 neg_kern_I = n.reshape(kernel_I_neg(positions).T,(binsx.size,binsy.size)).T[::-1]
             except: # no negative values at all
                 neg_kern_I = n.zeros((binsx.size,binsy.size))
@@ -336,15 +342,15 @@ for count in range(2):
                 else: convolve_neg[k] = n.zeros((binsx.size,binsy.size))
         return convolve_pos, convolve_neg
 
-    # Average all bootstrapped points together to get one smooth signal loss curve
+    # Fit polynomial to get one smooth signal loss curve
     # Convolve it based on the extra width "C" has on "I"
     # Return final M matrix (transfer function)
     def transfer_func(identity=False):
         M_matrix = {}
         for kk,k in enumerate(kpl_fold): # only positive k's
-            xs = n.mean(n.array(Pins_fold[k]),axis=1)
-            if identity == True: ys = n.mean(n.array(Pouts_I_fold[k]),axis=1)
-            if identity == False: ys = n.mean(n.array(Pouts_fold[k]),axis=1)
+            xs = n.array(Pins_fold[k]).flatten() 
+            if identity == True: ys = n.array(Pouts_I_fold[k]).flatten() 
+            if identity == False: ys = n.array(Pouts_fold[k]).flatten()
             xs_pos,xs_neg,ys_pos,ys_neg, _,_,_,_ = parse_data(xs, ys, ys)
             M_matrix_pos = curve_to_matrix(xs_pos,ys_pos)
             try: M_matrix_neg = curve_to_matrix(xs_neg,ys_neg)
@@ -391,6 +397,22 @@ for count in range(2):
             new_PS[k] = rowsum_combine/n.sum(rowsum_combine*bin_size(bins_concat)) # normalize
         return new_PS # distribution of bins_concat
    
+    # Shift distribution to new peak
+    def shift_dist(data, peakdata, ks):
+        shifted_data = {}
+        for key in data:
+            ind = n.where(ks == key)[0] # ind of peakdata for key
+            peak = peakdata[ind]
+            old_peak_ind = n.argmax(data[key])
+            new_peak_ind = n.argmin(n.abs(bins_concat-peak))
+            if n.sign(peak) != n.sign(bins_concat[old_peak_ind]):
+                old_peak_ind = n.argmax(data[key][::-1]) # old peak after flipping
+                
+            diff = new_peak_ind - old_peak_ind
+            shifted_bins = bins_concat + diff # shift x-axis
+            shifted_data[key] = n.interp(bins_concat, shifted_bins, data[key]) # re-sample bins_concat
+            shifted_data[key] /= n.sum(shifted_data[key]*bin_size(bins_concat)) # re-normalize 
+        return shifted_data
 
     ### SIGNAL LOSS CODE
 
@@ -401,7 +423,19 @@ for count in range(2):
     old_pCs_fold = data_dist(pCs_fold)
     old_pIs = data_dist(pIs)    
     old_pIs_fold = data_dist(pIs_fold)
-   
+     
+    # Shift old distributions to peak of no-bootstrapping case
+    if count == 0: # data case
+        old_pCs = shift_dist(old_pCs, file['pCv'], file['kpl'])
+        old_pCs_fold = shift_dist(old_pCs_fold, file['pCv_fold'], file['kpl_fold'])
+        old_pIs = shift_dist(old_pIs, file['pIv'], file['kpl'])
+        old_pIs_fold = shift_dist(old_pIs_fold, file['pIv_fold'], file['kpl_fold']) 
+    else:
+        old_pCs = shift_dist(old_pCs, file['pCn'], file['kpl'])
+        old_pCs_fold = shift_dist(old_pCs_fold, file['pCn_fold'], file['kpl_fold'])
+        old_pIs = shift_dist(old_pIs, file['pIn'], file['kpl'])
+        old_pIs_fold = shift_dist(old_pIs_fold, file['pIn_fold'], file['kpl_fold']) 
+    
     # Compute signal loss and get new distributions 
     if opts.skip_sigloss:
         print "Skipping Signal Loss!"
@@ -414,6 +448,7 @@ for count in range(2):
         convolve_pos, convolve_neg = convolve_kernel(kde_C, kde_I) # convolution kernels 
         M = transfer_func(identity=False) # final signal loss transfer function
         M_I = transfer_func(identity=True)
+        
         # new distributions
         new_pCs = sigloss_func(old_pCs, M) 
         new_pCs_fold = sigloss_func(old_pCs_fold, M)
@@ -447,19 +482,19 @@ for count in range(2):
         n.savez(fn, k=k, binsx=binsx, binsy=binsy, bins_concat=bins_concat, pC=pC[ind], pC_err=pC_err[ind], pI=pI[ind], pI_err=pI_err[ind], new_pCs=new_pCs[k], new_pIs=new_pIs[k], old_pCs=old_pCs[k], old_pIs=old_pIs[k], Pins=Pins_fold[k], Pouts=Pouts_fold[k], Pouts_I=Pouts_I_fold[k])    
        
     if count == 0: # data case
-        pCv = file['pCv'] #pC    
-        pCv_fold = file['pCv_fold'] #pC_fold
-        pIv = file['pIv'] #pI
-        pIv_fold = file['pIv_fold'] #pI_fold
+        pCv = pC    
+        pCv_fold = pC_fold
+        pIv = pI
+        pIv_fold = pI_fold
         pCv_err = pC_err
         pCv_fold_err = pC_fold_err
         pIv_err = pI_err
         pIv_fold_err = pI_fold_err
     if count == 1: # noise case
-        pCn = file['pCn'] #pC
-        pCn_fold = file['pCn_fold'] #pC_fold
-        pIn = file['pIn'] #pI
-        pIn_fold = file['pIn_fold'] #pI_fold
+        pCn = pC
+        pCn_fold = pC_fold
+        pIn = pI
+        pIn_fold = pI_fold
         pCn_err = pC_err
         pCn_fold_err = pC_fold_err
         pIn_err = pI_err
