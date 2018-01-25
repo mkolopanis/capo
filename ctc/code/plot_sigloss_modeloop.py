@@ -16,16 +16,7 @@ if True: # eigenmodes set to 1
     f1 = '/project_'
     f2 = '_modes'
 
-if False: # eigenmodes set to 0
-    path = '/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_RANGEOFPROJECTEDMODES_v2'
-    startmode=1
-    nmodes=20
-    deltamode=1
-    xlabel='Number of modes down-weighted'
-    f1 = '/project_'
-    f2 = '_modes'
-
-if True: # added identity
+if True: # added identity parameters
     path_add = '/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity_trace'
     startmode_add=0 
     nmodes_add=0.2 #20000 
@@ -109,10 +100,6 @@ if True:
 f = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_IDENTITYMULTWEIGHT_WEIGHTI/pspec_final_sep0,1.npz')
 ps_mult = n.abs(f['pCv'][k_ind]) + 2*f['pCv_err'][k_ind]
 
-# Best PS (Identity Add)
-f = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity/add_2000_identity/pspec_final_sep0,1.npz')
-ps_add = n.abs(f['pCv'][k_ind]) + 2*f['pCv_err'][k_ind]
-
 # Plot
 p.figure(figsize=(8,10))    
 p.subplot(211)
@@ -145,8 +132,6 @@ p.gca().invert_xaxis()
 p.axhline(file_f['pIv'][k_ind]+2*file_f['pIv_err'][k_ind],color='b',linestyle='--',linewidth=2,label='Unweighted')
     # plot inverse variance
 p.axhline(ps_mult,color='r',linestyle='-',linewidth=2,label='$\hat{C} = \hat{C} \circ I$')
-    # plot best added identity
-#p.axhline(ps_add,color='c',linestyle='-',linewidth=3,label='$\hat{C} = \hat{C} + 2000I$')
     # plot analytic
 p.axhline(sense,color='g',linestyle='-',linewidth=2,label='Analytical $2\sigma$ Error')
     # plot theory
