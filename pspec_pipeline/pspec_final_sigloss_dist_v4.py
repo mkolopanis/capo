@@ -402,7 +402,6 @@ for count in range(2):
                 Mpos = M[binsy.size:] # separate again
                 Mneg = M[:binsy.size]
             """
-            Mpos = Mpos*(n.resize(data_dist_pos,Mpos.shape).T) # multiply data distribution element-wise per column of M 
             # XXX if there are data_dist_neg points but no Mneg, use Mpos instead
             data_neg = n.resize(data_dist_neg,Mneg.shape).T
             Mneg_final = n.zeros_like(Mpos)
@@ -411,6 +410,7 @@ for count in range(2):
                     Mneg_final[r] = Mpos[len(binsy)-r-1]*data_neg[r]
                 else: Mneg_final[r] = Mneg[r]*data_neg[r]
             Mneg = Mneg_final.copy()
+            Mpos *= n.resize(data_dist_pos,Mpos.shape).T # multiply data distribution element-wise per column of M 
             #Mneg = Mneg*(n.resize(data_dist_neg,Mneg.shape).T)
             rowsum_pos = n.zeros(Mpos.shape[0])
             rowsum_neg = n.zeros(Mneg.shape[0])
@@ -532,7 +532,7 @@ for count in range(2):
         pIv_err = pI_err
         pIv_fold_err = pI_fold_err
     if count == 1: # noise case
-        pCn = pC
+        pC = pC
         pCn_fold = pC_fold
         pIn = pI
         pIn_fold = pI_fold
