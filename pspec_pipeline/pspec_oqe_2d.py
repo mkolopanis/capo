@@ -268,7 +268,7 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve,
                 pIv = dsIv.p_hat(MIv, qIv, scalar=scalar)
                 pCvs.append(pCv)
                 pIvs.append(pIv)
-
+ 
                 FCn = dsCn.get_F(key1, key2, cov_flagging=False)
                 FIn = dsIn.get_F(key1, key2, use_cov=False, cov_flagging=False)
                 qCn = dsCn.q_hat(key1, key2, cov_flagging=False)
@@ -279,7 +279,7 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve,
                 pIn = dsIv.p_hat(MIn, qIn, scalar=scalar)
                 pCns.append(pCn)
                 pIns.append(pIn)
-
+                
                 FCe = dsCe.get_F(key1, key2, cov_flagging=False)
                 FIe = dsIe.get_F(key1, key2, use_cov=False, cov_flagging=False)
                 qCe = dsCe.q_hat(key1, key2, cov_flagging=False)
@@ -569,7 +569,7 @@ for key in data_dict_v:
         new = data_dict_v[('even',key[1],key[2])] - data_dict_v[key]
     new_dict[key] = new
 dsv.add_data(dsets=new_dict)
-"""
+#"""
 """
 # NULL TEST: BASELINES
 new_dict = {}

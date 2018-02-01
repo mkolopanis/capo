@@ -191,11 +191,15 @@ for k_ind in xrange(Nk):
 figure()
 for k_ind in xrange(Nk):
     plt.semilogx(pspecs['pIe_fold'][:, k_ind], probs_data[:, k_ind],
-                 '-', label=k[k_ind])
+                 '-', linewidth=2, label=np.round(k[k_ind],3))
 grid()
 legend(loc='best')
-xlabel('$P_{inj}$')
-ylabel('Probability to find $P_{inj}$')
+xlabel('$\mathrm{P_{inj}}$',fontsize=16)
+ylabel('Probability to find $\mathrm{P_{inj}}$',fontsize=16)
+plt.tick_params(axis='both', which='major', labelsize=14)
+plt.legend(prop={'size':14},loc=4)
+plt.show()
+print 'Saving p_inj_prob.png'
 savefig(args.outfile + 'p_inj_prob.png', format='png')
 
 # pI and pIn values are not dependen on probability

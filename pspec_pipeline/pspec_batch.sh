@@ -67,11 +67,12 @@ else
 echo "CARINA PSA64!"
 ### PSA64 Options ###
 POL='I'
-weight='L^-1'
+weight='I' #'L^-1'
 WINDOW='none'
 FRF='--frf'
 LMODE='' #'--lmode=12'
-CHANGEC='--changeC'
+CHANGEC='' #'--changeC'
+MODE_NUM='0.04' # percentage of Tr(C) added to C for regularization if --changeC
 NBOOT=20 # use 1 if doing version 4 (pspec_banana)
 NGPS=5
 NGPS_LST=2 # only matters for version 4 (otherwise it's not used)
@@ -122,7 +123,8 @@ for chan in ${CHAN}; do
     fi
     
     # Stage 1: pspec_oqe_2d.py over range of injection levels
-    #for inject in `python -c "import numpy; print ' '.join(map(str,-numpy.logspace(-3,3,20))) + ' ' + ' '.join(map(str,numpy.logspace(-3,3,20)))"`; do
+    #for inject in `python -c "import numpy; print ' '.join(map(str,-numpy.logspace(-3,5,25))) + ' ' + ' '.join(map(str,numpy.logspace(-3,5,25)))"`; do
+    #for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(0,3,10)))"` ; do
     for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-2,3,20)))"` ; do
         out_dir_inject=${out_dir}_${inject}
         mkdir -p ${DIRNAME}/${out_dir_inject}
@@ -137,7 +139,7 @@ for chan in ${CHAN}; do
         ~/src/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${chan} \
         -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/${out_dir_inject} -b ${NBOOT} --mode_num=${mode_num_array[${chan}]}\
         ${EVEN_FILES} ${ODD_FILES} --NGPS=${NGPS} --rmbls=${RMBLS} --Trcvr=${TRCVR}
-    
+
         # Stage 2: pspec_2d_to_1d.py
         ~/src/capo/pspec_pipeline/pspec_2d_to_1d.py \
         --output=${DIRNAME}/${out_dir_inject}/ --NGPS_LST=${NGPS_LST} -v ${VERSION} ${DIRNAME}/${out_dir_inject}/*bootsigloss*.npz

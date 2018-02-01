@@ -468,7 +468,7 @@ if ymax_pk > ymax_d2:
     ymax_d2 = ymax_pk.copy()
     max_val_d2 = max_val_pk.copy()
 
-#ymax_d2 = 5e10 # XXX
+#ymax_d2 = 4e10 # XXX
 #max_val_d2 = np.log10(ymax_d2) # XXX
 
 ax1[0].set_ylim([1e-1, ymax_d2])

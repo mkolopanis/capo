@@ -77,6 +77,7 @@ CHAN='95_115'
 SEP='0,1'
 RA='0.5_8.6'
 RMBLS=''
+TRCVR=144
 EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
 DIRNAME=$2
@@ -88,12 +89,14 @@ fi
 mkdir ${DIRNAME}
 echo Making Directory ${DIRNAME}
 
-for mode_num in `python -c "import numpy; print ' '.join(map(str,numpy.arange(0,100000,5000)))"` ; do
+
+#for mode_num in `python -c "import numpy; print ' '.join(map(str,numpy.arange(0,20000,1000)))"` ; do
+for mode_num in `python -c "import numpy; print ' '.join(map(str,numpy.arange(0,0.2,0.01)))"` ; do
 #for mode_num in `python -c "import numpy; print ' '.join(map(str,numpy.arange(1,22,1)))"` ; do
 #for mode_num in `python -c "import numpy; print ' '.join(map(str,numpy.arange(0,22,1)))"` ; do
     #name_dir=project_${mode_num}_modes
     name_dir=add_${mode_num}_identity
-    mkdir -p ${DIRNAME}/${name_dir}
+    #mkdir -p ${DIRNAME}/${name_dir}
     out_dir=${name_dir}/inject_sep${SEP}
     echo MODE_NUM=${mode_num}
  
@@ -103,8 +106,12 @@ for mode_num in `python -c "import numpy; print ' '.join(map(str,numpy.arange(0,
         out_dir_pspec=${out_dir}_${inject}
         mkdir -p ${DIRNAME}/${out_dir_pspec}
         echo SIGNAL_LEVEL=${inject}
-    
-        #~/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/${out_dir_pspec} -b ${NBOOT} --NGPS=${NGPS} --rmbls=${RMBLS} --mode_num=${mode_num} ${EVEN_FILES} ${ODD_FILES}
+
+        # Run once for PS points (no bootstrapping)    
+        #~/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/${out_dir_pspec} -b 1 --NGPS=${NGPS} --Trcvr=${TRCVR} --rmbls=${RMBLS} --mode_num=${mode_num} ${EVEN_FILES} ${ODD_FILES}
+        
+        # Bootstrap for errors
+        #~/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/${out_dir_pspec} -b ${NBOOT} --NGPS=${NGPS} --Trcvr=${TRCVR} --rmbls=${RMBLS} --mode_num=${mode_num} ${EVEN_FILES} ${ODD_FILES}
     
         # Stage 2: pspec_2d_to_1d.py
         #~/capo/pspec_pipeline/pspec_2d_to_1d.py \
@@ -114,9 +121,9 @@ for mode_num in `python -c "import numpy; print ' '.join(map(str,numpy.arange(0,
         
     # Stage 3: pspec_final_sigloss_dist_v3.py
     cd ${DIRNAME}/${name_dir}
-    #~/capo/pspec_pipeline/pspec_final_sigloss_dist_v3.py --sep=${SEP} --skip_sigloss
-    #mv pspec_final_sep0,1.npz pspec_final_sep0,1_nosigloss.npz
-    ~/capo/pspec_pipeline/pspec_final_sigloss_dist_v3.py --sep=${SEP}
+    ~/capo/pspec_pipeline/pspec_final_sigloss_dist_v4.py --sep=${SEP} --skip_sigloss
+    mv pspec_final_sep0,1.npz pspec_final_sep0,1_nosigloss.npz
+    ~/capo/pspec_pipeline/pspec_final_sigloss_dist_v4.py --sep=${SEP}
     cd ../..
 
 done
