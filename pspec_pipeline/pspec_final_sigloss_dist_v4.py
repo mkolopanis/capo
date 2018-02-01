@@ -532,7 +532,7 @@ for count in range(2):
         pIv_err = pI_err
         pIv_fold_err = pI_fold_err
     if count == 1: # noise case
-        pC = pC
+        pCn = pC
         pCn_fold = pC_fold
         pIn = pI
         pIn_fold = pI_fold
