@@ -136,7 +136,7 @@ for count in range(2):
             p.figure(1) # Pin vs. Pout
             p.subplot(3, 4, ind+1)
             p.plot(Pins_fold[k], Pouts_fold[k], color)  # points
-            p.plot(Pins_fold[k], poly[k], 'r-') # polyfit
+            #p.plot(Pins_fold[k], poly[k], 'r-') # polyfit
             #p.plot([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
             p.plot([-pkhi, pkhi], [-pkhi, pkhi], 'k-')  # diagonal line
             p.grid(True)
@@ -150,7 +150,7 @@ for count in range(2):
             p.figure(2) # Pin vs. Pout for I case
             p.subplot(3, 4, ind+1)
             p.plot(Pins_fold[k], Pouts_I_fold[k], color)  # points
-            p.plot(Pins_fold[k], poly_I[k], 'r-') # polyfit
+            #p.plot(Pins_fold[k], poly_I[k], 'r-') # polyfit
             #p.plot([pklo, pkhi], [pklo, pkhi], 'k-')  # diagonal line
             p.plot([-pkhi, pkhi], [-pkhi, pkhi], 'k-')  # diagonal line
             p.grid(True)
@@ -555,7 +555,7 @@ n.savez(outname, kpl=kpl, k=file['k'], freq=file['freq'],
         pCn_fold=pCn_fold, pCn_fold_err=pCn_fold_err,
         pIn=pIn, pIn_err=pIn_err,
         pIn_fold=pIn_fold, pIn_fold_err=pIn_fold_err,
-        prob=0.95,
+        prob=0.95, kperp=file['kperp'], sep=opts.sep, kpl_fold=file['kpl_fold'],
         ngps=file['ngps'], nbls=file['nbls'], nbls_g=file['nbls_g'], nlsts_g=file['nlsts_g'],
         lsts=file['lsts'], afreqs=file['afreqs'], cnt_eff=file['cnt_eff'],
         frf_inttime=file['frf_inttime'], inttime=file['inttime'], 
