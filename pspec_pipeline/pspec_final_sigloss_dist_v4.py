@@ -53,6 +53,7 @@ for count in range(2):
     pCves_fold = {}
     pIves_fold = {}
     pCrs_fold = {}
+    pIrs_fold = {}
 
     for inject in glob.glob('inject_sep'+opts.sep+'*'):
         print 'Reading', inject
@@ -84,6 +85,7 @@ for count in range(2):
                 pCve_fold = n.zeros_like(pCv_Cr_fold)
                 pIve_fold = n.zeros_like(pCv_Cr_fold)
             pCr_fold = file_2d['pCr_fold']
+            pIr_fold = file_2d['pIr_fold']
             pC = file_2d['pCv']
             pC_fold = file_2d['pCv_fold']
             pI = file_2d['pIv']
@@ -103,6 +105,7 @@ for count in range(2):
                 pCves_fold[kpl_fold[ind]].append(pCve_fold[:,ind])
                 pIves_fold[kpl_fold[ind]].append(pIve_fold[:,ind])
                 pCrs_fold[kpl_fold[ind]].append(pCr_fold[:,ind])
+                pIrs_fold[kpl_fold[ind]].append(pIr_fold[:,ind])
             except:
                 Pouts_fold[kpl_fold[ind]] = [Pout_fold[:,ind]]
                 Pouts_I_fold[kpl_fold[ind]] = [Pout_I_fold[:,ind]]
@@ -114,6 +117,7 @@ for count in range(2):
                 pCves_fold[kpl_fold[ind]] = [pCve_fold[:,ind]]
                 pIves_fold[kpl_fold[ind]] = [pIve_fold[:,ind]]
                 pCrs_fold[kpl_fold[ind]] = [pCr_fold[:,ind]]
+                pIrs_fold[kpl_fold[ind]] = [pIr_fold[:,ind]]
         for ind in range(len(kpl)): # loop through k for P(k)
                 pCs[kpl[ind]] = [pC[:,ind]] # no appending because it's the same for every inject
                 pIs[kpl[ind]] = [pI[:,ind]]
@@ -264,7 +268,6 @@ for count in range(2):
                 else: fn = 'pspec_sigloss_terms.npz'
                 print "Saving",fn,"which contains data values for k =",k
                 n.savez(fn, k=k, pCv=file['pCv'][n.where(kpl==k)[0][0]], pIv=file['pIv'][n.where(kpl==k)[0][0]], Pins=Pins_fold[k], Pouts=Pouts_fold[k], Pouts_I=Pouts_I_fold[k], pCrs_fold=pCrs_fold[k], pCvs_Cr_fold=pCvs_Cr_fold[k], pCes_Cr_fold=pCes_Cr_fold[k], pCves_fold=pCves_fold[k], pIves_fold=pIves_fold[k])
-
             xs = n.array(Pins_fold[k]).flatten()
             ys_C = n.array(Pouts_fold[k]).flatten()
             ys_I = n.array(Pouts_I_fold[k]).flatten()
@@ -387,6 +390,7 @@ for count in range(2):
             except: M = M_matrix[-k] # M only exists for positive k's
            
             Mpos = M[binsy.size:] # separate
+            #Mneg = Mpos[::-1] # XXX flipped Mpos
             Mneg = M[:binsy.size]
             """
             if n.all(data_dist_neg==0) == False and n.all(Mneg==0) == True: # rare case when data has negative part of the distribution but there's no transfer function there
@@ -399,7 +403,15 @@ for count in range(2):
                 Mneg = M[:binsy.size]
             """
             Mpos = Mpos*(n.resize(data_dist_pos,Mpos.shape).T) # multiply data distribution element-wise per column of M 
-            Mneg = Mneg*(n.resize(data_dist_neg,Mneg.shape).T)
+            # XXX if there are data_dist_neg points but no Mneg, use Mpos instead
+            data_neg = n.resize(data_dist_neg,Mneg.shape).T
+            Mneg_final = n.zeros_like(Mpos)
+            for r in range(len(binsy)):
+                if n.all(Mneg[r] == 0) == True and n.all(data_neg[r] == 0) == False: # no Mneg
+                    Mneg_final[r] = Mpos[len(binsy)-r-1]*data_neg[r]
+                else: Mneg_final[r] = Mneg[r]*data_neg[r]
+            Mneg = Mneg_final.copy()
+            #Mneg = Mneg*(n.resize(data_dist_neg,Mneg.shape).T)
             rowsum_pos = n.zeros(Mpos.shape[0])
             rowsum_neg = n.zeros(Mneg.shape[0])
             for row in Mpos: rowsum_pos += row # add up rows of M
