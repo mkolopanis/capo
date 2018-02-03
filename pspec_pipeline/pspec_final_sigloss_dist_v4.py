@@ -195,7 +195,7 @@ for count in range(2):
         # lin-log grid-spacing
         nbins = 101 # XXX hard-coded number of bins for grid upon which to estimate kernels (must be odd for fftshift to do the right thing)
         dmax = max(n.max(Pins_fold.values()),n.max(pIs.values())) # maximum is determined from whichever is largest: EoR injection or "I" value
-        dg = 1 # spacing in linear regime
+        dg = 100 # XXX artificially set based on starting P_in values
         G = n.logspace(0,n.log10(dmax),nbins)[-1]/n.logspace(0,n.log10(dmax),nbins)[-2] # way to estimate multiplicative factor in log regime (~1.3) 
         grid = [] # grid spacing that's linear at low regime and log at high regime 
         g = 0
@@ -215,15 +215,12 @@ for count in range(2):
         ys = n.log10(n.abs(y))
         xs = n.append(n.repeat(0,100000),xs) # force fit to go through zero
         ys = n.append(n.repeat(0,100000),ys) 
-        #xs = n.append(0,xs) # force fit to go through zero
-        #ys = n.append(0,ys)
         order = n.argsort(xs) # re-order after padding
         xs = xs[order]
         ys = ys[order]
         coeff = n.polyfit(xs,ys,8) # coefficients from highest to lowest order
         for bb,b in enumerate(binsx): # walk through P_in
             if b <= n.max(xs): # only fill out curve if there's data points there
-                #y_bin = n.interp(b,xs,ys)
                 y_bin = n.interp(b,xs,n.polyval(coeff,xs)) # get P_out bin for given P_in bin
                 y_ind = n.argmin(n.abs(binsy-y_bin)) # get P_out index
                 m[y_ind][bb] = 1.0 # fill with 1
@@ -279,6 +276,8 @@ for count in range(2):
             factor = kernel_C_pos.factor+0.3 # XXX
             kernel_C_pos = scipy.stats.gaussian_kde((n.log10(xs_C_pos),n.log10(ys_C_pos)),bw_method=factor)
             kernel_I_pos = scipy.stats.gaussian_kde((n.log10(xs_I_pos),n.log10(ys_I_pos)),bw_method=factor)
+            pos_kern_I = n.reshape(kernel_I_pos(positions).T,(binsx.size,binsy.size)).T
+            pos_kern = n.reshape(kernel_C_pos(positions).T,(binsx.size,binsy.size)).T
             if len(xs_C_neg) > 0: # if there are negative points
                 kernel_C_neg = scipy.stats.gaussian_kde((n.log10(xs_C_neg),n.log10(ys_C_neg)),bw_method=factor)
                 neg_kern = n.reshape(kernel_C_neg(positions).T,(binsx.size,binsy.size)).T[::-1]
@@ -290,7 +289,21 @@ for count in range(2):
                 neg_kern_I = n.reshape(kernel_I_neg(positions).T,(binsx.size,binsy.size)).T[::-1]
             else: # no negative values at all
                 neg_kern_I = n.zeros((binsx.size,binsy.size))
-            if n.inf in neg_kern_I: neg_kern_I = n.zeors((binsx.size,binsy.size))
+            if n.inf in neg_kern_I: neg_kern_I = n.zeros((binsx.size,binsy.size))
+            """
+            # ensure columns sum to 1 for each half separately
+            for col in range(pos_kern.shape[1]):
+                if n.sum(neg_kern[:,col]) > 0: # avoid nan values
+                    neg_kern[:,col] /= n.sum(neg_kern[:,col]*bin_size(binsy))
+                if n.sum(neg_kern_I[:,col]) > 0:
+                    neg_kern_I[:,col] /= n.sum(neg_kern_I[:,col]*bin_size(binsy))
+                if n.sum(pos_kern[:,col]) > 0: 
+                    pos_kern[:,col] /= n.sum(pos_kern[:,col]*bin_size(binsy))
+                if n.sum(pos_kern_I[:,col]) > 0:
+                    pos_kern_I[:,col] /= n.sum(pos_kern_I[:,col]*bin_size(binsy))
+            kde_C[k] = n.concatenate((neg_kern,pos_kern))
+            kde_I[k] = n.concatenate((neg_kern_I,pos_kern_I))
+            """
             kde_C[k] = n.concatenate((neg_kern,n.reshape(kernel_C_pos(positions).T,(binsx.size,binsy.size)).T))
             kde_I[k] = n.concatenate((neg_kern_I,n.reshape(kernel_I_pos(positions).T,(binsx.size,binsy.size)).T))
             # ensure columns sum to 1
@@ -328,6 +341,8 @@ for count in range(2):
                     convolve_pos[k][:,col] = n.zeros_like(curveC_i_pos)
                     convolve_pos[k][:,col][curveC_i_pos.size/2] = 1.0
                 # Negative half
+                convolve_neg[k][:,col] = n.zeros_like(binsx.size)
+                convolve_neg[k][:,col][binsx.size/2] = 1.0 # fill with 1's to start
                 if n.all(neg_MC == 0) == False and n.all(neg_MI == 0) == False: # if there are negative values 
                     try: 
                         curveC_i_neg = neg_MC[:,col] / n.sum(neg_MC[:,col]*bin_size(binsy))
@@ -341,9 +356,7 @@ for count in range(2):
                             sigma_diff = n.sqrt(popt_C_neg[1]**2-popt_I_neg[1]**2) 
                             convolve_neg[k][:,col] = n.exp(-(n.fft.fftshift(n.arange(binsy.size)))**2/(2*sigma_diff**2)) 
                     except: # if curve_fit fails to find a solution
-                        convolve_neg[k][:,col] = n.zeros_like(binsx.size)
-                        convolve_neg[k][:,col][binsx.size/2] = 1.0
-                else: convolve_neg[k] = n.zeros((binsx.size,binsy.size))
+                        pass
         return convolve_pos, convolve_neg
 
     # Fit polynomial to get one smooth signal loss curve
@@ -386,32 +399,26 @@ for count in range(2):
             data_dist_pos = data_dist[k][binsy.size:] # separate
             data_dist_neg = data_dist[k][:binsy.size]
             # Get new distribution
-            try: M = M_matrix[k]
-            except: M = M_matrix[-k] # M only exists for positive k's
-           
-            Mpos = M[binsy.size:] # separate
-            #Mneg = Mpos[::-1] # XXX flipped Mpos
-            Mneg = M[:binsy.size]
-            """
-            if n.all(data_dist_neg==0) == False and n.all(Mneg==0) == True: # rare case when data has negative part of the distribution but there's no transfer function there
-                print "WARNING! For k =",k,", you have negative data values but no transfer function for negative P_out's... applying positive transfer function instead."
-                M = n.concatenate((Mpos[::-1],Mpos)) # flip Mpos
-                for col in range(M.shape[1]): # re-normalize
-                    if n.sum(M[:,col]) > 0:
-                        M[:,col] /= n.sum(M[:,col]*bin_size(binsy_full))
-                Mpos = M[binsy.size:] # separate again
-                Mneg = M[:binsy.size]
-            """
+            if k >= 0: M = M_matrix[k].copy()
+            elif k < 0: M = M_matrix[-k].copy() # M only exists for positive k's
+            Mpos = M[binsy.size:].copy() # separate
+            Mneg = M[:binsy.size].copy()
+            #Mneg = Mpos[::-1].copy() # XXX flipped Mpos (hack if don't want to use Mneg)
+            #"""
             # XXX if there are data_dist_neg points but no Mneg, use Mpos instead
-            data_neg = n.resize(data_dist_neg,Mneg.shape).T
             Mneg_final = n.zeros_like(Mpos)
             for r in range(len(binsy)):
-                if n.all(Mneg[r] == 0) == True and n.all(data_neg[r] == 0) == False: # no Mneg
-                    Mneg_final[r] = Mpos[len(binsy)-r-1]*data_neg[r]
-                else: Mneg_final[r] = Mneg[r]*data_neg[r]
+                if n.all(Mneg[:,r] == 0) == True: # no Mneg values in a column
+                    Mneg_final[:,r] = Mpos[:,r][::-1]
+                else: Mneg_final[:,r] = Mneg[:,r]
             Mneg = Mneg_final.copy()
-            Mpos *= n.resize(data_dist_pos,Mpos.shape).T # multiply data distribution element-wise per column of M 
-            #Mneg = Mneg*(n.resize(data_dist_neg,Mneg.shape).T)
+            # Re-normalize separately
+            for col in range(len(binsy)):
+                if n.sum(Mneg[:,col]) > 0: Mneg[:,col] /= n.sum(Mneg[:,col]*bin_size(binsy)[::-1]) # the reverse is actually quite important here
+                if n.sum(Mpos[:,col]) > 0: Mpos[:,col] /= n.sum(Mpos[:,col]*bin_size(binsy))
+            #"""
+            Mneg *= n.resize(data_dist_neg,Mneg.shape).T # multiply data distribution element-wise per column of M
+            Mpos *= n.resize(data_dist_pos,Mpos.shape).T  
             rowsum_pos = n.zeros(Mpos.shape[0])
             rowsum_neg = n.zeros(Mneg.shape[0])
             for row in Mpos: rowsum_pos += row # add up rows of M
@@ -493,7 +500,7 @@ for count in range(2):
     pI, pI_err = compute_stats(bins_concat, new_pIs)
     pC_fold, pC_fold_err = compute_stats(bins_concat, new_pCs_fold)
     pI_fold, pI_fold_err = compute_stats(bins_concat, new_pIs_fold)
-   
+    
     # Avoid signal gain  (which happens when P_out never goes below the data level)
     def no_gain(pts, errs, old_dist):
         new_errs = []
