@@ -113,8 +113,6 @@ yellow_con = n.convolve(window,n.log10(n.abs(pCrs))*n.sign(pCrs),mode='same')
 yellow = n.sign(pCrs)*10**(n.sign(pCrs)*yellow_con)
 """
 
-
-
 # Plot
 
 #P_out = xx   +  xe +  ex +    ee   - xx (C_x)
@@ -127,13 +125,16 @@ p.subplot(121)
 
 p.plot(Pins_black_pos,black_pos,'k-',label='$\mathrm{P_{out}}$',linewidth=3)
 p.plot(Pins_black_neg,black_neg,'k-',linewidth=3)
-p.plot(Pins,blue,'b-',linewidth=3,label='$\propto \mathrm{xC_{r}^{-1}QC_{r}^{-1}x}$')
+p.fill_between(Pins_black_neg, black_neg, n.interp(Pins_black_neg,Pins_black_pos,black_pos), facecolor=(0,0,0,0.5), edgecolor='k', linewidth=3)
+p.plot(Pins,blue,'b-',linewidth=3,label='$\propto \mathrm{x\widehat{C}_{r}^{-1}Q\widehat{C}_{r}^{-1}x}$')
 #p.plot(Pins_red_pos,red_pos,'r-',linewidth=3,label='$\propto xC_{r}^{-1}QC_{r}^{-1}e$')
-p.plot(Pins_red_neg,red_neg,'r-',linewidth=3,label='$\propto \mathrm{xC_{r}^{-1}QC_{r}^{-1}e}$')
+p.plot(Pins_red_neg,red_neg,'r-',linewidth=3,label='$\propto \mathrm{x\widehat{C}_{r}^{-1}Q\widehat{C}_{r}^{-1}e}$')
 p.plot(Pins_red_pos[pos_1],red_pos_1,'r-',linewidth=3)
+p.fill_between(Pins_red_pos[pos_1], red_pos_1, n.interp(Pins_red_pos[pos_1],Pins_red_neg,red_neg), facecolor=(1,0,0,0.5), edgecolor='r', linewidth=3)
 p.plot(Pins_red_pos[pos_2],red_pos_2,'r-',linewidth=3)
-p.plot(Pins,mag,'g-',linewidth=3,label='$\propto \mathrm{eC_{r}^{-1}QC_{r}^{-1}e}$')
-p.axhline(pCv,color='0.5',linestyle='-',linewidth=3,label='$\propto \mathrm{xC_{x}^{-1}QC_{x}^{-1}x}$')
+p.fill_between(Pins_red_pos[pos_2], red_pos_2, n.interp(Pins_red_pos[pos_2],Pins_red_neg,red_neg), facecolor=(1,0,0,0.5), edgecolor='r', linewidth=3)
+p.plot(Pins,mag,'g-',linewidth=3,label='$\propto \mathrm{e\widehat{C}_{r}^{-1}Q\widehat{C}_{r}^{-1}e}$')
+p.axhline(pCv,color='0.5',linestyle='-',linewidth=3,label='$\propto \mathrm{x\widehat{C}_{x}^{-1}Q\widehat{C}_{x}^{-1}x}$')
 #p.plot(Pins, blue + 2*red + magenta - pCv, 'k--')
 #p.plot(Pins,yellow,'y-',linewidth=3,label='$\propto rC_{r}^{-1}QC_{r}^{-1}r$')
    # Test all points
@@ -156,8 +157,10 @@ p.grid()
 p.subplot(122)
 p.plot(Pins_black_pos_I,black_pos_I,'k-',label='$\mathrm{P_{out}}$',linewidth=3)
 p.plot(Pins_black_neg_I,black_neg_I,'k-',linewidth=3)
+p.fill_between(Pins_black_neg_I, black_neg_I, n.interp(Pins_black_neg_I,Pins_black_pos_I,black_pos_I), facecolor=(0,0,0,0.5), edgecolor='k', linewidth=3)
 p.plot(Pins_red_pos_I,red_I_pos,'r-',linewidth=3,label='$\propto \mathrm{xIQIe}$')
 p.plot(Pins_red_neg_I,red_I_neg,'r-',linewidth=3)
+p.fill_between(Pins_red_neg_I, red_I_neg, n.interp(Pins_red_neg_I,Pins_red_pos_I,red_I_pos), facecolor=(1,0,0,0.5), edgecolor='r', linewidth=3)
 p.plot(Pins,Pins,'g-',linewidth=3,label='$\propto \mathrm{eIQIe}$')
 p.axhline(pIv,color='0.5',linestyle='-',linewidth=3,label='$\propto \mathrm{xIQIx}$')
 p.xlabel('$\mathrm{P_{in}}$ $[mK^{2}(h^{-1} Mpc)^{3}]$', fontsize=18)
@@ -169,7 +172,7 @@ p.plot([low,high], [-low,-high], 'k:')  # diagonal line
 p.tick_params(axis='both', which='major', labelsize=14)
 p.legend(prop={'size':16},loc=3,numpoints=1,ncol=2)
 p.grid()
-ttl = p.title("Unweighted, k = " + str(n.round(k,3)) + " h Mpc$^{-1}$", fontsize=16)
+ttl = p.title("Uniform Weighting, k = " + str(n.round(k,3)) + " h Mpc$^{-1}$", fontsize=16)
 ttl.set_position([.5, 1.03])
 
 p.tight_layout()
