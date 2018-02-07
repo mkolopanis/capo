@@ -2,6 +2,7 @@
 
 import numpy as n
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
 from scipy import stats
 
 # Read file and get data
@@ -55,29 +56,31 @@ ygrid,xgrid = n.meshgrid(binsy,binsx) # create grid on which to sample
 positions = n.vstack([xgrid.ravel(),ygrid.ravel()])
 
 kernel_C_pos = stats.gaussian_kde((n.log10(Pins_pos),n.log10(Pouts_pos)),bw_method='scott')
-factor = kernel_C_pos.factor+0.3
+factor = kernel_C_pos.factor+0.3 # don't add anything for nosubtract case
 kernel_C_pos = stats.gaussian_kde((n.log10(Pins_pos),n.log10(Pouts_pos)),bw_method=factor)
-M_pos = n.reshape(kernel_C_pos(positions).T,xgrid.shape).T
+M_pos = n.reshape(kernel_C_pos(positions).T,xgrid.shape).T*len(Pins_pos)
 
 kernel_I_pos = stats.gaussian_kde((n.log10(Pins_pos_I),n.log10(Pouts_pos_I)),bw_method=factor)
-M_pos_I = n.reshape(kernel_I_pos(positions).T,xgrid.shape).T
+M_pos_I = n.reshape(kernel_I_pos(positions).T,xgrid.shape).T*len(Pins_pos_I)
 try: 
-    kernel_C_neg = stats.gaussian_kde((n.log10(Pins_neg),n.log10(Pouts_neg)),bw_method=factor)
-    M_neg = n.reshape(kernel_C_neg(positions).T,xgrid.shape).T
+    offset = n.log10(n.std(Pouts_pos))*factor/n.log10(n.std(Pouts_neg)) # find bw to use in negative half, so that std*factor is the same
+    kernel_C_neg = stats.gaussian_kde((n.log10(Pins_neg),n.log10(Pouts_neg)),bw_method=offset) #factor)
+    M_neg = n.reshape(kernel_C_neg(positions).T,xgrid.shape).T*len(Pins_neg)
 except: # no negative values
     M_neg = n.zeros((binsx.size,binsy.size))
 try:
-    kernel_I_neg = stats.gaussian_kde((n.log10(Pins_neg_I),n.log10(Pouts_neg_I)),bw_method=factor)
-    M_neg_I = n.reshape(kernel_I_neg(positions).T,xgrid.shape).T
+    offset = n.log10(n.std(Pouts_pos_I))*factor/n.log10(n.std(Pouts_neg_I))
+    kernel_I_neg = stats.gaussian_kde((n.log10(Pins_neg_I),n.log10(Pouts_neg_I)),bw_method=offset) #factor)
+    M_neg_I = n.reshape(kernel_I_neg(positions).T,xgrid.shape).T*len(Pins_neg_I)
 except: # no negative values
     M_neg_I = n.zeros((binsx.size,binsy.size))
 
 M = n.concatenate((M_neg[::-1],M_pos))
 M_I = n.concatenate((M_neg_I[::-1],M_pos_I))
 
-for col in range(M.shape[1]): # normalize
-    M[:,col] /= n.sum(M[:,col])
-    M_I[:,col] /= n.sum(M_I[:,col])
+for col in range(M.shape[1]): # normalize together
+    M[:,col] /= n.sum(M[:,col])#*bin_size(n.concatenate((-binsy[::-1],binsy))))
+    M_I[:,col] /= n.sum(M_I[:,col])#*bin_size(n.concatenate((-binsy[::-1],binsy))))
 
 # Plot signal loss transfer curves
 pklo=1e2
@@ -88,7 +91,7 @@ plt.figure(figsize=(12,6))
 plt.subplot(121)
 #plt.plot(n.abs(Pins.flatten()),n.abs(Pouts.flatten()),'k.',label="All bootstraps")
 #plt.plot(10**binsx,10**n.polyval(coeff,binsx),'r-',label="Polynomial Fit")
-plt.pcolormesh(10**binsx,binsy_full,M,cmap='hot_r')
+plt.pcolormesh(10**binsx,binsy_full,M,cmap='hot_r',vmin=0,vmax=0.18)
 plt.plot([pklo, pkhi], [pklo, pkhi], 'k:')  # diagonal line
 plt.plot([pklo, pkhi], [-pklo,-pkhi], 'k:')  # diagonal line
 plt.hlines(y=n.abs(file_pts[k_pts_ind]),xmin=pklo,xmax=pkhi,color='0.5',linewidth=3) # peak of original distribution
@@ -111,7 +114,7 @@ plt.subplot(122)
 #plt.plot(n.abs(Pins.flatten()),n.abs(Pouts_I.flatten()),'k.',label="All bootstraps")
 #plt.plot(10**binsx,10**n.polyval(coeff_I,binsx),'r-',label="Polynomial Fit")
 plt.hlines(y=file_pts_I[k_pts_ind],xmin=pklo,xmax=pkhi,color='0.5',linewidth=3)
-plt.pcolormesh(10**binsx,binsy_full,M_I,cmap='hot_r')
+plt.pcolormesh(10**binsx,binsy_full,M_I,cmap='hot_r',vmin=0,vmax=0.18)
 plt.plot([pklo, pkhi], [pklo, pkhi], 'k:')  # diagonal line
 plt.plot([pklo, pkhi], [-pklo,-pkhi], 'k:')  # diagonal line
 #plt.legend(numpoints=1,prop={'size':10},loc='best')
@@ -120,7 +123,7 @@ plt.yscale('symlog',linthreshy=1e2)
 plt.xscale('log')
 #plt.yscale('symlog',linthreshy=5e7)
 #plt.xscale('symlog',linthreshx=5e7)
-ttl = plt.title("Unweighted, k = " + str(n.round(k,3)) + " h Mpc$^{-1}$", fontsize=14)
+ttl = plt.title("Uniform Weighting, k = " + str(n.round(k,3)) + " h Mpc$^{-1}$", fontsize=14)
 ttl.set_position([.5, 1.03])
 plt.xlabel('$\mathrm{P_{in}}$ $[mK^{2}(h^{-1} Mpc)^{3}]$', fontsize=18)
 plt.ylabel('$\mathrm{P_{out}}$ $[mK^{2}(h^{-1} Mpc)^{3}]$', fontsize=18)
