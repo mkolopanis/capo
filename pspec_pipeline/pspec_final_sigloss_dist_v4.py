@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Compute Signal Loss factor via distribution method v3.
+"""Compute Signal Loss factor via distribution method v4.
     -Reads in pspec_2d_to_1d.npz (contains PS points for aln bootstraps)
 
     -De-convolves out the extra width that M_C can have on M_I by fitting Gaussians to each and calculating a new sigma for the convolution kernel
@@ -195,7 +195,7 @@ for count in range(2):
         # lin-log grid-spacing
         nbins = 101 # XXX hard-coded number of bins for grid upon which to estimate kernels (must be odd for fftshift to do the right thing)
         dmax = max(n.max(Pins_fold.values()),n.max(pIs.values())) # maximum is determined from whichever is largest: EoR injection or "I" value
-        dg = 100 # XXX artificially set based on starting P_in values
+        dg = 1 # XXX artificially set based on starting P_in values
         G = n.logspace(0,n.log10(dmax),nbins)[-1]/n.logspace(0,n.log10(dmax),nbins)[-2] # way to estimate multiplicative factor in log regime (~1.3) 
         grid = [] # grid spacing that's linear at low regime and log at high regime 
         g = 0
@@ -501,7 +501,7 @@ for count in range(2):
     pC_fold, pC_fold_err = compute_stats(bins_concat, new_pCs_fold)
     pI_fold, pI_fold_err = compute_stats(bins_concat, new_pIs_fold)
     
-    # Avoid signal gain  (which happens when P_out never goes below the data level)
+    # Avoid signal gain (which happens when P_out never goes below the data level)
     def no_gain(pts, errs, old_dist):
         new_errs = []
         new_pts = []
