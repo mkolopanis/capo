@@ -105,20 +105,20 @@ def smooth_dist(fold=True):
             if n.sum(kdeI[:,col]) > 0:
                 kdeI[:,col] /= n.sum(kdeI[:,col]*bin_size(binsy_full))
         # Plot KDE and points
-        if opts.plot:
+        if count == 1: #opts.plot:
             p.figure(figsize=(10,6))
             p.subplot(121)
             p.pcolormesh(binsx,binsy_full,kdeC,cmap='hot_r')
-            if fold == True: dataval = file['pCv_fold'][n.where(kpl_fold==k)[0][0]]
-            if fold == False: dataval = file['pCv'][n.where(kpl_fold==k)[0][0]]
+            if fold == True: dataval = file['pCv_fold'][n.where(ks==k)[0][0]]
+            if fold == False: dataval = file['pCv'][n.where(ks==k)[0][0]]
             p.axhline(y=n.sign(dataval)*n.log10(n.abs(dataval)),color='0.5',linewidth=2)
             p.plot(n.log10(xs), n.sign(ys_C)*n.log10(n.abs(ys_C)),'k.')
             p.xlim(binsx.min(), binsx.max())
             p.ylim(binsy_full.min(), binsy_full.max()); p.grid()
             p.subplot(122)
             p.pcolormesh(binsx,binsy_full,kdeI,cmap='hot_r')
-            if fold == True: dataval = file['pIv_fold'][n.where(kpl_fold==k)[0][0]]
-            if fold == False: dataval = file['pIv'][n.where(kpl_fold==k)[0][0]]
+            if fold == True: dataval = file['pIv_fold'][n.where(ks==k)[0][0]]
+            if fold == False: dataval = file['pIv'][n.where(ks==k)[0][0]]
             p.axhline(y=n.sign(dataval)*n.log10(n.abs(dataval)),color='0.5',linewidth=2)
             p.plot(n.log10(xs), n.sign(ys_I)*n.log10(n.abs(ys_I)),'k.')
             p.xlim(binsx.min(), binsx.max())
