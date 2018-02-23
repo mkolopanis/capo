@@ -105,20 +105,24 @@ def smooth_dist(fold=True):
             if n.sum(kdeI[:,col]) > 0:
                 kdeI[:,col] /= n.sum(kdeI[:,col]*bin_size(binsy_full))
         # Plot KDE and points
-        if count == 1: #opts.plot:
+        if opts.plot:
             p.figure(figsize=(10,6))
             p.subplot(121)
             p.pcolormesh(binsx,binsy_full,kdeC,cmap='hot_r')
-            if fold == True: dataval = file['pCv_fold'][n.where(ks==k)[0][0]]
-            if fold == False: dataval = file['pCv'][n.where(ks==k)[0][0]]
+            if fold == True and count == 0: dataval = file['pCv_fold'][n.where(ks==k)[0][0]]
+            if fold == False and count == 0: dataval = file['pCv'][n.where(ks==k)[0][0]]
+            if fold == True and count == 1: dataval = file['pCn_fold'][n.where(ks==k)[0][0]]
+            if fold == False and count == 1: dataval = file['pCn'][n.where(ks==k)[0][0]]
             p.axhline(y=n.sign(dataval)*n.log10(n.abs(dataval)),color='0.5',linewidth=2)
             p.plot(n.log10(xs), n.sign(ys_C)*n.log10(n.abs(ys_C)),'k.')
             p.xlim(binsx.min(), binsx.max())
             p.ylim(binsy_full.min(), binsy_full.max()); p.grid()
             p.subplot(122)
             p.pcolormesh(binsx,binsy_full,kdeI,cmap='hot_r')
-            if fold == True: dataval = file['pIv_fold'][n.where(ks==k)[0][0]]
-            if fold == False: dataval = file['pIv'][n.where(ks==k)[0][0]]
+            if fold == True and count == 0: dataval = file['pIv_fold'][n.where(ks==k)[0][0]]
+            if fold == False and count == 0: dataval = file['pIv'][n.where(ks==k)[0][0]]
+            if fold == True and count == 1: dataval = file['pIn_fold'][n.where(ks==k)[0][0]]
+            if fold == False and count == 1: dataval = file['pIn'][n.where(ks==k)[0][0]]
             p.axhline(y=n.sign(dataval)*n.log10(n.abs(dataval)),color='0.5',linewidth=2)
             p.plot(n.log10(xs), n.sign(ys_I)*n.log10(n.abs(ys_I)),'k.')
             p.xlim(binsx.min(), binsx.max())
@@ -154,10 +158,10 @@ def sigloss_func(pt, M_matrix):
     return new_PS # distribution of bins_concat
  
 # Compute PS points and errors
-def compute_stats(bins, data, pt):
+def compute_stats(bins, data, pt, old=False):
     pts, errs = [], []
     for key in n.sort(data.keys()):
-        if opts.skip_sigloss: point = pt[key] # use no-bootstrapping case
+        if opts.skip_sigloss or old==True: point = pt[key] # use no-bootstrapping case
         else: 
             #point = bins[n.argmax(data[key])] # XXX peak of dist
             point = n.sum(bins*data[key])/n.sum(data[key]) # weighted avg
@@ -342,11 +346,44 @@ for count in range(2):
         new_pCs_fold = sigloss_func(pt_pCs_fold, kde_C_fold)
         new_pIs = sigloss_func(pt_pIs, kde_I)
         new_pIs_fold = sigloss_func(pt_pIs_fold, kde_I_fold)
-   
+
+    # Plot un-folded case
+    if opts.plot:
+        for k in kde_C:
+            p.figure(figsize=(10,10))
+            xmin,xmax = 0,16
+            p.subplot(221)
+            p.pcolormesh(binsx,binsy_full,kde_C[k],cmap='hot_r')
+            if count == 0: dataval = file['pCv'][n.where(kpl==k)[0][0]]
+            if count == 1: dataval = file['pCn'][n.where(kpl==k)[0][0]]
+            p.axhline(y=n.sign(dataval)*n.log10(n.abs(dataval)),color='0.5',linewidth=2)
+            p.xlim(xmin,xmax)
+            p.ylim(binsy_full.min(), binsy_full.max()); p.grid()
+            p.subplot(222)
+            p.pcolormesh(binsx,binsy_full,kde_I[k],cmap='hot_r')
+            if count == 0: dataval = file['pIv'][n.where(kpl==k)[0][0]]
+            if count == 1: dataval = file['pIn'][n.where(kpl==k)[0][0]]
+            p.axhline(y=n.sign(dataval)*n.log10(n.abs(dataval)),color='0.5',linewidth=2)
+            p.xlim(xmin,xmax)
+            p.ylim(binsy_full.min(), binsy_full.max()); p.grid()
+            p.subplot(223)
+            p.plot(binsx,new_pCs[k][len(binsx):],'k-'); p.grid()
+            p.xlim(xmin,xmax)
+            p.subplot(224)
+            p.plot(binsx,new_pIs[k][len(binsx):],'k-'); p.grid()
+            p.xlim(xmin,xmax)
+            p.tight_layout(); p.suptitle("k = " + str(k)); p.show()
+ 
     pC, pC_err = compute_stats(bins_concat, new_pCs, pt_pCs)
     pI, pI_err = compute_stats(bins_concat, new_pIs, pt_pIs)
     pC_fold, pC_fold_err = compute_stats(bins_concat, new_pCs_fold, pt_pCs_fold)
     pI_fold, pI_fold_err = compute_stats(bins_concat, new_pIs_fold, pt_pIs_fold)
+    
+    pC_old, pC_err_old = compute_stats(bins_concat, old_pCs, pt_pCs, old=True)
+    pI_old, pI_err_old = compute_stats(bins_concat, old_pIs, pt_pIs, old=True)
+    pC_fold_old, pC_fold_err_old = compute_stats(bins_concat, old_pCs_fold, pt_pCs_fold, old=True)
+    pI_fold_old, pI_fold_err_old = compute_stats(bins_concat, old_pIs_fold, pt_pIs_fold, old=True)
+    
     """
     if opts.skip_sigloss == None: # XXX artificially disallow signal gain
         pC, pC_err = no_gain(pC, pC_err, old_pCs, pt_pCs)
@@ -364,23 +401,23 @@ for count in range(2):
         n.savez(fn, k=k, binsx=binsx, binsy=binsy, bins_concat=bins_concat, pC=pC[ind], pC_err=pC_err[ind], pI=pI[ind], pI_err=pI_err[ind], new_pCs=new_pCs[k], new_pIs=new_pIs[k], old_pCs=old_pCs[k], old_pIs=old_pIs[k], Pins=Pins_fold[k], Pouts=Pouts_fold[k], Pouts_I=Pouts_I_fold[k])    
        
     if count == 0: # data case
-        pCv = pC    
-        pCv_fold = pC_fold
-        pIv = pI
-        pIv_fold = pI_fold
-        pCv_err = pC_err
-        pCv_fold_err = pC_fold_err
-        pIv_err = pI_err
-        pIv_fold_err = pI_fold_err
+        pCv = pC; pCv_old = pC_old
+        pCv_fold = pC_fold; pCv_fold_old = pC_fold_old
+        pIv = pI; pIv_old = pI_old
+        pIv_fold = pI_fold; pIv_fold_old = pI_fold_old
+        pCv_err = pC_err; pCv_err_old = pC_err_old
+        pCv_fold_err = pC_fold_err; pCv_fold_err_old = pC_fold_err_old
+        pIv_err = pI_err; pIv_err_old = pI_err_old
+        pIv_fold_err = pI_fold_err; pIv_fold_err_old = pI_fold_err_old
     if count == 1: # noise case
-        pCn = pC
-        pCn_fold = pC_fold
-        pIn = pI
-        pIn_fold = pI_fold
-        pCn_err = pC_err
-        pCn_fold_err = pC_fold_err
-        pIn_err = pI_err
-        pIn_fold_err = pI_fold_err
+        pCn = pC; pCn_old = pC_old
+        pCn_fold = pC_fold; pCn_fold_old = pC_fold_old
+        pIn = pI; pIn_old = pI_old
+        pIn_fold = pI_fold; pIn_fold_old = pI_fold_old
+        pCn_err = pC_err; pCn_err_old = pC_err_old
+        pCn_fold_err = pC_fold_err; pCn_fold_err_old = pC_fold_err_old
+        pIn_err = pI_err; pIn_err_old = pI_err_old
+        pIn_fold_err = pI_fold_err; pIn_fold_err_old = pI_fold_err_old
 
 # Write out solutions
 outname = 'pspec_final_sep'+opts.sep+'.npz'
@@ -396,6 +433,32 @@ n.savez(outname, kpl=kpl, k=file['k'], freq=file['freq'],
         pCn_fold=pCn_fold, pCn_fold_err=pCn_fold_err,
         pIn=pIn, pIn_err=pIn_err,
         pIn_fold=pIn_fold, pIn_fold_err=pIn_fold_err,
+        prob=0.95, kperp=file['kperp'], sep=opts.sep, kpl_fold=file['kpl_fold'],
+        ngps=file['ngps'], nbls=file['nbls'], nbls_g=file['nbls_g'], nlsts_g=file['nlsts_g'],
+        lsts=file['lsts'], afreqs=file['afreqs'], cnt_eff=file['cnt_eff'],
+        frf_inttime=file['frf_inttime'], inttime=file['inttime'], 
+        cmd=file['cmd'].item() + ' \n '+' '.join(sys.argv))
+
+outname2 = 'pspec_final_sep'+opts.sep+'_full.npz'
+print '   Saving', outname2
+# Save with 1-sigma errors (compatible with plot_pspec_final_v2.py)
+n.savez(outname2, kpl=kpl, k=file['k'], freq=file['freq'],
+        pCv=pCv, pCv_err=pCv_err, 
+        pCv_old=pCv_old, pCv_err_old=pCv_err_old,
+        pCv_fold=pCv_fold, pCv_fold_err=pCv_fold_err, 
+        pCv_fold_old=pCv_fold_old, pCv_fold_err_old=pCv_fold_err_old,
+        pIv=pIv, pIv_err=pIv_err,
+        pIv_old=pIv_old, pIv_err_old=pIv_err_old,
+        pIv_fold=pIv_fold, pIv_fold_err=pIv_fold_err,
+        pIv_fold_old=pIv_fold_old, pIv_fold_err_old=pIv_fold_err_old,
+        pCn=pCn, pCn_err=pCn_err, 
+        pCn_old=pCn_old, pCn_err_old=pCn_err_old,
+        pCn_fold=pCn_fold, pCn_fold_err=pCn_fold_err,
+        pCn_fold_old=pCn_fold_old, pCn_fold_err_old=pCn_fold_err_old,
+        pIn=pIn, pIn_err=pIn_err,
+        pIn_old=pIn_old, pIn_err_old=pIn_err_old,
+        pIn_fold=pIn_fold, pIn_fold_err=pIn_fold_err,
+        pIn_fold_old=pIn_fold_old, pIn_fold_err_old=pIn_fold_err_old,
         prob=0.95, kperp=file['kperp'], sep=opts.sep, kpl_fold=file['kpl_fold'],
         ngps=file['ngps'], nbls=file['nbls'], nbls_g=file['nbls_g'], nlsts_g=file['nlsts_g'],
         lsts=file['lsts'], afreqs=file['afreqs'], cnt_eff=file['cnt_eff'],
