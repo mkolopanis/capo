@@ -5,7 +5,7 @@ import matplotlib.pyplot as p
 from scipy import stats
 
 # Read file and get data
-file = n.load('pspec_sigloss_terms.npz')
+file = n.load('pspec_sigloss_terms_nosubtract.npz')
 k = file['k']
 Pins = n.array(file['Pins']).flatten() # P_in
 ind = n.where(Pins > 0)[0] # only pos P_ins
@@ -68,8 +68,8 @@ black_ind_neg_I = n.where(Pouts_I<0)[0] # where negative Pouts_I
 Pins_black_pos_I = Pins[black_ind_pos_I] # adjust Pins
 Pins_black_neg_I = Pins[black_ind_neg_I]
 poly_Pouts_pos_I = n.polyfit(n.log10(Pins_black_pos_I),n.log10(Pouts_I[black_ind_pos_I]),poly_dim)
-poly_Pouts_neg_I = n.polyfit(n.log10(Pins_black_neg_I),n.log10(-Pouts_I[black_ind_neg_I]),poly_dim)
-black_neg_I = -10**n.polyval(poly_Pouts_neg_I,n.log10(Pins_black_neg_I))
+#poly_Pouts_neg_I = n.polyfit(n.log10(Pins_black_neg_I),n.log10(-Pouts_I[black_ind_neg_I]),poly_dim)
+#black_neg_I = -10**n.polyval(poly_Pouts_neg_I,n.log10(Pins_black_neg_I))
 black_pos_I = 10**n.polyval(poly_Pouts_pos_I,n.log10(Pins_black_pos_I))
 
 poly_pCr = n.polyfit(n.log10(n.abs(Pins)),n.log10(n.abs(pCrs)),poly_dim)
@@ -123,7 +123,7 @@ low=1e2;high=1e16
 
 p.subplot(121)
 
-p.plot(Pins_black_pos,black_pos,'k-',label='$\mathrm{P_{out}}$',linewidth=3)
+p.plot(Pins_black_pos,black_pos,'k-',label='$\propto \mathrm{r\widehat{C}_{r}^{-1}Q\widehat{C}_{r}^{-1}r}$',linewidth=3)
 p.plot(Pins_black_neg,black_neg,'k-',linewidth=3)
 p.fill_between(Pins_black_neg, black_neg, n.interp(Pins_black_neg,Pins_black_pos,black_pos), facecolor=(0,0,0,0.5), edgecolor='k', linewidth=3)
 p.plot(Pins,blue,'b-',linewidth=3,label='$\propto \mathrm{x\widehat{C}_{r}^{-1}Q\widehat{C}_{r}^{-1}x}$')
@@ -155,9 +155,9 @@ p.legend(prop={'size':16},loc=3,numpoints=1,ncol=2)
 p.grid()
 
 p.subplot(122)
-p.plot(Pins_black_pos_I,black_pos_I,'k-',label='$\mathrm{P_{out}}$',linewidth=3)
-p.plot(Pins_black_neg_I,black_neg_I,'k-',linewidth=3)
-p.fill_between(Pins_black_neg_I, black_neg_I, n.interp(Pins_black_neg_I,Pins_black_pos_I,black_pos_I), facecolor=(0,0,0,0.5), edgecolor='k', linewidth=3)
+p.plot(Pins_black_pos_I,black_pos_I,'k-',label='$\propto \mathrm{rIQIr}$',linewidth=3)
+#p.plot(Pins_black_neg_I,black_neg_I,'k-',linewidth=3)
+#p.fill_between(Pins_black_neg_I, black_neg_I, n.interp(Pins_black_neg_I,Pins_black_pos_I,black_pos_I), facecolor=(0,0,0,0.5), edgecolor='k', linewidth=3)
 p.plot(Pins_red_pos_I,red_I_pos,'r-',linewidth=3,label='$\propto \mathrm{xIQIe}$')
 p.plot(Pins_red_neg_I,red_I_neg,'r-',linewidth=3)
 p.fill_between(Pins_red_neg_I, red_I_neg, n.interp(Pins_red_neg_I,Pins_red_pos_I,red_I_pos), facecolor=(1,0,0,0.5), edgecolor='r', linewidth=3)
