@@ -259,7 +259,7 @@ for filename in args.files:
                          -pCv_fold[neg_ind_fold],
                          pCv_fold_up[neg_ind_fold],
                          linestyle='',marker=marker, color='0.5')
-    ax1[gs_ind].plot(pspec_dict['k'], pCv_fold_new + pCv_fold_up_new, '--',
+    ax1[gs_ind].plot(pspec_dict['k'], pCv_fold_up_new, '--',
                     color='k')
     ax2[gs_ind].plot(pspec_dict['kpl'],
                      np.abs(pIv) + pIv_up, '--',
@@ -277,7 +277,7 @@ for filename in args.files:
                          -pCv[neg_ind],
                          pCv_up[neg_ind],
                          linestyle='', marker=marker, color='0.5')
-    ax2[gs_ind].plot(pspec_dict['kpl'], pCv_new + pCv_up_new, '--',
+    ax2[gs_ind].plot(pspec_dict['kpl'], pCv_up_new, '--',
                     color='k')
     ax3[gs_ind].plot(pspec_dict['k'],
                      np.abs(pIn_fold) + pIn_fold_up, '--',
@@ -295,7 +295,7 @@ for filename in args.files:
                          -pCn_fold[neg_ind_noise_fold],
                          pCn_fold_up[neg_ind_noise_fold],
                          linestyle='', marker=marker, color='0.5')
-    ax3[gs_ind].plot(pspec_dict['k'], pCn_fold_new + pCn_fold_up_new, '--',
+    ax3[gs_ind].plot(pspec_dict['k'], pCn_fold_up_new, '--',
                     color='k')
     ax4[gs_ind].plot(pspec_dict['kpl'],
                      np.abs(pIn) + pIn_up, '--',
@@ -313,7 +313,7 @@ for filename in args.files:
                          -pCn[neg_ind_noise],
                          pCn_up[neg_ind_noise],
                          linestyle='', marker=marker, color='0.5')
-    ax4[gs_ind].plot(pspec_dict['kpl'], pCn_new + pCn_up_new, '--',
+    ax4[gs_ind].plot(pspec_dict['kpl'], pCn_up_new, '--',
                     color='k')
     """
     ax1[gs_ind].errorbar(pspec_dict['k'][pos_ind_fold], 
