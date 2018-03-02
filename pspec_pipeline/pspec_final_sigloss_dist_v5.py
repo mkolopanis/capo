@@ -31,6 +31,18 @@ opts,args = o.parse_args(sys.argv[1:])
 #-------------
 ### FUNCTIONS
 
+# Calculate normalization factor for log-sampling prior
+# Factor is linear width
+def prior_factor(bins):
+    factors = []
+    for bb in range(len(bins)):
+        if bb != 0 and bb != len(bins)-1: # skip edge cases
+            factor = (bins[bb+1]-bins[bb-1]) #/ (n.log10(bins[bb+1]/bins[bb-1]))
+            factors.append(factor)
+    factors.append(factors[-1]) # repeat last value for right edge case
+    factors = n.insert(factors,0,factors[0]) # repeat first value for left edge case
+    return factors
+
 # Get bin sizes to use for normalization
 def bin_size(bins): # XXX approximation since they're just divided in two
     bins_size = []
@@ -90,15 +102,20 @@ def smooth_dist(fold=True):
         xs = xs[ind] 
         ys_C = ys_C[ind]
         ys_I = ys_I[ind]
-        factor = 0.05
-        factorI = 0.05
+        # find default kernel first
+        kernel_C = scipy.stats.gaussian_kde((n.log10(xs),n.sign(ys_C)*n.log10(n.abs(ys_C))),bw_method='scott')
+        kernel_I = scipy.stats.gaussian_kde((n.log10(xs),n.sign(ys_I)*n.log10(n.abs(ys_I))),bw_method='scott')
+        # back out factor to use, based on variance of injects
+        factor = n.sqrt(var_inject / kernel_C.covariance)[0][0] # use var of x-axis
+        factorI = n.sqrt(var_inject / kernel_I.covariance)[0][0]
+        # re-make kernels
         kernel_C = scipy.stats.gaussian_kde((n.log10(xs),n.sign(ys_C)*n.log10(n.abs(ys_C))),bw_method=factor)
-        kernel_I = scipy.stats.gaussian_kde((n.log10(xs),n.sign(ys_I)*n.log10(n.abs(ys_I))),bw_method = factorI)
+        kernel_I = scipy.stats.gaussian_kde((n.log10(xs),n.sign(ys_I)*n.log10(n.abs(ys_I))),bw_method=factorI)
         kdeC = n.reshape(kernel_C(positions).T,(binsy_full.size,binsy_full.size)).T
         kdeI = n.reshape(kernel_I(positions).T,(binsy_full.size,binsy_full.size)).T
         kdeC = kdeC[:,binsx.size:] # remove negative P_in half (nothing is there)
         kdeI = kdeI[:,binsx.size:]
-        # Normalize columns
+        # Normalize columns (this doesn't really matter since we take one horizontal cut, but let's do it for plotting purposes)
         for col in range(kdeC.shape[1]):
             if n.sum(kdeC[:,col]) > 0: # avoid nan values
                 kdeC[:,col] /= n.sum(kdeC[:,col]*bin_size(binsy_full))
@@ -152,8 +169,8 @@ def sigloss_func(pt, M_matrix):
         peak_ind = n.argmin(n.abs(bins_concat-point)) # matching index
         cut = M[peak_ind] # cut of KDE at peak of data
         #if peak_ind < len(bins_concat)/2: cut = M[len(bins_concat)-peak_ind-1] # XXX positive cut instead
-        cut /= n.sum(cut*bin_size(10**binsx))
-        cut = n.concatenate((n.zeros_like(cut),cut)) # tack on zeros as negative half (always positive points)
+        cut /= n.sum(cut*bin_size(10**binsx)) # normal normalization
+        cut * prior_factor(10**binsx) # normalize for prior
         new_PS[k] = cut
     return new_PS # distribution of bins_concat
  
@@ -161,31 +178,21 @@ def sigloss_func(pt, M_matrix):
 def compute_stats(bins, data, pt, old=False):
     pts, errs = [], []
     for key in n.sort(data.keys()):
-        if opts.skip_sigloss or old==True: point = pt[key] # use no-bootstrapping case
+        if opts.skip_sigloss or old==True: 
+            point = pt[key] # use no-bootstrapping case
         else: 
             #point = bins[n.argmax(data[key])] # XXX peak of dist
             point = n.sum(bins*data[key])/n.sum(data[key]) # weighted avg
         pts.append(point)
         percents = [n.sum((data[key]*bin_size(bins))[:i]) for i in range(len(data[key]))]
-        left = n.interp(0.025,percents,bins)
-        right = n.interp(0.975,percents,bins)
-        errs.append((right-left)/4) # 1-sigma
+        if opts.skip_sigloss or old==True: # find error when dist is centered at 0
+            left = n.interp(0.025,percents,bins)
+            right = n.interp(0.975,percents,bins)
+            errs.append((right-left)/4) # 1-sigma error bar
+        else:
+            up = n.interp(0.95,percents,bins) # upper limit (not error bar) of positive-only posterior
+            errs.append(up/2) # divide because it'll be multiplied in the plotting script
     return pts,errs
-
-# Avoid signal gain (i.e. avoid reducing PS values artificially because the transfer curve artificially shows 'signal gain')
-def no_gain(pts, errs, old_dist, pt):
-    new_errs = []
-    new_pts = []
-    _, old_errs = compute_stats(bins_concat, old_dist, pt)
-    for ee in range(len(errs)):
-        if errs[ee] < old_errs[ee]: # if variance after signal loss is smaller than before
-            new_errs.append(old_errs[ee])
-            try: new_pts.append(n.abs(pt[kpl[ee]])) # un-folded case # XXX abs since points are always positive now?
-            except: new_pts.append(n.abs(pt[-kpl[ee]])) # folded case (positive k's only)
-        else: 
-            new_errs.append(errs[ee])
-            new_pts.append(pts[ee])
-    return new_pts, new_errs
 
 #-----------------
 ### Main Program
@@ -225,6 +232,11 @@ for count in range(2):
             Pout_I_fold = file_2d['pIs-pIn_fold']
             Pout = file_2d['pCs-pCn']
             Pout_I = file_2d['pIs-pIn']
+            if opts.nosubtract:
+                Pout_fold = file_2d['pCs_fold']
+                Pout_I_fold = file_2d['pIs_fold']
+                Pout = file_2d['pCs']
+                Pout_I = file_2d['pIs']
             pC = file_2d['pCn']
             pC_fold = file_2d['pCn_fold']
             pI = file_2d['pIn']
@@ -258,6 +270,15 @@ for count in range(2):
 
         Pin_fold = file_2d['pIe_fold']
         Pin = file_2d['pIe']
+        
+        # estimate variance of inject
+        varz = []
+        for k_val in range(Pin.shape[1]):
+            dat = n.log10(Pin[:,k_val])
+            var = n.std(dat)**2
+            varz.append(var)
+            #print 'k:',kpl[k_val],' ; var:',var
+        var_inject = n.mean(varz) # mean over k (should be the same for all injects if seed is the same)
         
         for ind in range(len(kpl_fold)): # loop through k for Delta^2(k)
             try:
@@ -305,7 +326,7 @@ for count in range(2):
     ### SIGNAL LOSS CODE
 
     binsx, binsy, binsy_full, bins_concat = make_bins() # bins are where to sample distributions
-
+    
     # Get distributions of original data (used to find errors if skip_sigloss)
     old_pCs = data_dist(pCs)
     old_pCs_fold = data_dist(pCs_fold)
@@ -367,30 +388,23 @@ for count in range(2):
             p.xlim(xmin,xmax)
             p.ylim(binsy_full.min(), binsy_full.max()); p.grid()
             p.subplot(223)
-            p.plot(binsx,new_pCs[k][len(binsx):],'k-'); p.grid()
+            p.plot(binsx,new_pCs[k],'k-'); p.grid()
             p.xlim(xmin,xmax)
             p.subplot(224)
-            p.plot(binsx,new_pIs[k][len(binsx):],'k-'); p.grid()
+            p.plot(binsx,new_pIs[k],'k-'); p.grid()
             p.xlim(xmin,xmax)
             p.tight_layout(); p.suptitle("k = " + str(k)); p.show()
  
-    pC, pC_err = compute_stats(bins_concat, new_pCs, pt_pCs)
-    pI, pI_err = compute_stats(bins_concat, new_pIs, pt_pIs)
-    pC_fold, pC_fold_err = compute_stats(bins_concat, new_pCs_fold, pt_pCs_fold)
-    pI_fold, pI_fold_err = compute_stats(bins_concat, new_pIs_fold, pt_pIs_fold)
+    pC, pC_err = compute_stats(10**binsx, new_pCs, pt_pCs)
+    pI, pI_err = compute_stats(10**binsx, new_pIs, pt_pIs)
+    pC_fold, pC_fold_err = compute_stats(10**binsx, new_pCs_fold, pt_pCs_fold)
+    pI_fold, pI_fold_err = compute_stats(10**binsx, new_pIs_fold, pt_pIs_fold)
     
     pC_old, pC_err_old = compute_stats(bins_concat, old_pCs, pt_pCs, old=True)
     pI_old, pI_err_old = compute_stats(bins_concat, old_pIs, pt_pIs, old=True)
     pC_fold_old, pC_fold_err_old = compute_stats(bins_concat, old_pCs_fold, pt_pCs_fold, old=True)
     pI_fold_old, pI_fold_err_old = compute_stats(bins_concat, old_pIs_fold, pt_pIs_fold, old=True)
     
-    """
-    if opts.skip_sigloss == None: # XXX artificially disallow signal gain
-        pC, pC_err = no_gain(pC, pC_err, old_pCs, pt_pCs)
-        pI, pI_err = no_gain(pI, pI_err, old_pIs, pt_pIs)
-        pC_fold, pC_fold_err = no_gain(pC_fold, pC_fold_err, old_pCs_fold, pt_pCs_fold)
-        pI_fold, pI_fold_err = no_gain(pI_fold, pI_fold_err, old_pIs_fold, pt_pIs_fold)
-    """
     # Save values to use for plotting sigloss plots
     if count == 0:
         Ind = -3 # one k-value
