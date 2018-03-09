@@ -96,54 +96,68 @@ def smooth_dist(fold=True):
             ys_C = n.array(Pouts[k]).flatten()
             ys_I = n.array(Pouts_I[k]).flatten()
         # Kernel Density Estimator (all values together)
-        ygrid,xgrid = n.meshgrid(binsy_full,binsy_full)
-        positions = n.vstack([xgrid.ravel(),ygrid.ravel()])
         ind = n.where(xs > 0)[0] # only positive P_in's
         xs = xs[ind] 
         ys_C = ys_C[ind]
         ys_I = ys_I[ind]
+        if True: # log-space kde
+            binsy_kde = binsy_full
+            binsx_kde = binsx
+            xs_kde = n.log10(xs)
+            ys_kde = n.sign(ys_C)*n.log10(n.abs(ys_C))
+            ys_I_kde = n.sign(ys_I)*n.log10(n.abs(ys_I))
+        if False: # linear-space kde # XXX need to edit var_inject appropriately
+            binsy_kde = bins_concat
+            binsx_kde = bins_concat[len(bins_concat)/2:]
+            xs_kde = xs
+            ys_kde = ys_C
+            ys_I_kde = ys_I
+        ygrid,xgrid = n.meshgrid(binsy_kde,binsy_kde)
+        positions = n.vstack([xgrid.ravel(),ygrid.ravel()])
         # find default kernel first
-        kernel_C = scipy.stats.gaussian_kde((n.log10(xs),n.sign(ys_C)*n.log10(n.abs(ys_C))),bw_method='scott')
-        kernel_I = scipy.stats.gaussian_kde((n.log10(xs),n.sign(ys_I)*n.log10(n.abs(ys_I))),bw_method='scott')
-        # back out factor to use, based on variance of injects
-        factor = n.sqrt(var_inject / kernel_C.covariance)[0][0] # use var of x-axis
-        factorI = n.sqrt(var_inject / kernel_I.covariance)[0][0]
+        kernel_C = scipy.stats.gaussian_kde((xs_kde,ys_kde),bw_method='scott')
+        kernel_I = scipy.stats.gaussian_kde((xs_kde,ys_I_kde),bw_method='scott')
+        # revise factor using the cov per injection level
+        ratio = n.sqrt(var_inject / n.cov(xs_kde))
+        ratioI = n.sqrt(var_inject / n.cov(xs_kde))
+        factor = ratio * kernel_C.factor
+        factorI = ratioI * kernel_I.factor
         # re-make kernels
-        kernel_C = scipy.stats.gaussian_kde((n.log10(xs),n.sign(ys_C)*n.log10(n.abs(ys_C))),bw_method=factor)
-        kernel_I = scipy.stats.gaussian_kde((n.log10(xs),n.sign(ys_I)*n.log10(n.abs(ys_I))),bw_method=factorI)
-        kdeC = n.reshape(kernel_C(positions).T,(binsy_full.size,binsy_full.size)).T
-        kdeI = n.reshape(kernel_I(positions).T,(binsy_full.size,binsy_full.size)).T
-        kdeC = kdeC[:,binsx.size:] # remove negative P_in half (nothing is there)
-        kdeI = kdeI[:,binsx.size:]
+        kernel_C = scipy.stats.gaussian_kde((xs_kde,ys_kde),bw_method=factor)
+        kernel_I = scipy.stats.gaussian_kde((xs_kde,ys_I_kde),bw_method=factorI)
+        kdeC = n.reshape(kernel_C(positions).T,(binsy_kde.size,binsy_kde.size)).T
+        kdeI = n.reshape(kernel_I(positions).T,(binsy_kde.size,binsy_kde.size)).T
+        kdeC = kdeC[:,binsx_kde.size:] # remove negative P_in half (nothing is there)
+        kdeI = kdeI[:,binsx_kde.size:]
         # Normalize columns (this doesn't really matter since we take one horizontal cut, but let's do it for plotting purposes)
         for col in range(kdeC.shape[1]):
             if n.sum(kdeC[:,col]) > 0: # avoid nan values
-                kdeC[:,col] /= n.sum(kdeC[:,col]*bin_size(binsy_full))
+                kdeC[:,col] /= n.sum(kdeC[:,col]*bin_size(binsy_kde))
             if n.sum(kdeI[:,col]) > 0:
-                kdeI[:,col] /= n.sum(kdeI[:,col]*bin_size(binsy_full))
+                kdeI[:,col] /= n.sum(kdeI[:,col]*bin_size(binsy_kde))
         # Plot KDE and points
         if opts.plot:
             p.figure(figsize=(10,6))
             p.subplot(121)
-            p.pcolormesh(binsx,binsy_full,kdeC,cmap='hot_r')
+            p.pcolormesh(binsx_kde,binsy_kde,kdeC,cmap='hot_r')
             if fold == True and count == 0: dataval = file['pCv_fold'][n.where(ks==k)[0][0]]
             if fold == False and count == 0: dataval = file['pCv'][n.where(ks==k)[0][0]]
             if fold == True and count == 1: dataval = file['pCn_fold'][n.where(ks==k)[0][0]]
-            if fold == False and count == 1: dataval = file['pCn'][n.where(ks==k)[0][0]]
+            if  fold == False and count == 1: dataval = file['pCn'][n.where(ks==k)[0][0]]
             p.axhline(y=n.sign(dataval)*n.log10(n.abs(dataval)),color='0.5',linewidth=2)
-            p.plot(n.log10(xs), n.sign(ys_C)*n.log10(n.abs(ys_C)),'k.')
+            p.plot(xs_kde, ys_kde,'k.')
             p.xlim(binsx.min(), binsx.max())
             p.ylim(binsy_full.min(), binsy_full.max()); p.grid()
             p.subplot(122)
-            p.pcolormesh(binsx,binsy_full,kdeI,cmap='hot_r')
+            p.pcolormesh(binsx_kde,binsy_kde,kdeI,cmap='hot_r')
             if fold == True and count == 0: dataval = file['pIv_fold'][n.where(ks==k)[0][0]]
             if fold == False and count == 0: dataval = file['pIv'][n.where(ks==k)[0][0]]
             if fold == True and count == 1: dataval = file['pIn_fold'][n.where(ks==k)[0][0]]
             if fold == False and count == 1: dataval = file['pIn'][n.where(ks==k)[0][0]]
             p.axhline(y=n.sign(dataval)*n.log10(n.abs(dataval)),color='0.5',linewidth=2)
-            p.plot(n.log10(xs), n.sign(ys_I)*n.log10(n.abs(ys_I)),'k.')
-            p.xlim(binsx.min(), binsx.max())
-            p.ylim(binsy_full.min(), binsy_full.max())
+            p.plot(xs_kde,ys_I_kde,'k.')
+            p.xlim(binsx_kde.min(), binsx_kde.max())
+            p.ylim(binsy_kde.min(), binsy_kde.max())
             p.tight_layout(); p.suptitle("k = " + str(k)); p.grid(); p.show()
         kde_C[k] = kdeC # populate dictionary
         kde_I[k] = kdeI
@@ -275,7 +289,7 @@ for count in range(2):
         varz = []
         for k_val in range(Pin.shape[1]):
             dat = n.log10(Pin[:,k_val])
-            var = n.std(dat)**2
+            var = n.cov(dat)
             varz.append(var)
             #print 'k:',kpl[k_val],' ; var:',var
         var_inject = n.mean(varz) # mean over k (should be the same for all injects if seed is the same)
@@ -305,6 +319,7 @@ for count in range(2):
                 pIves_fold[kpl_fold[ind]] = [pIve_fold[:,ind]]
                 pCrs_fold[kpl_fold[ind]] = [pCr_fold[:,ind]]
                 pIrs_fold[kpl_fold[ind]] = [pIr_fold[:,ind]]
+        
         for ind in range(len(kpl)): # loop through k for P(k)
             pCs[kpl[ind]] = [pC[:,ind]] # no appending because it's the same for every inject
             pIs[kpl[ind]] = [pI[:,ind]]
@@ -316,7 +331,7 @@ for count in range(2):
                 Pouts[kpl[ind]] = [Pout[:,ind]]
                 Pouts_I[kpl[ind]] = [Pout_I[:,ind]]
                 Pins[kpl[ind]] = [Pin[:,ind]]
-                
+    
     # Values of interest are contained within dictionaries indexed by kpl_fold or kpl:
     #     Pins_fold, Pins
     #     Pouts_fold, Pouts
@@ -324,7 +339,6 @@ for count in range(2):
     #     pCs, pCs_fold, pIs, pIs_fold  (data/noise values)
  
     ### SIGNAL LOSS CODE
-
     binsx, binsy, binsy_full, bins_concat = make_bins() # bins are where to sample distributions
     
     # Get distributions of original data (used to find errors if skip_sigloss)
@@ -332,7 +346,7 @@ for count in range(2):
     old_pCs_fold = data_dist(pCs_fold)
     old_pIs = data_dist(pIs)    
     old_pIs_fold = data_dist(pIs_fold)
-
+    
     # Get original PS points (from no-bootstrapping case)
     if count == 0: # data case
         pt_pC = file['pCv']
@@ -367,7 +381,7 @@ for count in range(2):
         new_pCs_fold = sigloss_func(pt_pCs_fold, kde_C_fold)
         new_pIs = sigloss_func(pt_pIs, kde_I)
         new_pIs_fold = sigloss_func(pt_pIs_fold, kde_I_fold)
-
+    
     # Plot un-folded case
     if opts.plot:
         for k in kde_C:
