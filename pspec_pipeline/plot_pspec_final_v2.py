@@ -226,13 +226,21 @@ for filename in args.files:
     prob = 95
     # now get post-sigloss data
     pCv_new = pspec_dict['pCv']
+    pIv_new = pspec_dict['pIv']
     pCv_up_new = pspec_dict['pCv_err']*2
+    pIv_up_new = pspec_dict['pIv_err']*2
     pCv_fold_new = pspec_dict['pCv_fold']*fold_factor
+    pIv_fold_new = pspec_dict['pIv_fold']*fold_factor
     pCv_fold_up_new = pspec_dict['pCv_fold_err']*fold_factor
+    pIv_fold_up_new = pspec_dict['pIv_fold_err']*fold_factor
     pCn_new = pspec_dict['pCn']
+    pIn_new = pspec_dict['pIn']
     pCn_up_new = pspec_dict['pCn_err']*2
+    pIn_up_new = pspec_dict['pIn_err']*2
     pCn_fold_new = pspec_dict['pCn_fold']*fold_factor
+    pIn_fold_new = pspec_dict['pIn_fold']*fold_factor
     pCn_fold_up_new = pspec_dict['pCn_fold_err']*fold_factor
+    pIn_fold_up_new = pspec_dict['pIn_fold_err']*fold_factor
      
     pos_ind = np.where(pCv >= 0)[0]
     pos_ind_noise = np.where(pCn >= 0)[0]
@@ -261,6 +269,8 @@ for filename in args.files:
                          linestyle='',marker=marker, color='0.5')
     ax1[gs_ind].plot(pspec_dict['k'], pCv_fold_up_new, '--',
                     color='k')
+    #ax1[gs_ind].plot(pspec_dict['k'], pIv_fold_up_new, '--',
+    #                color='c')
     ax2[gs_ind].plot(pspec_dict['kpl'],
                      np.abs(pIv) + pIv_up, '--',
                      label='pI {0:02d}%'.format(int(prob)))
@@ -279,6 +289,8 @@ for filename in args.files:
                          linestyle='', marker=marker, color='0.5')
     ax2[gs_ind].plot(pspec_dict['kpl'], pCv_up_new, '--',
                     color='k')
+    #ax2[gs_ind].plot(pspec_dict['kpl'], pIv_up_new, '--',
+    #                color='c')
     ax3[gs_ind].plot(pspec_dict['k'],
                      np.abs(pIn_fold) + pIn_fold_up, '--',
                      label='pIn {0:02d}%'.format(int(prob)))
@@ -297,6 +309,8 @@ for filename in args.files:
                          linestyle='', marker=marker, color='0.5')
     ax3[gs_ind].plot(pspec_dict['k'], pCn_fold_up_new, '--',
                     color='k')
+    #ax3[gs_ind].plot(pspec_dict['k'], pIn_fold_up_new, '--',
+    #                color='c')
     ax4[gs_ind].plot(pspec_dict['kpl'],
                      np.abs(pIn) + pIn_up, '--',
                      label='pIn {0:02d}%'.format(int(prob)))
@@ -315,6 +329,8 @@ for filename in args.files:
                          linestyle='', marker=marker, color='0.5')
     ax4[gs_ind].plot(pspec_dict['kpl'], pCn_up_new, '--',
                     color='k')
+    #ax4[gs_ind].plot(pspec_dict['kpl'], pIn_up_new, '--',
+    #                color='c')
     """
     ax1[gs_ind].errorbar(pspec_dict['k'][pos_ind_fold], 
                         pspec_dict['pC_fold'][pos_ind_fold], 
