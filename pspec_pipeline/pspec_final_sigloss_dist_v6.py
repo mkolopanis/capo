@@ -126,6 +126,14 @@ def smooth_dist(fold=True):
                 kdeC[:,col] /= n.sum(kdeC[:,col]*bin_size(binsy_kde))
             if n.sum(kdeI[:,col]) > 0:
                 kdeI[:,col] /= n.sum(kdeI[:,col]*bin_size(binsy_kde))
+        
+         # Save values to use for plotting sigloss plots
+        if count == 0 and fold == True and kk == 8:
+            if opts.nosubtract: fn = 'pspec_sigloss_nosubtract.npz'
+            else: fn = 'pspec_sigloss.npz'
+            print "Saving",fn,"which contains data values for k =",k
+            n.savez(fn, k=k, binsx=binsx_kde, binsy=binsy_kde, kdeC=kdeC, kdeI=kdeI, xs=xs_kde, ys=ys_kde, ysI=ys_I_kde, pC=file['pCv_fold'][n.where(ks==k)[0][0]], pI=file['pIv_fold'][n.where(ks==k)[0][0]])    
+        
         # Plot KDE and points
         if opts.plot:
             p.figure(figsize=(10,6))
@@ -227,6 +235,7 @@ for count in range(2):
     pIrs_fold = {}
 
     for inject in glob.glob('inject_sep'+opts.sep+'*'):
+        #if 'moredense' in inject: continue
         print 'Reading', inject
         file_2d = n.load(inject + '/pspec_2d_to_1d.npz')
 
@@ -410,15 +419,6 @@ for count in range(2):
     pC_fold_old, pC_fold_err_old = compute_stats(binsy_lin, old_pCs_fold, pt_pCs_fold, old=True)
     pI_fold_old, pI_fold_err_old = compute_stats(binsy_lin, old_pIs_fold, pt_pIs_fold, old=True)
     
-    # Save values to use for plotting sigloss plots
-    if count == 0:
-        Ind = -3 # one k-value
-        k = kpl[ind]
-        if opts.nosubtract: fn = 'pspec_sigloss_nosubtract.npz'
-        else: fn = 'pspec_sigloss.npz'
-        print "Saving",fn,"which contains data values for k =",k
-        n.savez(fn, k=k, binsx=binsx_log, binsy=binsy_log, pC=pC[ind], pC_err=pC_err[ind], pI=pI[ind], pI_err=pI_err[ind], new_pCs=new_pCs[k], new_pIs=new_pIs[k], old_pCs=old_pCs[k], old_pIs=old_pIs[k], Pins=Pins_fold[k], Pouts=Pouts_fold[k], Pouts_I=Pouts_I_fold[k])    
-       
     if count == 0: # data case
         pCv = pC; pCv_old = pC_old
         pCv_fold = pC_fold; pCv_fold_old = pC_fold_old
@@ -437,7 +437,16 @@ for count in range(2):
         pCn_fold_err = pC_fold_err; pCn_fold_err_old = pC_fold_err_old
         pIn_err = pI_err; pIn_err_old = pI_err_old
         pIn_fold_err = pI_fold_err; pIn_fold_err_old = pI_fold_err_old
-
+    """
+    # Save values to use for plotting sigloss plots
+    if count == 0:
+        Ind = -3 # one k-value
+        k = kpl[ind]
+        if opts.nosubtract: fn = 'pspec_sigloss_nosubtract.npz'
+        else: fn = 'pspec_sigloss.npz'
+        print "Saving",fn,"which contains data values for k =",k
+        n.savez(fn, k=k, binsx=binsx, binsy=binsy, bins_concat=bins_concat, pC=pC[ind], pC_err=pC_err[ind], pI=pI[ind], pI_err=pI_err[ind], new_pCs=new_pCs[k], new_pIs=new_pIs[k], old_pCs=old_pCs[k], old_pIs=old_pIs[k], Pins=Pins_fold[k], Pouts=Pouts_fold[k], Pouts_I=Pouts_I_fold[k])
+    """
 # Write out solutions
 outname = 'pspec_final_sep'+opts.sep+'.npz'
 print '   Saving', outname
