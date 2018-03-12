@@ -6,9 +6,21 @@ from matplotlib.colors import LogNorm
 from scipy import stats
 
 # Read file and get data
-file = n.load('pspec_sigloss.npz')
-#file = n.load('pspec_sigloss_nosubtract.npz')
+#file = n.load('pspec_sigloss.npz')
+file = n.load('pspec_sigloss_nosubtract.npz')
 k = file['k']
+xs = 10**file['xs']
+ys = 10**n.abs(file['ys'])*n.sign(file['ys'])
+ysI = 10**n.abs(file['ysI'])*n.sign(file['ysI'])
+M = file['kdeC']
+M_I = file['kdeI']
+pC = file['pC']
+pI = file['pI']
+binsx = file['binsx']
+binsy = file['binsy']
+binsy_full = 10**n.abs(binsy)*n.sign(binsy)
+
+"""
 file2 = n.load('inject_sep0,1_0.001/pspec_pk_k3pk.npz')
 file_pts = file2['pCv']
 file_pts_I = file2['pIv']
@@ -25,7 +37,8 @@ binsx = file['binsx']
 binsy = file['binsy']
 #binsx = file['bins']
 #binsy = file['bins']
-
+binsy_full = n.concatenate((-10**binsy[::-1],10**binsy))
+"""
 """
 # Fit polynomial to mean signal loss transfer curve
 xs = n.log10(n.abs(Pins.flatten())) # absolute value since symmetric
@@ -41,7 +54,7 @@ ys_I = ys_I[order]
 coeff = n.polyfit(xs,ys,8) # coefficients from highest to lowest order
 coeff_I = n.polyfit(xs,ys_I,8)
 """
-
+"""
 #KDE
 Pouts_pos = Pouts[n.where(Pouts > 0)[0]]
 Pouts_neg = -Pouts[n.where(Pouts < 0)[0]]
@@ -81,53 +94,44 @@ M_I = n.concatenate((M_neg_I[::-1],M_pos_I))
 for col in range(M.shape[1]): # normalize together
     M[:,col] /= n.sum(M[:,col])#*bin_size(n.concatenate((-binsy[::-1],binsy))))
     M_I[:,col] /= n.sum(M_I[:,col])#*bin_size(n.concatenate((-binsy[::-1],binsy))))
-
+"""
 # Plot signal loss transfer curves
-pklo=1e2
-pkhi=1e13
-binsy_full = n.concatenate((-10**binsy[::-1],10**binsy))
+pklo=1e5#1e2
+pkhi=1e11#1e13
 
 plt.figure(figsize=(12,6))
 plt.subplot(121)
-#plt.plot(n.abs(Pins.flatten()),n.abs(Pouts.flatten()),'k.',label="All bootstraps")
-#plt.plot(10**binsx,10**n.polyval(coeff,binsx),'r-',label="Polynomial Fit")
-plt.pcolormesh(10**binsx,binsy_full,M,cmap='hot_r',vmin=0,vmax=0.18)
+plt.plot(xs,ys,'k.')
+plt.pcolormesh(10**binsx,binsy_full,M,cmap='hot_r',vmin=0,vmax=3)
 plt.plot([pklo, pkhi], [pklo, pkhi], 'k:')  # diagonal line
 plt.plot([pklo, pkhi], [-pklo,-pkhi], 'k:')  # diagonal line
-plt.hlines(y=n.abs(file_pts[k_pts_ind]),xmin=pklo,xmax=pkhi,color='0.5',linewidth=3) # peak of original distribution
-#plt.legend(numpoints=1,prop={'size':10},loc='best')
-#plt.grid()
+#plt.hlines(y=n.abs(file_pts[k_pts_ind]),xmin=pklo,xmax=pkhi,color='0.5',linewidth=3) # peak of original distribution
+plt.hlines(y=pC,xmin=pklo,xmax=pkhi,color='0.5',linewidth=3)
 plt.yscale('symlog',linthreshy=1e2)
 plt.xscale('log')
 plt.xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]')
 ttl = plt.title("Inverse Covariance Weighting, k = " + str(n.round(k,3)) + " h Mpc$^{-1}$", fontsize=14)
 ttl.set_position([.5, 1.03])
 plt.xlabel('$\mathrm{P_{in}}$ $[mK^{2}(h^{-1} Mpc)^{3}]$', fontsize=18)
-plt.ylabel('$\mathrm{P_{out}}$ $[mK^{2}(h^{-1} Mpc)^{3}]$', fontsize=18)
-#plt.ylabel('$\mathrm{\widehat{p}_{r}}$ $[mK^{2}(h^{-1} Mpc)^{3}]$', fontsize=18)
+plt.ylabel('$\mathrm{\widehat{p}_{r}}$ $[mK^{2}(h^{-1} Mpc)^{3}]$', fontsize=18)
 plt.tick_params(axis='both', which='major', labelsize=14)
 plt.xlim(pklo,pkhi)
 plt.ylim(-pkhi,pkhi)
 plt.grid()
 
 plt.subplot(122)
-#plt.plot(n.abs(Pins.flatten()),n.abs(Pouts_I.flatten()),'k.',label="All bootstraps")
-#plt.plot(10**binsx,10**n.polyval(coeff_I,binsx),'r-',label="Polynomial Fit")
-plt.hlines(y=file_pts_I[k_pts_ind],xmin=pklo,xmax=pkhi,color='0.5',linewidth=3)
-plt.pcolormesh(10**binsx,binsy_full,M_I,cmap='hot_r',vmin=0,vmax=0.18)
+#plt.hlines(y=file_pts_I[k_pts_ind],xmin=pklo,xmax=pkhi,color='0.5',linewidth=3)
+plt.hlines(y=pI,xmin=pklo,xmax=pkhi,color='0.5',linewidth=3)
+plt.plot(xs,ysI,'k.')
+plt.pcolormesh(10**binsx,binsy_full,M_I,cmap='hot_r',vmin=0,vmax=3)
 plt.plot([pklo, pkhi], [pklo, pkhi], 'k:')  # diagonal line
 plt.plot([pklo, pkhi], [-pklo,-pkhi], 'k:')  # diagonal line
-#plt.legend(numpoints=1,prop={'size':10},loc='best')
-#plt.grid()
 plt.yscale('symlog',linthreshy=1e2)
 plt.xscale('log')
-#plt.yscale('symlog',linthreshy=5e7)
-#plt.xscale('symlog',linthreshx=5e7)
 ttl = plt.title("Uniform Weighting, k = " + str(n.round(k,3)) + " h Mpc$^{-1}$", fontsize=14)
 ttl.set_position([.5, 1.03])
 plt.xlabel('$\mathrm{P_{in}}$ $[mK^{2}(h^{-1} Mpc)^{3}]$', fontsize=18)
-plt.ylabel('$\mathrm{P_{out}}$ $[mK^{2}(h^{-1} Mpc)^{3}]$', fontsize=18)
-#plt.ylabel('$\mathrm{\widehat{p}_{r}}$ $[mK^{2}(h^{-1} Mpc)^{3}]$', fontsize=18)
+plt.ylabel('$\mathrm{\widehat{p}_{r}}$ $[mK^{2}(h^{-1} Mpc)^{3}]$', fontsize=18)
 plt.tick_params(axis='both', which='major', labelsize=14)
 plt.xlim(pklo,pkhi)
 plt.ylim(-pkhi,pkhi)

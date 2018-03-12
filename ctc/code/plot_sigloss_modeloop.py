@@ -15,15 +15,27 @@ if True: # eigenmodes set to 1
     xlabel='Number of modes down-weighted using inverse covariance weighting'
     f1 = '/project_'
     f2 = '_modes'
+    loop = n.arange(startmode,nmodes,deltamode)
 
-if True: # added identity parameters
+if False: # added identity parameters
     path_add = '/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity_trace'
     startmode_add=0 
-    nmodes_add=0.2 #20000 
+    nmodes_add=0.2 #0.4 #20000 
     deltamode_add=0.01 #1000
     xlabel_add='Strength of identity added: $\widehat{C} + xTr(\widehat{C}$)'
     f1_add = '/add_'
     f2_add = '_identity'
+    loop_add = n.arange(startmode_add,nmodes_add,deltamode_add)
+
+if True: # added identity parameters in LOG space
+    path_add = '/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity_trace_log'
+    startmode_add=-4 
+    endmode_add=0
+    nmodes_add=20 #20000 
+    xlabel_add='Strength of identity added: $\widehat{C} + xTr(\widehat{C}$)'
+    f1_add = '/add_'
+    f2_add = '_identity'
+    loop_add = n.logspace(startmode_add,endmode_add,nmodes_add)
 
 # Read files
 sense=4436767.36822*2 # XXX from plotting one of the "project_#_modes" directories
@@ -31,42 +43,50 @@ PS_i_up = []
 PS_f_up = []
 PS_i = []
 PS_f = []
-for mode_num in n.arange(startmode,nmodes,deltamode):
+k_ind = -3
+
+for mode_num in loop:
     filename = path + f1 + str(mode_num) + f2
     print 'Reading', filename
     print mode_num
     #file_i = n.load(filename + '/inject_sep0,1_0.001/pspec_pk_k3pk.npz')
-    file_i = n.load(filename + '/pspec_final_sep0,1_nosigloss.npz')
-    file_f = n.load(filename + '/pspec_final_sep0,1.npz')
-    kpl = file_i['kpl']
-    k_ind = -3 # XXX hard-coded k index for k = 0.344
+    #file_i = n.load(filename + '/pspec_final_sep0,1_nosigloss.npz')
+    #file_f = n.load(filename + '/pspec_final_sep0,1.npz')
+    f = n.load(filename+'/pspec_final_sep0,1_full.npz')
+    kpl = f['kpl']
     k = kpl[k_ind] 
-    PS_i_up.append(2*file_i['pCv_err'][k_ind]) # 2-sigma err
-    PS_f_up.append(2*file_f['pCv_err'][k_ind]) # 2-sigma err
-    PS_i.append(n.abs(file_i['pCv'])[k_ind])
-    PS_f.append(n.abs(file_f['pCv'])[k_ind])
-    #if mode_num == 0:
-    #    PS_f_up[0] = PS_i_up[0]
+    #PS_i_up.append(2*file_i['pCv_err'][k_ind]) # 2-sigma err
+    #PS_f_up.append(2*file_f['pCv_err'][k_ind]) # 2-sigma err
+    #PS_i.append(n.abs(file_i['pCv'])[k_ind])
+    #PS_f.append(n.abs(file_f['pCv'])[k_ind])
+    PS_i_up.append(2*n.array(f['pCv_err_old'])[k_ind])
+    PS_f_up.append(2*n.array(f['pCv_err'])[k_ind])
+    PS_i.append(n.abs(f['pCv_old'])[k_ind])
+    PS_f.append(n.abs(f['pCv'])[k_ind])
 
 #""" # Read in added identity case as a second curve being plotted
 PS_i_up_add = []
 PS_f_up_add = []
 PS_i_add = []
 PS_f_add = []
-for mode_num in n.arange(startmode_add,nmodes_add,deltamode_add):
+for mode_num in loop_add:
     filename = path_add + f1_add + str(mode_num) + f2_add
     print 'Reading', filename
     print mode_num
     #file_i = n.load(filename + '/inject_sep0,1_0.001/pspec_pk_k3pk.npz')
-    file_i = n.load(filename + '/pspec_final_sep0,1_nosigloss.npz')
-    file_f = n.load(filename + '/pspec_final_sep0,1.npz')
-    kpl = file_i['kpl']
-    k_ind = -3 # XXX hard-coded k index for k = 0.344
+    #file_i = n.load(filename + '/pspec_final_sep0,1_nosigloss.npz')
+    #file_f = n.load(filename + '/pspec_final_sep0,1.npz')
+    f = n.load(filename + '/pspec_final_sep0,1_full.npz')
+    kpl = f['kpl']
     k = kpl[k_ind] 
-    PS_i_up_add.append(2*file_i['pCv_err'][k_ind]) # 2-sigma err
-    PS_f_up_add.append(2*file_f['pCv_err'][k_ind]) # 2-sigma err
-    PS_i_add.append(n.abs(file_i['pCv'])[k_ind])
-    PS_f_add.append(n.abs(file_f['pCv'])[k_ind])
+    #PS_i_up_add.append(2*file_i['pCv_err'][k_ind]) # 2-sigma err
+    #PS_f_up_add.append(2*file_f['pCv_err'][k_ind]) # 2-sigma err
+    #PS_i_add.append(n.abs(file_i['pCv'])[k_ind])
+    #PS_f_add.append(n.abs(file_f['pCv'])[k_ind])
+    PS_i_up_add.append(2*n.array(f['pCv_err_old'])[k_ind])
+    PS_f_up_add.append(2*n.array(f['pCv_err'])[k_ind])
+    PS_i_add.append(n.abs(f['pCv_old'])[k_ind])
+    PS_f_add.append(n.abs(f['pCv'])[k_ind])
 #"""
 
 """
@@ -97,18 +117,19 @@ if True:
 """
 
 # Best PS (Identity Mult)
-f = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_IDENTITYMULTWEIGHT_WEIGHTI/pspec_final_sep0,1.npz')
-ps_mult = n.abs(f['pCv'][k_ind]) + 2*f['pCv_err'][k_ind]
+f = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_IDENTITYMULTWEIGHT_WEIGHTI/pspec_final_sep0,1_full.npz')
+#ps_mult = n.abs(f['pCv'][k_ind]) + 2*f['pCv_err'][k_ind] # point + 2err
+ps_mult = 2*f['pCv_err'][k_ind] # 2sigma upper limit
 
 # Plot
 p.figure(figsize=(8,10))    
 p.subplot(211)
     # plot before/after for # eigenmodes down-weighted
-p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_i) + n.array(PS_i_up), color='0.5', linewidth=2, label='Pre-signal loss estimation')
-p.plot(n.arange(startmode,nmodes,deltamode), n.array(PS_f) + n.array(PS_f_up), 'k-', linewidth=2, label='Post-signal loss estimation')
-p.xlim(n.arange(startmode,nmodes,deltamode)[0], n.arange(startmode,nmodes,deltamode)[-1])
+p.plot(loop, n.array(PS_i_up), color='0.5', linewidth=2, label='Pre-signal loss estimation')
+p.plot(loop, n.array(PS_f_up), 'k-', linewidth=2, label='Post-signal loss estimation')
+p.xlim(loop[0], loop[-1])
      # plot unweighted
-p.axhline(file_f['pIv'][k_ind]+2*file_f['pIv_err'][k_ind],color='b',linestyle='--',linewidth=2)
+p.axhline(2*f['pIv_err_old'][k_ind],color='b',linestyle='--',linewidth=2)
     # plot inverse variance
 p.axhline(ps_mult,color='r',linestyle='-',linewidth=2)
     # plot analytic
@@ -124,12 +145,12 @@ p.title('k = ' +str(round(k,3)))
    
 p.subplot(212)
     # plot before/after for added identity
-p.plot(n.arange(startmode_add,nmodes_add,deltamode_add), n.array(PS_i_add) + n.array(PS_i_up_add), color='0.5', linewidth=2, linestyle='-.', label='Pre-signal loss estimation')
-p.plot(n.arange(startmode_add,nmodes_add,deltamode_add), n.array(PS_f_add) + n.array(PS_f_up_add), color='k', linewidth=2, linestyle='-.', label='Post-signal loss estimation')
-p.xlim(n.arange(startmode_add,nmodes_add,deltamode_add)[0], n.arange(startmode_add,nmodes_add,deltamode_add)[-1])
+p.plot(loop_add, n.array(PS_i_up_add), color='0.5', linewidth=2, linestyle='-.', label='Pre-signal loss estimation')
+p.plot(loop_add, n.array(PS_f_up_add), color='k', linewidth=2, linestyle='-.', label='Post-signal loss estimation')
+p.xlim(loop_add[0], loop_add[-1])
 p.gca().invert_xaxis()
     # plot unweighted
-p.axhline(file_f['pIv'][k_ind]+2*file_f['pIv_err'][k_ind],color='b',linestyle='--',linewidth=2,label='Unweighted')
+p.axhline(2*f['pIv_err_old'][k_ind],color='b',linestyle='--',linewidth=2,label='Uniform weighting')
     # plot inverse variance
 p.axhline(ps_mult,color='r',linestyle='-',linewidth=2,label='$\hat{C} = \hat{C} \circ I$')
     # plot analytic
@@ -142,6 +163,7 @@ p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=16)
 p.legend(prop={'size':12}, loc=2, numpoints=1, ncol=2)
 p.tick_params(axis='both', which='major', labelsize=12)
 p.yscale('log')
+p.xscale('log')
 p.ylim(1e5,1e10)
 p.grid()
 p.subplots_adjust(hspace=0.3)

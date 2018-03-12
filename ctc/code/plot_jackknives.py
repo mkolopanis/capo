@@ -3,12 +3,12 @@
 import numpy as n
 import pylab as p
 
-#file_eo = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_JACKKNIFE_EVENODD/pspec_final_sep0,1.npz')
-#file_bl = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_JACKKNIFE_BASELINES/pspec_final_sep0,1.npz')
-#file_lst = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_JACKKNIFE_LST_FIRSTLAST/pspec_final_sep0,1.npz')
-file_eo = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_evenodd_addI/pspec_final_sep0,1.npz')
-file_bl = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_baselines_addI/pspec_final_sep0,1.npz')
-file_lst = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_lst_addI/pspec_final_sep0,1.npz')
+#file_eo = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_evenodd_addI/pspec_final_sep0,1.npz')
+#file_bl = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_baselines_addI/pspec_final_sep0,1.npz')
+#file_lst = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_lst_addI/pspec_final_sep0,1.npz')
+file_eo = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_evenodd_addI/pspec_final_sep0,1_nosigloss.npz')
+file_bl = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_baselines_addI/pspec_final_sep0,1_nosigloss.npz')
+file_lst = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_lst_addI/pspec_final_sep0,1_nosigloss.npz')
 data = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/0.04addedidentity_correcttsys/pspec_final_sep0,1.npz')
 
 noise = 4436767.36822 # XXX
@@ -40,7 +40,7 @@ p.legend(numpoints=1,prop={'size':14},ncol=2)
 p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=14)
 p.xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]',fontsize=14)
 p.tick_params(axis='both', which='major', labelsize=14)
-p.ylim(-1.e8,2e8)
+p.ylim(-1.e8,1.2e8)
 p.grid()
 
 p.show()

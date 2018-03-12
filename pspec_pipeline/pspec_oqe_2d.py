@@ -58,7 +58,7 @@ opts, args = o.parse_args(sys.argv[1:])
 
 # Basic parameters
 random.seed(0)  # for oqe.py (eor generator)
-n.random.seed(0)  # for noise generator
+#n.random.seed(0)  # for noise generator
 POL = opts.pol
 if POL == 'xx' or POL == 'yy': NPOL = 1
 else: NPOL = 2
@@ -569,7 +569,7 @@ for key in data_dict_v:
         new = data_dict_v[('even',key[1],key[2])] - data_dict_v[key]
     new_dict[key] = new
 dsv.add_data(dsets=new_dict)
-#"""
+"""
 """
 # NULL TEST: BASELINES
 new_dict = {}
@@ -723,7 +723,7 @@ for boot in xrange(opts.nboot):
         nbls_g = n.int(n.round(N/NGPS))  # number of baselines per group
         nbls = nbls_g  # over-ride nbls for proper sensitivity calculation later
         NGPS = 1  # over-ride NGPS for proper sensitivity calculation later
-
+    
     # Compute power spectra
     pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs, pCe_Cr, pCv_Cr, pCve, pIve = make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve, grouping=True)
 
