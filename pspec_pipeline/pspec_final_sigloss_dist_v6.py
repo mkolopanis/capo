@@ -24,7 +24,7 @@ o.add_option('--plot',action='store_true',
             help='Show plots.')
 o.add_option('--skip_sigloss',action='store_true',
             help='Save values without correcting for signal loss.')
-o.add_option('--sep',default='0,2',
+o.add_option('--sep',default='0_2',
             help='Separation to run script for.')
 o.add_option('--nosubtract',action='store_true',
             help='Run for no-subtraction case (P_out = pCr).')
@@ -135,7 +135,7 @@ def smooth_dist(fold=True):
             n.savez(fn, k=k, binsx=binsx_kde, binsy=binsy_kde, kdeC=kdeC, kdeI=kdeI, xs=xs_kde, ys=ys_kde, ysI=ys_I_kde, pC=file['pCv_fold'][n.where(ks==k)[0][0]], pI=file['pIv_fold'][n.where(ks==k)[0][0]])    
         
         # Plot KDE and points
-        if opts.plot:
+        if fold == opts.plot:
             p.figure(figsize=(10,6))
             p.subplot(121)
             p.pcolormesh(binsx_kde,binsy_kde,kdeC,cmap='hot_r')
@@ -373,6 +373,7 @@ for count in range(2):
         new_pCs_fold = old_pCs_fold.copy()
         new_pIs = old_pIs.copy()
         new_pIs_fold = old_pIs_fold.copy()
+        binsx_log = binsy_log
     else:
         kde_C, kde_I, binsx_log = smooth_dist(fold=False) # KDE transfer curves
         kde_C_fold, kde_I_fold, binsx_log = smooth_dist(fold=True)
@@ -409,8 +410,8 @@ for count in range(2):
             p.xlim(xmin,xmax)
             p.tight_layout(); p.suptitle("k = " + str(k)); p.show()
  
-    pC, pC_err = compute_stats(10**binsx_log, new_pCs, pt_pCs)
-    pI, pI_err = compute_stats(10**binsx_log, new_pIs, pt_pIs)
+    pC, pC_err = compute_stats(10**n.abs(binsx_log)*n.sign(binsx_log), new_pCs, pt_pCs)
+    pI, pI_err = compute_stats(10**n.abs(binsx_log)*n.sign(binsx_log), new_pIs, pt_pIs)
     pC_fold, pC_fold_err = compute_stats(10**binsx_log, new_pCs_fold, pt_pCs_fold)
     pI_fold, pI_fold_err = compute_stats(10**binsx_log, new_pIs_fold, pt_pIs_fold)
     
