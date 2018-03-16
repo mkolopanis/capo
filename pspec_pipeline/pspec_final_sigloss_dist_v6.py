@@ -203,7 +203,7 @@ def compute_stats(bins, data, pt, old=False):
             right = n.interp(0.975,percents,bins)
             errs.append((right-left)/4) # 1-sigma error bar
         else:
-            up = n.interp(0.95,percents,bins) # upper limit (not error bar) of positive-only posterior
+            up = n.interp(0.975,percents,bins) # upper limit (not error bar) of positive-only posterior
             errs.append(up/2) # divide because it'll be multiplied in the plotting script
     return pts,errs
 
@@ -469,7 +469,7 @@ n.savez(outname, kpl=kpl, k=file['k'], freq=file['freq'],
         pIn_fold=pIn_fold, pIn_fold_err=pIn_fold_err,
         theory_noise = file['theory_noise'],
         theory_noise_delta2 = file['theory_noise_delta2'],
-        prob=0.95, kperp=file['kperp'], sep=opts.sep, kpl_fold=file['kpl_fold'],
+        prob=0.975, kperp=file['kperp'], sep=opts.sep, kpl_fold=file['kpl_fold'],
         ngps=file['ngps'], nbls=file['nbls'], nbls_g=file['nbls_g'], nlsts_g=file['nlsts_g'],
         lsts=file['lsts'], afreqs=file['afreqs'], cnt_eff=file['cnt_eff'],
         frf_inttime=file['frf_inttime'], inttime=file['inttime'],
@@ -497,7 +497,7 @@ n.savez(outname2, kpl=kpl, k=file['k'], freq=file['freq'],
         pIn_fold_old=pIn_fold_old, pIn_fold_err_old=pIn_fold_err_old,
         theory_noise = file['theory_noise'],
         theory_noise_delta2 = file['theory_noise_delta2'],
-        prob=0.95, kperp=file['kperp'], sep=opts.sep, kpl_fold=file['kpl_fold'],
+        prob=0.975, kperp=file['kperp'], sep=opts.sep, kpl_fold=file['kpl_fold'],
         ngps=file['ngps'], nbls=file['nbls'], nbls_g=file['nbls_g'], nlsts_g=file['nlsts_g'],
         lsts=file['lsts'], afreqs=file['afreqs'], cnt_eff=file['cnt_eff'],
         frf_inttime=file['frf_inttime'], inttime=file['inttime'],
