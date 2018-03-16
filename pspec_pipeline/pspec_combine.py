@@ -51,7 +51,7 @@ pIn_fold_err_old = {}
 kperps = []
 seps = []
 theory_noise = {}
-theoury_noise_fold = {}
+theory_noise_delta2 = {}
 # These dummy values are to set the "vals" = 0 when combining noise variance
 dummy_noise = {}
 dummy_noise_fold = {}
@@ -59,7 +59,7 @@ dummy_noise_fold = {}
 for file in args.files:  # XXX only compatible with pspec_pk_k3pk.npz files
     print 'Reading', file
     f = n.load(file)
-    metakeys = [key for key in f.keys() if not (key.startswith('p') or key.startswith('k') or k.startswith('theory'))]  # all keys except PS values and k,kpl,kpl_fold,kperp
+    metakeys = [key for key in f.keys() if not (key.startswith('p') or key.startswith('k') or key.startswith('theory'))]  # all keys except PS values and k,kpl,kpl_fold,kperp
     kperps.append(f['kperp'])
     seps.append(f['sep'])
     for kk, k in enumerate(f['kpl']):  # each dictionary has keys of k's and contains a list of values for that k (3 if there are 3 seps)
@@ -152,7 +152,7 @@ pIn_fold_old_combine, pIn_fold_err_old_combine = combine_PS(f['kpl_fold'], pIn_f
 
 
 _, theory_noise_combine = combine_PS(f['kpl'], dummy_noise, theory_noise)
-_, theory_noise_delta2_combine = combine_PS(f['kpl'], dummy_noise_fold,
+_, theory_noise_delta2_combine = combine_PS(f['kpl_fold'], dummy_noise_fold,
                                             theory_noise_delta2)
 # Save
 kperp = n.mean(kperps)  # XXX averaged together k_perps
@@ -173,9 +173,6 @@ n.savez(final_file, k=k, kperp=kperp, kpl=kpl, kpl_fold=kpl_fold,
         pCn=pCn_combine, pCn_err=pCn_err_combine,
         pIn=pIn_combine, pIn_err=pIn_err_combine,
         pCv_fold=pCv_fold_combine, pCv_fold_err=pCv_fold_err_combine,
-        pIv_fold=pIv_fold_combine, pIv_fold_err=pIv_fold_err_combine,
-        pCn_fold=pCn_fold_combine, pCn_fold_err=pCn_fold_err_combine,
-        pIn_fold=pIn_fold_combine, pIn_fold_err=pIn_fold_err_combine,
         pIv_fold=pIv_fold_combine, pIv_fold_err=pIv_fold_err_combine,
         pCn_fold=pCn_fold_combine, pCn_fold_err=pCn_fold_err_combine,
         pIn_fold=pIn_fold_combine, pIn_fold_err=pIn_fold_err_combine,
