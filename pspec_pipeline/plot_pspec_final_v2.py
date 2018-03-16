@@ -309,11 +309,11 @@ for filename in args.files:
                      '--', color='blue', label='pIn {0:02}%'.format(int(prob)))
 
     if ('theory_noise' and 'theory_noise_delta2') in pspec_dict.keys():
-        ax5[gs_ind].plot(pspec_dict['kpl'], 2*pspec_dict['theory_noise']
+        print '\tUsing save theory_noise and theory_delta_2'
+        ax5[gs_ind].plot(pspec_dict['kpl'], 2*pspec_dict['theory_noise'],
                          color='g', marker='_', label='Analytical 2-sigma')
         ax6[gs_ind].plot(pspec_dict['kpl'], 2*pspec_dict['theory_noise'],
-                         color='g', marker='_', label='Analytical 2-sigma'
-                         marker='_', label='Analytical 2-sigma')
+                         color='g', marker='_', label='Analytical 2-sigma')
         ax1[gs_ind].plot(pspec_dict['k'], 2*pspec_dict['theory_noise_delta2'],
                          'g-', label='Analytical 2-sigma')
         ax2[gs_ind].plot(pspec_dict['kpl'], 2*pspec_dict['theory_noise'],
