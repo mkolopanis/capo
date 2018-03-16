@@ -191,5 +191,6 @@ n.savez(final_file, k=k, kperp=kperp, kpl=kpl, kpl_fold=kpl_fold,
         pCn_fold_err_old=pCn_fold_err_old_combine,
         pIn_fold_old=pIn_fold_old_combine,
         pIn_fold_err_old=pIn_fold_err_old_combine,
-        theory_noise=theory_noise, theory_noise_delta2=theory_noise_delta2,
+        theory_noise=theory_noise_combine,
+        theory_noise_delta2=theory_noise_delta2_combine,
         nseps=len(pCv[pCv.keys()[0]]), **metadata)
