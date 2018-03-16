@@ -234,7 +234,12 @@ for count in range(2):
     pCrs_fold = {}
     pIrs_fold = {}
 
-    for inject in glob.glob('inject_sep'+opts.sep+'*'):
+    inj_files = glob.glob('inject_sep'+opts.sep+'*')
+    inj_levels = [float(inj.split('_')[-1]) for inj in inj_files]
+    inj_inds = np.argsort(inj_levels)
+    inj_files = np.take(inj_files, inj_inds)
+
+    for inject in inj_files:
         #if 'moredense' in inject: continue
         print 'Reading', inject
         file_2d = n.load(inject + '/pspec_2d_to_1d.npz')
