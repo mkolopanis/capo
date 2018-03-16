@@ -13,6 +13,9 @@ from capo.eor_results import read_bootstraps_dcj, average_bootstraps, split_stac
 from capo.pspec import dk_du
 from capo import cosmo_units
 import numpy as np
+from capo.cosmo_units import f212z
+from capo import sensitivity
+
 
 parser = argparse.ArgumentParser(
     description=('Calculate power spectra for a run '
@@ -171,6 +174,59 @@ for key in pk_pspecs:
     if key[0] == 'p' and key[-3:] == 'err':
         pk_pspecs[key] = pk_pspecs[key] * scaling
 """
+
+print('Computing 21cmSense_Calc Noise')
+print('Using these parameters:')
+redshift = f212z(pk_pspecs['freq'] * 1e9)
+inttime = pk_pspecs['frf_inttime']
+cnt = pk_pspecs['cnt_eff']
+nbls_g = pk_pspecs['nbls_g']
+nlsts = len(pk_pspecs['lsts']) * pk_pspecs['inttime']
+nlsts /= pk_pspecs['frf_inttime']
+nlsts_g = pk_pspecs['nlsts_g']
+if pk_pspecs['frf_inttime'] == pk_pspecs['inttime']:
+    omega_eff = .74**2/.32  # for capo analytical; from T1 of Parsons FRF paper
+else:
+    omega_eff = .74**2/.24
+print 'Redshift:', redshift
+print '\tT_int:', inttime
+print '\tNbls:', pk_pspecs['nbls']
+print '\tNgps:', pk_pspecs['ngps']
+print '\tNdays:', cnt
+print '\tNlstbins:', nlsts_g
+S = sensitivity.Sense()
+f = pk_pspecs['freq']
+S.z = capo.pspec.f2z(f)
+
+#   Tsys
+#S.Tsys = 551e3  #set to match 21cmsense exactly
+#S.Tsys = 505e3 #Ali et al, at 164MHz
+if 'Trcvr' in pk_pspecs.keys():
+    S.Tsys = (pk_pspecs['Trcvr'] + 180.*(f/.180)**-2.55)*1e3
+else:
+    S.Tsys = (pk_pspecs['Trcvr'] + 180.*(f/.180)**-2.55)*1e3
+    # set to match noise realization
+    # calcuation made from correcting Ali 2015 Tsys estimate
+
+print "Tsys = ",S.Tsys
+
+S.t_int = inttime
+S.Ndays = cnt  #effective number of days
+S.Npols = 2
+try: S.Nseps = pk_pspecs['nseps']
+except: S.Nseps = 1
+print "Nseps = ",S.Nseps
+S.Nblgroups = pk_pspecs['ngps']
+# use the FRF weighted beams listed in T1 of Parsons etal beam sculpting paper
+S.Omega_eff = omega_eff
+k = pk_pspecs['k']
+S.Nbls = pk_pspecs['nbls']
+S.Nlstbins = nlsts_g
+S.calc()
+print "capo.sensitivity Pk_noise = ", S.P_N
+pk_pspecs['theory_noise'] = np.repeat(S.P_N, len(pk_pspec['kpl']))
+pk_pspecs['theory_noise_delta2'] = S.Delta2_N(k)
+
 
 # Save values
 for key in pk_pspecs.keys():
