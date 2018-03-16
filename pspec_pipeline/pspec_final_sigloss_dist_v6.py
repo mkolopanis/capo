@@ -236,8 +236,8 @@ for count in range(2):
 
     inj_files = glob.glob('inject_sep'+opts.sep+'*')
     inj_levels = [float(inj.split('_')[-1]) for inj in inj_files]
-    inj_inds = np.argsort(inj_levels)
-    inj_files = np.take(inj_files, inj_inds)
+    inj_inds = n.argsort(inj_levels)
+    inj_files = n.take(inj_files, inj_inds)
 
     for inject in inj_files:
         #if 'moredense' in inject: continue
