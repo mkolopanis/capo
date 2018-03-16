@@ -236,10 +236,10 @@ for count in range(2):
 
     inj_files = glob.glob('inject_sep'+opts.sep+'*')
     inj_levels = [float(inj.split('_')[-1]) for inj in inj_files]
-    inj_inds = np.argsort(inj_levels)
-    inj_files = np.take(inj_files, inj_inds)
+    inj_inds = n.argsort(inj_levels)
+    inj_files = n.take(inj_files, inj_inds)
 
-    for inject iinj_files:
+    for inject in inj_files:
         #if 'moredense' in inject: continue
         print 'Reading', inject
         file_2d = n.load(inject + '/pspec_2d_to_1d.npz')
@@ -467,6 +467,8 @@ n.savez(outname, kpl=kpl, k=file['k'], freq=file['freq'],
         pCn_fold=pCn_fold, pCn_fold_err=pCn_fold_err,
         pIn=pIn, pIn_err=pIn_err,
         pIn_fold=pIn_fold, pIn_fold_err=pIn_fold_err,
+        theory_noise = file['theory_noise'],
+        theory_noise_delta2 = file['theory_noise_delta2'],
         prob=0.95, kperp=file['kperp'], sep=opts.sep, kpl_fold=file['kpl_fold'],
         ngps=file['ngps'], nbls=file['nbls'], nbls_g=file['nbls_g'], nlsts_g=file['nlsts_g'],
         lsts=file['lsts'], afreqs=file['afreqs'], cnt_eff=file['cnt_eff'],
@@ -493,6 +495,8 @@ n.savez(outname2, kpl=kpl, k=file['k'], freq=file['freq'],
         pIn_old=pIn_old, pIn_err_old=pIn_err_old,
         pIn_fold=pIn_fold, pIn_fold_err=pIn_fold_err,
         pIn_fold_old=pIn_fold_old, pIn_fold_err_old=pIn_fold_err_old,
+        theory_noise = file['theory_noise'],
+        theory_noise_delta2 = file['theory_noise_delta2'],
         prob=0.95, kperp=file['kperp'], sep=opts.sep, kpl_fold=file['kpl_fold'],
         ngps=file['ngps'], nbls=file['nbls'], nbls_g=file['nbls_g'], nlsts_g=file['nlsts_g'],
         lsts=file['lsts'], afreqs=file['afreqs'], cnt_eff=file['cnt_eff'],
