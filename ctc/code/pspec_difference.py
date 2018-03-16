@@ -21,10 +21,11 @@ f2 = n.load(args[1])
 os.system('mkdir '+args[0].split('/')[-2]) # make inject directory
 fname = args[0].split('/')[-2]+'/'+args[0].split('/')[-1] # name of outputted file
 fnew = {}
+chans = ['pIv','pIv_fold','pCv','pCv_fold','pIn','pIn_fold','pCn','pCn_fold']
 
 # Difference keys
 for key in f1:
-    if key[0] == 'p': # PS channel
+    if key in chans: # PS channel
         fnew[key] = f1[key] - f2[key]        
     else:
         fnew[key] = f1[key] # copy other channels
