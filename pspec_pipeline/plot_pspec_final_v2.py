@@ -132,91 +132,6 @@ for filename in args.files:
     redshift = f212z(pspec_dict['freq'] * 1e9)
     gs_ind = int(np.where(zs == redshift)[0].item())
 
-    if args.analytical:
-        inttime = pspec_dict['frf_inttime']
-        cnt = pspec_dict['cnt_eff']
-        nbls_g = pspec_dict['nbls_g']
-        nlsts = len(pspec_dict['lsts']) * pspec_dict['inttime']
-        nlsts /= pspec_dict['frf_inttime']
-        nlsts_g = pspec_dict['nlsts_g']
-        if pspec_dict['frf_inttime'] == pspec_dict['inttime']:
-            omega_eff = .74**2/.32  # for capo analytical; from T1 of Parsons FRF paper
-        else:
-            omega_eff = .74**2/.24
-        print 'Redshift:', redshift
-        print '\tT_int:', inttime
-        print '\tNbls:', pspec_dict['nbls']
-        print '\tNgps:', pspec_dict['ngps']
-        print '\tNdays:', cnt
-        print '\tNlstbins:', nlsts_g
-        if old_analytical:  # XXX might not work anymore, since we should use nlsts_g and nbls_g
-            tsys = 500e3  # mK
-            nseps = 1  # number of seps used
-            folding = 2  # XXX 2 for delta^2
-            nmodes = (nlsts*nseps*folding)**.5
-            pol = 2
-            real = np.sqrt(2)
-            sdf = .1/203
-            freqs = pspec_dict['afreqs']
-            freq = pspec_dict['freq']
-            z = capo.pspec.f2z(freq)
-            X2Y = capo.pspec.X2Y(z)/1e9  # h^-3 Mpc^3 / str/ Hz
-            B = sdf*freqs.size
-            bm = np.polyval(capo.pspec.DEFAULT_BEAM_POLY, freq) * 2.35  # correction for beam^2
-            if pspec_dict['frf_inttime'] != pspec_dict['inttime']:
-                bm *= 1.3  # correction factor for FRF version of omega_pp = .32/.24 = 1.3
-            scalar = X2Y * bm  #* B
-            # error bars minimum width. Consider them flat for P(k). Factor of 2 at the end is due to folding of kpl (root(2)) and root(2) in radiometer equation.
-            # pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (2*inttime*pol*real*nbls*ndays*nmodes) ) #this 2-sigma curve should encompass 95% of the points
-            pk_noise = 2*scalar*((tsys)**2 / (inttime*pol*real*nbls*cnt*nmodes))  # this 2-sigma curve should line up with pI
-            # Plot analytical noise curve on plots
-            ax1[gs_ind].plot(pspec_dict['k'],
-                             pk_noise*pspec_dict['k']**3/(2*np.pi**2), 'g-',
-                             label='Analytical 2-sigma')
-            ax2[gs_ind].axhline(pk_noise, color='g', marker='_',
-                                label='Analytical 2-sigma')
-            ax3[gs_ind].plot(pspec_dict['k'],
-                             pk_noise*pspec_dict['k']**3/(2*np.pi**2), 'g-',
-                             label='Analytical 2-sigma')
-            ax4[gs_ind].axhline(pk_noise, color='g', marker='_',
-                                label='Analytical 2-sigma')
-        else:  # new capo.sensitivity
-            from capo import sensitivity
-            S = sensitivity.Sense()
-            f = pspec_dict['freq']
-            S.z = capo.pspec.f2z(f)
-
-            #   Tsys
-            # S.Tsys = 551e3  #set to match 21cmsense exactly
-            # S.Tsys = 505e3 #Ali et al, at 164MHz
-            S.Tsys = (144 + 180.*(f/.180)**-2.55)*1e3  # set to match noise realization
-            print "Tsys = ", S.Tsys
-
-            S.t_int = inttime
-            S.Ndays = cnt  # effective number of days
-            S.Npols = 2
-            try: S.Nseps = pspec_dict['nseps']
-            except: S.Nseps = 1
-            print "Nseps = ", S.Nseps
-            S.Nblgroups = pspec_dict['ngps']
-            S.Omega_eff = omega_eff  # use the FRF weighted beams listed in T1 of Parsons etal beam sculpting paper
-            k = pspec_dict['k']
-            S.Nbls = pspec_dict['nbls']
-            S.Nlstbins = nlsts_g
-            S.calc()
-            print "capo.sensitivity Pk_noise = ", S.P_N
-            ax5[gs_ind].axhline(S.P_N*2, color='g',
-                                marker='_', label='Analytical 2-sigma')
-            ax6[gs_ind].axhline(S.P_N*2, color='g',
-                                marker='_', label='Analytical 2-sigma')
-            ax1[gs_ind].plot(k, S.Delta2_N(k)*2,
-                             'g-', label='Analytical 2-sigma')
-            ax2[gs_ind].axhline(S.P_N*2, color='g',
-                                marker='_', label='Analytical 2-sigma')
-            ax3[gs_ind].plot(k, S.Delta2_N(k)*2,
-                             'g-', label='Analytical 2-sigma')
-            ax4[gs_ind].axhline(S.P_N*2, color='g',
-                                marker='_', label='Analytical 2-sigma')
     # get special index for gridspec to plot all pspecs on same z value
     marker = markers[marker_count[gs_ind]]
     marker_count[gs_ind] += 1
@@ -393,6 +308,106 @@ for filename in args.files:
     ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pIn_up),
                      '--', color='blue', label='pIn {0:02}%'.format(int(prob)))
 
+    if ('theory_noise' and 'theory_noise_delta2') in pspec_dict.keys():
+        ax5[gs_ind].plot(pspec_dict['kpl'], 2*pspec_dict['theory_noise']
+                         color='g', marker='_', label='Analytical 2-sigma')
+        ax6[gs_ind].plot(pspec_dict['kpl'], 2*pspec_dict['theory_noise'],
+                         color='g', marker='_', label='Analytical 2-sigma'
+                         marker='_', label='Analytical 2-sigma')
+        ax1[gs_ind].plot(pspec_dict['k'], 2*pspec_dict['theory_noise_delta2'],
+                         'g-', label='Analytical 2-sigma')
+        ax2[gs_ind].plot(pspec_dict['kpl'], 2*pspec_dict['theory_noise'],
+                         color='g', marker='_', label='Analytical 2-sigma')
+        ax3[gs_ind].plot(pspec_dict['k'], 2*pspec_dict['theory_noise_delta2'],
+                         'g-', label='Analytical 2-sigma')
+        ax4[gs_ind].plot(pspec_dict['kpl'], 2*pspec_dict['theory_noise'],
+                         color='g', marker='_', label='Analytical 2-sigma')
+    else:
+        if args.analytical:
+            inttime = pspec_dict['frf_inttime']
+            cnt = pspec_dict['cnt_eff']
+            nbls_g = pspec_dict['nbls_g']
+            nlsts = len(pspec_dict['lsts']) * pspec_dict['inttime']
+            nlsts /= pspec_dict['frf_inttime']
+            nlsts_g = pspec_dict['nlsts_g']
+            if pspec_dict['frf_inttime'] == pspec_dict['inttime']:
+                omega_eff = .74**2/.32  # for capo analytical; from T1 of Parsons FRF paper
+            else:
+                omega_eff = .74**2/.24
+            print 'Redshift:', redshift
+            print '\tT_int:', inttime
+            print '\tNbls:', pspec_dict['nbls']
+            print '\tNgps:', pspec_dict['ngps']
+            print '\tNdays:', cnt
+            print '\tNlstbins:', nlsts_g
+            if old_analytical:  # XXX might not work anymore, since we should use nlsts_g and nbls_g
+                tsys = 500e3  # mK
+                nseps = 1  # number of seps used
+                folding = 2  # XXX 2 for delta^2
+                nmodes = (nlsts*nseps*folding)**.5
+                pol = 2
+                real = np.sqrt(2)
+                sdf = .1/203
+                freqs = pspec_dict['afreqs']
+                freq = pspec_dict['freq']
+                z = capo.pspec.f2z(freq)
+                X2Y = capo.pspec.X2Y(z)/1e9  # h^-3 Mpc^3 / str/ Hz
+                B = sdf*freqs.size
+                bm = np.polyval(capo.pspec.DEFAULT_BEAM_POLY, freq) * 2.35  # correction for beam^2
+                if pspec_dict['frf_inttime'] != pspec_dict['inttime']:
+                    bm *= 1.3  # correction factor for FRF version of omega_pp = .32/.24 = 1.3
+                scalar = X2Y * bm  #* B
+                # error bars minimum width. Consider them flat for P(k). Factor of 2 at the end is due to folding of kpl (root(2)) and root(2) in radiometer equation.
+                # pk_noise = 2*scalar*fr_correct*( (tsys)**2 / (2*inttime*pol*real*nbls*ndays*nmodes) ) #this 2-sigma curve should encompass 95% of the points
+                pk_noise = 2*scalar*((tsys)**2 / (inttime*pol*real*nbls*cnt*nmodes))  # this 2-sigma curve should line up with pI
+                # Plot analytical noise curve on plots
+                ax1[gs_ind].plot(pspec_dict['k'],
+                                 pk_noise*pspec_dict['k']**3/(2*np.pi**2), 'g-',
+                                 label='Analytical 2-sigma')
+                ax2[gs_ind].axhline(pk_noise, color='g', marker='_',
+                                    label='Analytical 2-sigma')
+                ax3[gs_ind].plot(pspec_dict['k'],
+                                 pk_noise*pspec_dict['k']**3/(2*np.pi**2), 'g-',
+                                 label='Analytical 2-sigma')
+                ax4[gs_ind].axhline(pk_noise, color='g', marker='_',
+                                    label='Analytical 2-sigma')
+            else:  # new capo.sensitivity
+                from capo import sensitivity
+                S = sensitivity.Sense()
+                f = pspec_dict['freq']
+                S.z = capo.pspec.f2z(f)
+
+                #   Tsys
+                # S.Tsys = 551e3  #set to match 21cmsense exactly
+                # S.Tsys = 505e3 #Ali et al, at 164MHz
+                S.Tsys = (144 + 180.*(f/.180)**-2.55)*1e3  # set to match noise realization
+                print "Tsys = ", S.Tsys
+
+                S.t_int = inttime
+                S.Ndays = cnt  # effective number of days
+                S.Npols = 2
+                try: S.Nseps = pspec_dict['nseps']
+                except: S.Nseps = 1
+                print "Nseps = ", S.Nseps
+                S.Nblgroups = pspec_dict['ngps']
+                S.Omega_eff = omega_eff  # use the FRF weighted beams listed in T1 of Parsons etal beam sculpting paper
+                k = pspec_dict['k']
+                S.Nbls = pspec_dict['nbls']
+                S.Nlstbins = nlsts_g
+                S.calc()
+                print "capo.sensitivity Pk_noise = ", S.P_N
+                ax5[gs_ind].axhline(S.P_N*2, color='g',
+                                    marker='_', label='Analytical 2-sigma')
+                ax6[gs_ind].axhline(S.P_N*2, color='g',
+                                    marker='_', label='Analytical 2-sigma')
+                ax1[gs_ind].plot(k, S.Delta2_N(k)*2,
+                                 'g-', label='Analytical 2-sigma')
+                ax2[gs_ind].axhline(S.P_N*2, color='g',
+                                    marker='_', label='Analytical 2-sigma')
+                ax3[gs_ind].plot(k, S.Delta2_N(k)*2,
+                                 'g-', label='Analytical 2-sigma')
+                ax4[gs_ind].axhline(S.P_N*2, color='g',
+                                    marker='_', label='Analytical 2-sigma')
 # set up some parameters to make the figures pretty
 for gs_ind in xrange(Nzs):
     # only set ylabel for first plot
