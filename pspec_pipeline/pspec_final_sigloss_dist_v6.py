@@ -54,7 +54,7 @@ def bin_size(bins): # XXX approximation since they're just divided in two
         else: bins_size.append((bins[bb+1]-bins[bb-1])/2) # middle bins
     return bins_size
 
-# Make bins (grid), which is used for sampling distributions 
+# Make bins (grid), which is used for sampling distributions
 def make_bins():
     # lin-log grid-spacing
     nbins = 101 # XXX hard-coded number of bins for grid upon which to estimate kernels
@@ -72,7 +72,7 @@ def smooth_dist(fold=True):
     kde_I = {}
     if fold == True: ks = kpl_fold # k values to loop over
     if fold == False: ks = kpl
-    for kk,k in enumerate(ks): 
+    for kk,k in enumerate(ks):
 
         if kk == 8 and count == 0 and fold == True: # save values out
             # Save values to use for plotting sigloss terms
@@ -80,16 +80,16 @@ def smooth_dist(fold=True):
             else: fn = 'pspec_sigloss_terms.npz'
             print "Saving",fn,"which contains data values for k =",k
             n.savez(fn, k=k, pCv=file['pCv'][n.where(kpl==k)[0][0]], pIv=file['pIv'][n.where(kpl==k)[0][0]], Pins=Pins_fold[k], Pouts=Pouts_fold[k], Pouts_I=Pouts_I_fold[k], pCrs_fold=pCrs_fold[k], pCvs_Cr_fold=pCvs_Cr_fold[k], pCes_Cr_fold=pCes_Cr_fold[k], pCves_fold=pCves_fold[k], pIves_fold=pIves_fold[k])
-        
+
         # Get bins and data for transfer curve
         binsx_kde = [] # will be filled in with injection levels
         binsy_kde = binsy_log
         n_injects = n.array(Pins[k]).shape[0]
-        if fold == True: 
+        if fold == True:
             xs = n.array(Pins_fold[k])
             ys_C = n.array(Pouts_fold[k])
             ys_I = n.array(Pouts_I_fold[k])
-        if fold == False: 
+        if fold == False:
             xs = n.array(Pins[k])
             ys_C = n.array(Pouts[k])
             ys_I = n.array(Pouts_I[k])
@@ -108,9 +108,9 @@ def smooth_dist(fold=True):
             factor = ratio * kernel_C.factor
             factorI = ratioI * kernel_I.factor
             # KDE once again
-            kernel_C = scipy.stats.gaussian_kde(ys_kde[col],bw_method=factor) 
-            kernel_I = scipy.stats.gaussian_kde(ys_I_kde[col],bw_method=factorI) 
-            # get distribution 
+            kernel_C = scipy.stats.gaussian_kde(ys_kde[col],bw_method=factor)
+            kernel_I = scipy.stats.gaussian_kde(ys_I_kde[col],bw_method=factorI)
+            # get distribution
             data_dist_C = kernel_C(binsy_kde)
             data_dist_I = kernel_I(binsy_kde)
             bins_size = bin_size(binsy_kde)
@@ -118,7 +118,7 @@ def smooth_dist(fold=True):
             data_dist_I /= n.sum(data_dist_I*bins_size)
             binsx_kde.append(n.mean(xs_kde[col])) # mean of P_in for the injection level # XXX could do max to be conservative if wanted
             kdeC[:,col] = data_dist_C
-            kdeI[:,col] = data_dist_I 
+            kdeI[:,col] = data_dist_I
         binsx_kde = n.array(binsx_kde) # make it an array
         # Normalize columns
         for col in range(kdeC.shape[1]):
@@ -126,14 +126,14 @@ def smooth_dist(fold=True):
                 kdeC[:,col] /= n.sum(kdeC[:,col]*bin_size(binsy_kde))
             if n.sum(kdeI[:,col]) > 0:
                 kdeI[:,col] /= n.sum(kdeI[:,col]*bin_size(binsy_kde))
-        
+
          # Save values to use for plotting sigloss plots
         if count == 0 and fold == True and kk == 8:
             if opts.nosubtract: fn = 'pspec_sigloss_nosubtract.npz'
             else: fn = 'pspec_sigloss.npz'
             print "Saving",fn,"which contains data values for k =",k
-            n.savez(fn, k=k, binsx=binsx_kde, binsy=binsy_kde, kdeC=kdeC, kdeI=kdeI, xs=xs_kde, ys=ys_kde, ysI=ys_I_kde, pC=file['pCv_fold'][n.where(ks==k)[0][0]], pI=file['pIv_fold'][n.where(ks==k)[0][0]])    
-        
+            n.savez(fn, k=k, binsx=binsx_kde, binsy=binsy_kde, kdeC=kdeC, kdeI=kdeI, xs=xs_kde, ys=ys_kde, ysI=ys_I_kde, pC=file['pCv_fold'][n.where(ks==k)[0][0]], pI=file['pIv_fold'][n.where(ks==k)[0][0]])
+
         # Plot KDE and points
         if fold == opts.plot:
             p.figure(figsize=(10,6))
@@ -186,14 +186,14 @@ def sigloss_func(pt, M_matrix):
         cut * prior_factor(10**binsx_log) # normalize for prior
         new_PS[k] = cut
     return new_PS # distribution of bins_concat
- 
+
 # Compute PS points and errors
 def compute_stats(bins, data, pt, old=False):
     pts, errs = [], []
     for key in n.sort(data.keys()):
-        if opts.skip_sigloss or old==True: 
+        if opts.skip_sigloss or old==True:
             point = pt[key] # use no-bootstrapping case
-        else: 
+        else:
             #point = bins[n.argmax(data[key])] # XXX peak of dist
             point = n.sum(bins*data[key])/n.sum(data[key]) # weighted avg
         pts.append(point)
@@ -234,7 +234,12 @@ for count in range(2):
     pCrs_fold = {}
     pIrs_fold = {}
 
-    for inject in glob.glob('inject_sep'+opts.sep+'*'):
+    inj_files = glob.glob('inject_sep'+opts.sep+'*')
+    inj_levels = [float(inj.split('_')[-1]) for inj in inj_files]
+    inj_inds = n.argsort(inj_levels)
+    inj_files = n.take(inj_files, inj_inds)
+
+    for inject in inj_files:
         #if 'moredense' in inject: continue
         print 'Reading', inject
         file_2d = n.load(inject + '/pspec_2d_to_1d.npz')
@@ -269,7 +274,7 @@ for count in range(2):
                 Pout_I = file_2d['pIr']
             pCe_Cr_fold = file_2d['pCe_Cr_fold']
             pCv_Cr_fold = file_2d['pCv_Cr_fold']
-            try: 
+            try:
                 pCve_fold = file_2d['pCve_fold']
                 pIve_fold = file_2d['pIve_fold']
             except: # depending on how recent the oqe run was, this key may not exist
@@ -284,7 +289,7 @@ for count in range(2):
 
         Pin_fold = file_2d['pIe_fold']
         Pin = file_2d['pIe']
-        
+
         # estimate variance of inject
         varz = []
         for k_val in range(Pin.shape[1]):
@@ -293,7 +298,7 @@ for count in range(2):
             varz.append(var)
             #print 'k:',kpl[k_val],' ; var:',var
         var_inject = n.mean(varz) # mean over k (should be the same for all injects if seed is the same)
-        
+
         for ind in range(len(kpl_fold)): # loop through k for Delta^2(k)
             try:
                 Pouts_fold[kpl_fold[ind]].append(Pout_fold[:,ind])
@@ -319,7 +324,7 @@ for count in range(2):
                 pIves_fold[kpl_fold[ind]] = [pIve_fold[:,ind]]
                 pCrs_fold[kpl_fold[ind]] = [pCr_fold[:,ind]]
                 pIrs_fold[kpl_fold[ind]] = [pIr_fold[:,ind]]
-        
+
         for ind in range(len(kpl)): # loop through k for P(k)
             pCs[kpl[ind]] = [pC[:,ind]] # no appending because it's the same for every inject
             pIs[kpl[ind]] = [pI[:,ind]]
@@ -331,22 +336,22 @@ for count in range(2):
                 Pouts[kpl[ind]] = [Pout[:,ind]]
                 Pouts_I[kpl[ind]] = [Pout_I[:,ind]]
                 Pins[kpl[ind]] = [Pin[:,ind]]
-    
+
     # Values of interest are contained within dictionaries indexed by kpl_fold or kpl:
     #     Pins_fold, Pins
     #     Pouts_fold, Pouts
     #     Pouts_I_fold, Pouts_I
     #     pCs, pCs_fold, pIs, pIs_fold  (data/noise values)
- 
+
     ### SIGNAL LOSS CODE
     binsy_log, binsy_lin = make_bins() # bins are where to sample distributions
-    
+
     # Get distributions of original data (used to find errors if skip_sigloss)
     old_pCs = data_dist(pCs)
     old_pCs_fold = data_dist(pCs_fold)
-    old_pIs = data_dist(pIs)    
+    old_pIs = data_dist(pIs)
     old_pIs_fold = data_dist(pIs_fold)
-    
+
     # Get original PS points (from no-bootstrapping case)
     if count == 0: # data case
         pt_pC = file['pCv']
@@ -365,8 +370,8 @@ for count in range(2):
     for kk,k in enumerate(kpl_fold):
         pt_pCs_fold[k] = pt_pC_fold[kk]
         pt_pIs_fold[k] = pt_pI_fold[kk]
-    
-    # Compute signal loss and get new distributions 
+
+    # Compute signal loss and get new distributions
     if opts.skip_sigloss:
         print "Skipping Signal Loss!"
         new_pCs = old_pCs.copy()
@@ -378,11 +383,11 @@ for count in range(2):
         kde_C, kde_I, binsx_log = smooth_dist(fold=False) # KDE transfer curves
         kde_C_fold, kde_I_fold, binsx_log = smooth_dist(fold=True)
         # new distributions
-        new_pCs = sigloss_func(pt_pCs, kde_C) 
+        new_pCs = sigloss_func(pt_pCs, kde_C)
         new_pCs_fold = sigloss_func(pt_pCs_fold, kde_C_fold)
         new_pIs = sigloss_func(pt_pIs, kde_I)
         new_pIs_fold = sigloss_func(pt_pIs_fold, kde_I_fold)
-    
+
     # Plot un-folded case
     if opts.plot:
         for k in kde_C:
@@ -409,17 +414,17 @@ for count in range(2):
             p.plot(binsx_log,new_pIs[k],'k-'); p.grid()
             p.xlim(xmin,xmax)
             p.tight_layout(); p.suptitle("k = " + str(k)); p.show()
- 
+
     pC, pC_err = compute_stats(10**n.abs(binsx_log)*n.sign(binsx_log), new_pCs, pt_pCs)
     pI, pI_err = compute_stats(10**n.abs(binsx_log)*n.sign(binsx_log), new_pIs, pt_pIs)
     pC_fold, pC_fold_err = compute_stats(10**binsx_log, new_pCs_fold, pt_pCs_fold)
     pI_fold, pI_fold_err = compute_stats(10**binsx_log, new_pIs_fold, pt_pIs_fold)
-    
+
     pC_old, pC_err_old = compute_stats(binsy_lin, old_pCs, pt_pCs, old=True)
     pI_old, pI_err_old = compute_stats(binsy_lin, old_pIs, pt_pIs, old=True)
     pC_fold_old, pC_fold_err_old = compute_stats(binsy_lin, old_pCs_fold, pt_pCs_fold, old=True)
     pI_fold_old, pI_fold_err_old = compute_stats(binsy_lin, old_pIs_fold, pt_pIs_fold, old=True)
-    
+
     if count == 0: # data case
         pCv = pC; pCv_old = pC_old
         pCv_fold = pC_fold; pCv_fold_old = pC_fold_old
@@ -462,25 +467,27 @@ n.savez(outname, kpl=kpl, k=file['k'], freq=file['freq'],
         pCn_fold=pCn_fold, pCn_fold_err=pCn_fold_err,
         pIn=pIn, pIn_err=pIn_err,
         pIn_fold=pIn_fold, pIn_fold_err=pIn_fold_err,
+        theory_noise = file['theory_noise'],
+        theory_noise_delta2 = file['theory_noise_delta2'],
         prob=0.95, kperp=file['kperp'], sep=opts.sep, kpl_fold=file['kpl_fold'],
         ngps=file['ngps'], nbls=file['nbls'], nbls_g=file['nbls_g'], nlsts_g=file['nlsts_g'],
         lsts=file['lsts'], afreqs=file['afreqs'], cnt_eff=file['cnt_eff'],
-        frf_inttime=file['frf_inttime'], inttime=file['inttime'], 
+        frf_inttime=file['frf_inttime'], inttime=file['inttime'],
         cmd=file['cmd'].item() + ' \n '+' '.join(sys.argv))
 
 outname2 = 'pspec_final_sep'+opts.sep+'_full.npz'
 print '   Saving', outname2
 # Save with 1-sigma errors (compatible with plot_pspec_final_v2.py)
 n.savez(outname2, kpl=kpl, k=file['k'], freq=file['freq'],
-        pCv=pCv, pCv_err=pCv_err, 
+        pCv=pCv, pCv_err=pCv_err,
         pCv_old=pCv_old, pCv_err_old=pCv_err_old,
-        pCv_fold=pCv_fold, pCv_fold_err=pCv_fold_err, 
+        pCv_fold=pCv_fold, pCv_fold_err=pCv_fold_err,
         pCv_fold_old=pCv_fold_old, pCv_fold_err_old=pCv_fold_err_old,
         pIv=pIv, pIv_err=pIv_err,
         pIv_old=pIv_old, pIv_err_old=pIv_err_old,
         pIv_fold=pIv_fold, pIv_fold_err=pIv_fold_err,
         pIv_fold_old=pIv_fold_old, pIv_fold_err_old=pIv_fold_err_old,
-        pCn=pCn, pCn_err=pCn_err, 
+        pCn=pCn, pCn_err=pCn_err,
         pCn_old=pCn_old, pCn_err_old=pCn_err_old,
         pCn_fold=pCn_fold, pCn_fold_err=pCn_fold_err,
         pCn_fold_old=pCn_fold_old, pCn_fold_err_old=pCn_fold_err_old,
@@ -488,9 +495,10 @@ n.savez(outname2, kpl=kpl, k=file['k'], freq=file['freq'],
         pIn_old=pIn_old, pIn_err_old=pIn_err_old,
         pIn_fold=pIn_fold, pIn_fold_err=pIn_fold_err,
         pIn_fold_old=pIn_fold_old, pIn_fold_err_old=pIn_fold_err_old,
+        theory_noise = file['theory_noise'],
+        theory_noise_delta2 = file['theory_noise_delta2'],
         prob=0.95, kperp=file['kperp'], sep=opts.sep, kpl_fold=file['kpl_fold'],
         ngps=file['ngps'], nbls=file['nbls'], nbls_g=file['nbls_g'], nlsts_g=file['nlsts_g'],
         lsts=file['lsts'], afreqs=file['afreqs'], cnt_eff=file['cnt_eff'],
-        frf_inttime=file['frf_inttime'], inttime=file['inttime'], 
+        frf_inttime=file['frf_inttime'], inttime=file['inttime'],
         cmd=file['cmd'].item() + ' \n '+' '.join(sys.argv))
-
