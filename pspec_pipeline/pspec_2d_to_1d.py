@@ -196,7 +196,7 @@ print '\tNdays:', cnt
 print '\tNlstbins:', nlsts_g
 S = sensitivity.Sense()
 f = pk_pspecs['freq']
-S.z = capo.pspec.f2z(f)
+S.z = f212z(f*1e9)
 
 #   Tsys
 #S.Tsys = 551e3  #set to match 21cmsense exactly
@@ -204,7 +204,7 @@ S.z = capo.pspec.f2z(f)
 if 'Trcvr' in pk_pspecs.keys():
     S.Tsys = (pk_pspecs['Trcvr'] + 180.*(f/.180)**-2.55)*1e3
 else:
-    S.Tsys = (pk_pspecs['Trcvr'] + 180.*(f/.180)**-2.55)*1e3
+    S.Tsys = ( 144. + 180.*(f/.180)**-2.55)*1e3
     # set to match noise realization
     # calcuation made from correcting Ali 2015 Tsys estimate
 
@@ -224,7 +224,7 @@ S.Nbls = pk_pspecs['nbls']
 S.Nlstbins = nlsts_g
 S.calc()
 print "capo.sensitivity Pk_noise = ", S.P_N
-pk_pspecs['theory_noise'] = np.repeat(S.P_N, len(pk_pspec['kpl']))
+pk_pspecs['theory_noise'] = np.repeat(S.P_N, len(pk_pspecs['kpl']))
 pk_pspecs['theory_noise_delta2'] = S.Delta2_N(k)
 
 
