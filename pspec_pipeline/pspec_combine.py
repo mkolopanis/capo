@@ -29,6 +29,25 @@ pCn_fold = {}
 pCn_fold_err = {}
 pIn_fold = {}
 pIn_fold_err = {}
+
+pCv_old = {}
+pCv_err_old = {}
+pIv_old = {}
+pIv_err_old = {}
+pCv_fold_old = {}
+pCv_fold_err_old = {}
+pIv_fold_old = {}
+pIv_fold_err_old = {}
+pCn_old = {}
+pCn_err_old = {}
+pIn_old = {}
+pIn_err_old = {}
+pCn_fold_old = {}
+pCn_fold_err_old = {}
+pIn_fold_old = {}
+pIn_fold_err_old = {}
+
+
 kperps = []
 seps = []
 theory_noise = {}
@@ -52,6 +71,16 @@ for file in args.files:  # XXX only compatible with pspec_pk_k3pk.npz files
         pCn_err.setdefault(k, []).append(f['pCn_err'][kk])
         pIn.setdefault(k, []).append(f['pIn'][kk])
         pIn_err.setdefault(k, []).append(f['pIn_err'][kk])
+
+        pCv_old.setdefault(k, []).append(f['pCv_old'][kk])
+        pCv_err_old.setdefault(k, []).append(f['pCv_err_old'][kk])
+        pIv_old.setdefault(k, []).append(f['pIv_old'][kk])
+        pIv_err_old.setdefault(k, []).append(f['pIv_err_old'][kk])
+        pCn_old.setdefault(k, []).append(f['pCn_old'][kk])
+        pCn_err_old.setdefault(k, []).append(f['pCn_err_old'][kk])
+        pIn_old.setdefault(k, []).append(f['pIn_old'][kk])
+        pIn_err_old.setdefault(k, []).append(f['pIn_err_old'][kk])
+
         theory_noise.setdefault(k, []).append(f['theory_noise'][kk])
         dummy_noise.setdefault(k, []).append(0)
 
@@ -64,6 +93,16 @@ for file in args.files:  # XXX only compatible with pspec_pk_k3pk.npz files
         pCn_fold_err.setdefault(k, []).append(f['pCn_fold_err'][kk])
         pIn_fold.setdefault(k, []).append(f['pIn_fold'][kk])
         pIn_fold_err.setdefault(k, []).append(f['pIn_fold_err'][kk])
+
+        pCv_fold_old.setdefault(k, []).append(f['pCv_fold_old'][kk])
+        pCv_fold_err_old.setdefault(k, []).append(f['pCv_fold_err_old'][kk])
+        pIv_fold_old.setdefault(k, []).append(f['pIv_fold_old'][kk])
+        pIv_fold_err_old.setdefault(k, []).append(f['pIv_fold_err_old'][kk])
+        pCn_fold_old.setdefault(k, []).append(f['pCn_fold_old'][kk])
+        pCn_fold_err_old.setdefault(k, []).append(f['pCn_fold_err_old'][kk])
+        pIn_fold_old.setdefault(k, []).append(f['pIn_fold_old'][kk])
+        pIn_fold_err_old.setdefault(k, []).append(f['pIn_fold_err_old'][kk])
+
         theory_noise_delta2.setdefault(k, []).append(f['theory_noise_delta2'][kk])
         dummy_noise_fold.setdefault(k, []).append(0)
 
@@ -99,6 +138,18 @@ pCn_fold_combine, pCn_fold_err_combine = combine_PS(f['kpl_fold'], pCn_fold,
                                                     pCn_fold_err)
 pIn_fold_combine, pIn_fold_err_combine = combine_PS(f['kpl_fold'], pIn_fold,
                                                     pIn_fold_err)
+pCv_old_combine, pCv_err_old_combine = combine_PS(f['kpl'], pCv_old,
+                                                  pCv_err_old)
+pIv_old_combine, pIv_err_old_combine = combine_PS(f['kpl'], pIv_old,
+                                                  pIv_err_old)
+pCv_fold_old_combine, pCv_fold_err_old_combine = combine_PS(f['kpl_fold'], pCv_fold_old, pCv_fold_err_old)
+pIv_fold_old_combine, pIv_fold_err_old_combine = combine_PS(f['kpl_fold'], pIv_fold_old, pIv_fold_err_old)
+pCn_old_combine, pCn_err_old_combine = combine_PS(f['kpl'], pCn_old, pCn_err_old)
+pIn_old_combine, pIn_err_old_combine = combine_PS(f['kpl'], pIn_old, pIn_err_old)
+pCn_fold_old_combine, pCn_fold_err_old_combine = combine_PS(f['kpl_fold'], pCn_fold_old, pCn_fold_err_old)
+pIn_fold_old_combine, pIn_fold_err_old_combine = combine_PS(f['kpl_fold'], pIn_fold_old, pIn_fold_err_old)
+
+
 
 _, theory_noise_combine = combine_PS(f['kpl'], dummy_noise, theory_noise)
 _, theory_noise_delta2_combine = combine_PS(f['kpl'], dummy_noise_fold,
