@@ -17,18 +17,8 @@ if True: # eigenmodes set to 1
     f2 = '_modes'
     loop = n.arange(startmode,nmodes,deltamode)
 
-if False: # added identity parameters
-    path_add = '/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity_trace'
-    startmode_add=0 
-    nmodes_add=0.2 #0.4 #20000 
-    deltamode_add=0.01 #1000
-    xlabel_add='Strength of identity added: $\widehat{C} + xTr(\widehat{C}$)'
-    f1_add = '/add_'
-    f2_add = '_identity'
-    loop_add = n.arange(startmode_add,nmodes_add,deltamode_add)
-
 if True: # added identity parameters in LOG space
-    path_add = '/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity_trace_log'
+    path_add = '/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity_trace_log_DENSE_NOSEED'
     startmode_add=-4 
     endmode_add=0
     nmodes_add=20 #20000 
@@ -49,16 +39,9 @@ for mode_num in loop:
     filename = path + f1 + str(mode_num) + f2
     print 'Reading', filename
     print mode_num
-    #file_i = n.load(filename + '/inject_sep0,1_0.001/pspec_pk_k3pk.npz')
-    #file_i = n.load(filename + '/pspec_final_sep0,1_nosigloss.npz')
-    #file_f = n.load(filename + '/pspec_final_sep0,1.npz')
     f = n.load(filename+'/pspec_final_sep0,1_full.npz')
     kpl = f['kpl']
     k = kpl[k_ind] 
-    #PS_i_up.append(2*file_i['pCv_err'][k_ind]) # 2-sigma err
-    #PS_f_up.append(2*file_f['pCv_err'][k_ind]) # 2-sigma err
-    #PS_i.append(n.abs(file_i['pCv'])[k_ind])
-    #PS_f.append(n.abs(file_f['pCv'])[k_ind])
     PS_i_up.append(2*n.array(f['pCv_err_old'])[k_ind])
     PS_f_up.append(2*n.array(f['pCv_err'])[k_ind])
     PS_i.append(n.abs(f['pCv_old'])[k_ind])
@@ -73,16 +56,9 @@ for mode_num in loop_add:
     filename = path_add + f1_add + str(mode_num) + f2_add
     print 'Reading', filename
     print mode_num
-    #file_i = n.load(filename + '/inject_sep0,1_0.001/pspec_pk_k3pk.npz')
-    #file_i = n.load(filename + '/pspec_final_sep0,1_nosigloss.npz')
-    #file_f = n.load(filename + '/pspec_final_sep0,1.npz')
     f = n.load(filename + '/pspec_final_sep0,1_full.npz')
     kpl = f['kpl']
     k = kpl[k_ind] 
-    #PS_i_up_add.append(2*file_i['pCv_err'][k_ind]) # 2-sigma err
-    #PS_f_up_add.append(2*file_f['pCv_err'][k_ind]) # 2-sigma err
-    #PS_i_add.append(n.abs(file_i['pCv'])[k_ind])
-    #PS_f_add.append(n.abs(file_f['pCv'])[k_ind])
     PS_i_up_add.append(2*n.array(f['pCv_err_old'])[k_ind])
     PS_f_up_add.append(2*n.array(f['pCv_err'])[k_ind])
     PS_i_add.append(n.abs(f['pCv_old'])[k_ind])
@@ -117,7 +93,7 @@ if True:
 """
 
 # Best PS (Identity Mult)
-f = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_IDENTITYMULTWEIGHT_WEIGHTI/pspec_final_sep0,1_full.npz')
+f = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_IDENTITYMULTWEIGHT_WEIGHTI_DENSE_NOSEED/pspec_final_sep0,1_full.npz')
 #ps_mult = n.abs(f['pCv'][k_ind]) + 2*f['pCv_err'][k_ind] # point + 2err
 ps_mult = 2*f['pCv_err'][k_ind] # 2sigma upper limit
 
@@ -125,11 +101,11 @@ ps_mult = 2*f['pCv_err'][k_ind] # 2sigma upper limit
 p.figure(figsize=(8,10))    
 p.subplot(211)
     # plot before/after for # eigenmodes down-weighted
-p.plot(loop, n.array(PS_i_up), color='0.5', linewidth=2, label='Pre-signal loss estimation')
+p.plot(loop, n.array(PS_i) + n.array(PS_i_up), color='0.5', linewidth=2, label='Pre-signal loss estimation')
 p.plot(loop, n.array(PS_f_up), 'k-', linewidth=2, label='Post-signal loss estimation')
 p.xlim(loop[0], loop[-1])
      # plot unweighted
-p.axhline(2*f['pIv_err_old'][k_ind],color='b',linestyle='--',linewidth=2)
+p.axhline(f['pIv_old'][k_ind]+2*f['pIv_err_old'][k_ind],color='b',linestyle='--',linewidth=2)
     # plot inverse variance
 p.axhline(ps_mult,color='r',linestyle='-',linewidth=2)
     # plot analytic
@@ -145,12 +121,12 @@ p.title('k = ' +str(round(k,3)))
    
 p.subplot(212)
     # plot before/after for added identity
-p.plot(loop_add, n.array(PS_i_up_add), color='0.5', linewidth=2, linestyle='-.', label='Pre-signal loss estimation')
+p.plot(loop_add, n.array(PS_i_add) + n.array(PS_i_up_add), color='0.5', linewidth=2, linestyle='-.', label='Pre-signal loss estimation')
 p.plot(loop_add, n.array(PS_f_up_add), color='k', linewidth=2, linestyle='-.', label='Post-signal loss estimation')
 p.xlim(loop_add[0], loop_add[-1])
 p.gca().invert_xaxis()
     # plot unweighted
-p.axhline(2*f['pIv_err_old'][k_ind],color='b',linestyle='--',linewidth=2,label='Uniform weighting')
+p.axhline(f['pIv_old'][k_ind]+2*f['pIv_err_old'][k_ind],color='b',linestyle='--',linewidth=2,label='Uniform weighting')
     # plot inverse variance
 p.axhline(ps_mult,color='r',linestyle='-',linewidth=2,label='$\hat{C} = \hat{C} \circ I$')
     # plot analytic
