@@ -146,6 +146,7 @@ def smooth_dist(fold=True):
             else: fn = 'pspec_sigloss.npz'
             print "Saving",fn,"which contains data values for k =",k
             n.savez(fn, k=k, binsx=binsx_kde, binsy=binsy_kde, kdeC=kdeC, kdeI=kdeI, xs=xs_kde, ys=ys_kde, ysI=ys_I_kde, pC=file['pCv_fold'][n.where(ks==k)[0][0]], pI=file['pIv_fold'][n.where(ks==k)[0][0]])
+        
         # Plot KDE and points
         if opts.plot:
             p.figure(figsize=(10,6))
@@ -455,20 +456,10 @@ for count in range(2):
         pCn_fold_err = pC_fold_err; pCn_fold_err_old = pC_fold_err_old
         pIn_err = pI_err; pIn_err_old = pI_err_old
         pIn_fold_err = pI_fold_err; pIn_fold_err_old = pI_fold_err_old
-    """
-    # Save values to use for plotting sigloss plots
-    if count == 0:
-        Ind = -3 # one k-value
-        k = kpl[ind]
-        if opts.nosubtract: fn = 'pspec_sigloss_nosubtract.npz'
-        else: fn = 'pspec_sigloss.npz'
-        print "Saving",fn,"which contains data values for k =",k
-        n.savez(fn, k=k, binsx=binsx, binsy=binsy, bins_concat=bins_concat, pC=pC[ind], pC_err=pC_err[ind], pI=pI[ind], pI_err=pI_err[ind], new_pCs=new_pCs[k], new_pIs=new_pIs[k], old_pCs=old_pCs[k], old_pIs=old_pIs[k], Pins=Pins_fold[k], Pouts=Pouts_fold[k], Pouts_I=Pouts_I_fold[k])
-    """
+
 # Write out solutions
 outname = 'pspec_final_sep'+opts.sep+'.npz'
 print '   Saving', outname
-
 # Save with 1-sigma errors (compatible with pspec_combine.py and plot_pspec_final.py)
 n.savez(outname, kpl=kpl, k=file['k'], freq=file['freq'],
         pCv=pCv, pCv_err=pCv_err,
