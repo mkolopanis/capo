@@ -257,6 +257,7 @@ def make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve,
                 continue
             if key1[0] == key2[0]:  # don't do 'even' with 'even', for example
                 continue
+            #if key1[1] == key2[1] or (key1[0] == 'even' or key2[0] == 'even'): continue # for jackknife with only even or odd (comment out above if statements to use this one instead)
             else:
                 FCv = dsCv.get_F(key1, key2, cov_flagging=False)
                 FIv = dsIv.get_F(key1, key2, use_cov=False, cov_flagging=False)
