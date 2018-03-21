@@ -163,16 +163,16 @@ for filename in args.files:
     pIv_up_new = pspec_dict['pIv_err']*2
     pCv_fold_new = pspec_dict['pCv_fold']*fold_factor
     pIv_fold_new = pspec_dict['pIv_fold']*fold_factor
-    pCv_fold_up_new = pspec_dict['pCv_fold_err']*fold_factor
-    pIv_fold_up_new = pspec_dict['pIv_fold_err']*fold_factor
+    pCv_fold_up_new = pspec_dict['pCv_fold_err']*2*fold_factor
+    pIv_fold_up_new = pspec_dict['pIv_fold_err']*2*fold_factor
     pCn_new = pspec_dict['pCn']
     pIn_new = pspec_dict['pIn']
     pCn_up_new = pspec_dict['pCn_err']*2
     pIn_up_new = pspec_dict['pIn_err']*2
     pCn_fold_new = pspec_dict['pCn_fold']*fold_factor
     pIn_fold_new = pspec_dict['pIn_fold']*fold_factor
-    pCn_fold_up_new = pspec_dict['pCn_fold_err']*fold_factor
-    pIn_fold_up_new = pspec_dict['pIn_fold_err']*fold_factor
+    pCn_fold_up_new = pspec_dict['pCn_fold_err']*2*fold_factor
+    pIn_fold_up_new = pspec_dict['pIn_fold_err']*2*fold_factor
 
     pos_ind = np.where(pCv >= 0)[0]
     pos_ind_noise = np.where(pCn >= 0)[0]
