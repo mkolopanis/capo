@@ -4,13 +4,10 @@ import numpy as n
 import pylab as p
 
 # Old jackknives ((e+o) x (e-o) for example)
-#file_eo = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_evenodd_addI/pspec_final_sep0,1.npz')
-#file_bl = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_baselines_addI/pspec_final_sep0,1.npz')
-#file_lst = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_lst_addI/pspec_final_sep0,1.npz')
-file_eo = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_evenodd_addI/pspec_final_sep0,1_nosigloss.npz')
-file_bl = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_baselines_addI/pspec_final_sep0,1_nosigloss.npz')
-file_lst = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_lst_addI/pspec_final_sep0,1_nosigloss.npz')
-data = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity_trace_log_DENSE_NOSEED/add_0.0206913808111_identity/pspec_final_sep0,1.npz')
+#file_eo = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_evenodd_addI/pspec_final_sep0,1_nosigloss.npz')
+#file_bl = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_baselines_addI/pspec_final_sep0,1_nosigloss.npz')
+#file_lst = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/jackknife_lst_addI/pspec_final_sep0,1_nosigloss.npz')
+#data = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity_trace_log_DENSE_NOSEED/add_0.0206913808111_identity/pspec_final_sep0,1.npz')
 
 
 # New jackknives (differencing of 2 PS)
@@ -68,7 +65,7 @@ p.errorbar(file_bls_diff['kpl'],file_bls_diff['pIv_old'],file_lst_diff['pIv_err_
 p.axhline(0,color='k',linestyle='--')
 p.axhspan(-noise_bl*2,noise_bl*2,facecolor='0.5',edgecolor="none",alpha=0.5,label='Estimated $2\sigma$ Error')
 #p.legend(numpoints=1,prop={'size':16})
-#p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=18)
+p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=18)
 p.xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]',fontsize=18)
 p.tick_params(axis='both', which='major', labelsize=16)
 p.ylim(-1.2e9,1.2e9)
@@ -84,7 +81,7 @@ p.errorbar(file_eo_diff['kpl'],file_eo_diff['pIv_old'],file_eo_diff['pIv_err_old
 p.axhline(0,color='k',linestyle='--')
 p.axhspan(-noise_eo*2,noise_eo*2,facecolor='0.5',edgecolor="none",alpha=0.5,label='Estimated $2\sigma$ Error')
 #p.legend(numpoints=1,prop={'size':16})
-#p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=18)
+p.ylabel('$P(k)$ $[mK^{2}(h^{-1} Mpc)^{3}]$',fontsize=18)
 p.xlabel('$k_{\\parallel}$ [$h$ Mpc$^{-1}$]',fontsize=18)
 p.tick_params(axis='both', which='major', labelsize=16)
 p.ylim(-1.2e9,1.2e9)

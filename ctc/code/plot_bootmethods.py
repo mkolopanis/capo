@@ -4,16 +4,17 @@ import numpy as n
 import matplotlib.pyplot as plt
 
 # Files to read
-boot_bl = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_IDENTITYMULTWEIGHT_WEIGHTI/pspec_final_sep0,1.npz') # bootstrap over baseline only
-#boot_bl = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_RANGEOFPROJECTEDMODES/project_3_modes/pspec_final_sep0,1.npz') # bootstrap over baseline only
-boot_time = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_IDENTITYMULTWEIGHT_WEIGHTI/pspec_final_sep0,1_oldboot.npz') # bootstrap over time and bl
+#boot_bl = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_IDENTITYMULTWEIGHT_WEIGHTI/pspec_final_sep0,1.npz') # bootstrap over baseline only
+#boot_time = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_IDENTITYMULTWEIGHT_WEIGHTI/pspec_final_sep0,1_oldboot.npz') # bootstrap over time and bl
+boot_bl = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/compare_boot_methods/pspec_final_sep0,1_full.npz')
+boot_time = n.load('/data4/paper/ctc/PSA64/PAPER_METHODS/compare_boot_methods/pspec_final_sep0,1_full_boottime.npz')
 
 
 noise = 4436767.36822 # XXX
 
 # Plot
-plt.plot(boot_bl['kpl'], boot_bl['pIn_err']*2, color='black', linewidth=2, label='Bootstrap baselines only')
-plt.plot(boot_time['kpl'], boot_time['pIn_err']*2, color='0.5', linewidth=2, label='Bootstrap baselines and times')
+plt.plot(boot_bl['kpl'], boot_bl['pIn_err_old']*2, color='black', linewidth=2, label='Bootstrap baselines only')
+plt.plot(boot_time['kpl'], boot_time['pIn_err_old']*2, color='0.5', linewidth=2, label='Bootstrap baselines and times')
 plt.axhline(y=noise*2, color='green', linestyle='-', linewidth=2, label='Analytic')
 plt.legend(numpoints=1,prop={'size':14},loc='best')
 plt.grid()
