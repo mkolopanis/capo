@@ -460,20 +460,20 @@ for count in range(2):
 
 # create dictionary of extra keys for the save calls
 extra_out_dict = {
-        prob:0.975,
-        kperp:file['kperp'],
-        sep:opts.sep,
-        kpl_fold:file['kpl_fold'],
-        ngps:file['ngps'],
-        nbls:file['nbls'],
-        nbls_g:file['nbls_g'],
-        nlsts_g:file['nlsts_g'],
-        lsts:file['lsts'],
-        afreqs:file['afreqs'],
-        cnt_eff:file['cnt_eff'],
-        frf_inttime:file['frf_inttime'],
-        inttime:file['inttime'],
-        cmd:file['cmd'].item() + ' \n '+' '.join(sys.argv)
+        'prob':0.975,
+        'kperp':file['kperp'],
+        'sep':opts.sep,
+        'kpl_fold':file['kpl_fold'],
+        'ngps':file['ngps'],
+        'nbls':file['nbls'],
+        'nbls_g':file['nbls_g'],
+        'nlsts_g':file['nlsts_g'],
+        'lsts':file['lsts'],
+        'afreqs':file['afreqs'],
+        'cnt_eff':file['cnt_eff'],
+        'frf_inttime':file['frf_inttime'],
+        'inttime':file['inttime'],
+        'cmd':file['cmd'].item() + ' \n '+' '.join(sys.argv)
         }
 
 if ('theory_noise' and 'theoyr_noise_delta2') in file.keys():
