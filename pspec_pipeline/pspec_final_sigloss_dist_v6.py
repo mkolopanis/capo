@@ -96,7 +96,7 @@ def smooth_dist(fold=True):
         xs_kde = n.log10(xs) # log-space
         ys_kde = n.sign(ys_C)*n.log10(n.abs(ys_C))
         ys_I_kde = n.sign(ys_I)*n.log10(n.abs(ys_I))
-        kdeC = n.zeros((len(binsy_kde),n_injects))
+        kdeC = n.zeros((len(binsy_kde),n_injects)) 
         kdeI = n.zeros((len(binsy_kde),n_injects))
         for col in range(n_injects): # loop over injection levels
             # KDE one time for factor
@@ -105,8 +105,8 @@ def smooth_dist(fold=True):
             # revise factor using the cov in the abs(y-axis) per injection level
             ratio = n.sqrt(n.cov(n.abs(ys_kde[col])) / n.cov(ys_kde[col]))
             ratioI = n.sqrt(n.cov(n.abs(ys_I_kde[col])) / n.cov(ys_I_kde[col]))
-            factor = ratio * kernel_C.factor
-            factorI = ratioI * kernel_I.factor
+            factor = ratio * kernel_C.factor 
+            factorI = ratioI * kernel_I.factor 
             # KDE once again
             kernel_C = scipy.stats.gaussian_kde(ys_kde[col],bw_method=factor)
             kernel_I = scipy.stats.gaussian_kde(ys_I_kde[col],bw_method=factorI)
@@ -116,26 +116,18 @@ def smooth_dist(fold=True):
             bins_size = bin_size(binsy_kde)
             data_dist_C /= n.sum(data_dist_C*bins_size) # normalize
             data_dist_I /= n.sum(data_dist_I*bins_size)
-            binsx_kde.append(n.mean(xs_kde[col])) # mean of P_in for the injection level # XXX could do max to be conservative if wanted
+            binsx_kde.append(n.mean(xs_kde[col])) # mean of P_in for the injection level # XXX could do max to be conservative if wanted - this would yield more sigloss
             kdeC[:,col] = data_dist_C
             kdeI[:,col] = data_dist_I
         binsx_kde = n.array(binsx_kde) # make it an array
-        # Normalize columns
-        for col in range(kdeC.shape[1]):
-            if n.sum(kdeC[:,col]) > 0: # avoid nan values
-                kdeC[:,col] /= n.sum(kdeC[:,col]*bin_size(binsy_kde))
-            if n.sum(kdeI[:,col]) > 0:
-                kdeI[:,col] /= n.sum(kdeI[:,col]*bin_size(binsy_kde))
-
-         # Save values to use for plotting sigloss plots
+        # Save values to use for plotting sigloss plots
         if count == 0 and fold == True and kk == 8:
             if opts.nosubtract: fn = 'pspec_sigloss_nosubtract.npz'
             else: fn = 'pspec_sigloss.npz'
             print "Saving",fn,"which contains data values for k =",k
             n.savez(fn, k=k, binsx=binsx_kde, binsy=binsy_kde, kdeC=kdeC, kdeI=kdeI, xs=xs_kde, ys=ys_kde, ysI=ys_I_kde, pC=file['pCv_fold'][n.where(ks==k)[0][0]], pI=file['pIv_fold'][n.where(ks==k)[0][0]])
-
         # Plot KDE and points
-        if fold == opts.plot:
+        if opts.plot:
             p.figure(figsize=(10,6))
             p.subplot(121)
             p.pcolormesh(binsx_kde,binsy_kde,kdeC,cmap='hot_r')
@@ -198,7 +190,7 @@ def compute_stats(bins, data, pt, old=False):
             point = n.sum(bins*data[key])/n.sum(data[key]) # weighted avg
         pts.append(point)
         percents = [n.sum((data[key]*bin_size(bins))[:i]) for i in range(len(data[key]))]
-        if opts.skip_sigloss or old==True: # find error when dist is centered at 0
+        if opts.skip_sigloss or old==True: # find error when dist is centered at PS pt
             left = n.interp(0.025,percents,bins)
             right = n.interp(0.975,percents,bins)
             errs.append((right-left)/4) # 1-sigma error bar
@@ -345,7 +337,7 @@ for count in range(2):
 
     ### SIGNAL LOSS CODE
     binsy_log, binsy_lin = make_bins() # bins are where to sample distributions
-
+    
     # Get distributions of original data (used to find errors if skip_sigloss)
     old_pCs = data_dist(pCs)
     old_pCs_fold = data_dist(pCs_fold)
@@ -387,7 +379,7 @@ for count in range(2):
         new_pCs_fold = sigloss_func(pt_pCs_fold, kde_C_fold)
         new_pIs = sigloss_func(pt_pIs, kde_I)
         new_pIs_fold = sigloss_func(pt_pIs_fold, kde_I_fold)
-
+    
     # Plot un-folded case
     if opts.plot:
         for k in kde_C:
@@ -467,8 +459,8 @@ n.savez(outname, kpl=kpl, k=file['k'], freq=file['freq'],
         pCn_fold=pCn_fold, pCn_fold_err=pCn_fold_err,
         pIn=pIn, pIn_err=pIn_err,
         pIn_fold=pIn_fold, pIn_fold_err=pIn_fold_err,
-        theory_noise = file['theory_noise'],
-        theory_noise_delta2 = file['theory_noise_delta2'],
+        #theory_noise = file['theory_noise'],
+        #theory_noise_delta2 = file['theory_noise_delta2'],
         prob=0.975, kperp=file['kperp'], sep=opts.sep, kpl_fold=file['kpl_fold'],
         ngps=file['ngps'], nbls=file['nbls'], nbls_g=file['nbls_g'], nlsts_g=file['nlsts_g'],
         lsts=file['lsts'], afreqs=file['afreqs'], cnt_eff=file['cnt_eff'],
@@ -495,8 +487,8 @@ n.savez(outname2, kpl=kpl, k=file['k'], freq=file['freq'],
         pIn_old=pIn_old, pIn_err_old=pIn_err_old,
         pIn_fold=pIn_fold, pIn_fold_err=pIn_fold_err,
         pIn_fold_old=pIn_fold_old, pIn_fold_err_old=pIn_fold_err_old,
-        theory_noise = file['theory_noise'],
-        theory_noise_delta2 = file['theory_noise_delta2'],
+        #theory_noise = file['theory_noise'],
+        #theory_noise_delta2 = file['theory_noise_delta2'],
         prob=0.975, kperp=file['kperp'], sep=opts.sep, kpl_fold=file['kpl_fold'],
         ngps=file['ngps'], nbls=file['nbls'], nbls_g=file['nbls_g'], nlsts_g=file['nlsts_g'],
         lsts=file['lsts'], afreqs=file['afreqs'], cnt_eff=file['cnt_eff'],
