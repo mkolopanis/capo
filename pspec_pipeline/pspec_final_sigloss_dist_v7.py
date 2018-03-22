@@ -457,6 +457,28 @@ for count in range(2):
         pIn_err = pI_err; pIn_err_old = pI_err_old
         pIn_fold_err = pI_fold_err; pIn_fold_err_old = pI_fold_err_old
 
+
+# create dictionary of extra keys for the save calls
+extra_out_dict = {
+        prob:0.975,
+        kperp:file['kperp'],
+        sep:opts.sep,
+        kpl_fold:file['kpl_fold'],
+        ngps:file['ngps'],
+        nbls:file['nbls'],
+        nbls_g:file['nbls_g'],
+        nlsts_g:file['nlsts_g'],
+        lsts:file['lsts'],
+        afreqs:file['afreqs'],
+        cnt_eff:file['cnt_eff'],
+        frf_inttime:file['frf_inttime'],
+        inttime:file['inttime'],
+        cmd:file['cmd'].item() + ' \n '+' '.join(sys.argv)
+        }
+
+if ('theory_noise' and 'theoyr_noise_delta2') in file.keys():
+        extra_out_dict['theoury_noise']=file['theory_noise']
+        extra_out_dict['theory_noise_delta2']=file['theory_noise_delta2']
 # Write out solutions
 outname = 'pspec_final_sep'+opts.sep+'.npz'
 print '   Saving', outname
@@ -470,13 +492,7 @@ n.savez(outname, kpl=kpl, k=file['k'], freq=file['freq'],
         pCn_fold=pCn_fold, pCn_fold_err=pCn_fold_err,
         pIn=pIn, pIn_err=pIn_err,
         pIn_fold=pIn_fold, pIn_fold_err=pIn_fold_err,
-        #theory_noise = file['theory_noise'],
-        #theory_noise_delta2 = file['theory_noise_delta2'],
-        prob=0.975, kperp=file['kperp'], sep=opts.sep, kpl_fold=file['kpl_fold'],
-        ngps=file['ngps'], nbls=file['nbls'], nbls_g=file['nbls_g'], nlsts_g=file['nlsts_g'],
-        lsts=file['lsts'], afreqs=file['afreqs'], cnt_eff=file['cnt_eff'],
-        frf_inttime=file['frf_inttime'], inttime=file['inttime'],
-        cmd=file['cmd'].item() + ' \n '+' '.join(sys.argv))
+        **extra_out_dict)
 
 outname2 = 'pspec_final_sep'+opts.sep+'_full.npz'
 print '   Saving', outname2
@@ -498,10 +514,4 @@ n.savez(outname2, kpl=kpl, k=file['k'], freq=file['freq'],
         pIn_old=pIn_old, pIn_err_old=pIn_err_old,
         pIn_fold=pIn_fold, pIn_fold_err=pIn_fold_err,
         pIn_fold_old=pIn_fold_old, pIn_fold_err_old=pIn_fold_err_old,
-        #theory_noise = file['theory_noise'],
-        #theory_noise_delta2 = file['theory_noise_delta2'],
-        prob=0.975, kperp=file['kperp'], sep=opts.sep, kpl_fold=file['kpl_fold'],
-        ngps=file['ngps'], nbls=file['nbls'], nbls_g=file['nbls_g'], nlsts_g=file['nlsts_g'],
-        lsts=file['lsts'], afreqs=file['afreqs'], cnt_eff=file['cnt_eff'],
-        frf_inttime=file['frf_inttime'], inttime=file['inttime'],
-        cmd=file['cmd'].item() + ' \n '+' '.join(sys.argv))
+        **extra_out_dict)
