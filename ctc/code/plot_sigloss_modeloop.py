@@ -8,7 +8,7 @@ from scipy.optimize import curve_fit
 # Plots power spectrum results before and after signal loss correction as a function of modes removed
 
 if True: # eigenmodes set to 1
-    path = '/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_RANGEOFPROJECTEDMODES'
+    path = '/data4/paper/ctc/PSA64/PAPER_METHODS/PSA64_FRF_RA.5_8.6_CHAN95_115_SEP0,1_RANGEOFPROJECTEDMODES_DENSE_NOSEED'
     startmode=0
     nmodes=22
     deltamode=1
