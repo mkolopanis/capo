@@ -430,8 +430,8 @@ for count in range(2):
 
     pC, pC_err = compute_stats(10**n.abs(binsx_log)*n.sign(binsx_log), new_pCs, pt_pCs)
     pI, pI_err = compute_stats(10**n.abs(binsx_log)*n.sign(binsx_log), new_pIs, pt_pIs)
-    pC_fold, pC_fold_err = compute_stats(10**binsx_log, new_pCs_fold, pt_pCs_fold)
-    pI_fold, pI_fold_err = compute_stats(10**binsx_log, new_pIs_fold, pt_pIs_fold)
+    pC_fold, pC_fold_err = compute_stats(10**n.abs(binsx_log)*n.sign(binsx_log), new_pCs_fold, pt_pCs_fold)
+    pI_fold, pI_fold_err = compute_stats(10**n.abs(binsx_log)*n.sign(binsx_log), new_pIs_fold, pt_pIs_fold)
 
     pC_old, pC_err_old = compute_stats(binsy_lin, old_pCs, pt_pCs, old=True)
     pI_old, pI_err_old = compute_stats(binsy_lin, old_pIs, pt_pIs, old=True)
