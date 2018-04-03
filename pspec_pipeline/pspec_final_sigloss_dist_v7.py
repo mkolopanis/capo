@@ -195,8 +195,8 @@ def sigloss_func(pt, M_matrix):
         peak_ind = n.argmin(n.abs(binsy_lin-point)) # matching index
         cut = M[peak_ind] # cut of KDE at peak of data
         #if peak_ind < len(binsy_lin)/2: cut = M[len(binsy_lin)-peak_ind-1] # XXX positive cut instead
+        cut *= prior_factor(10**binsx_log) # normalize for prior
         cut /= n.sum(cut*bin_size(10**binsx_log)) # normal normalization
-        cut * prior_factor(10**binsx_log) # normalize for prior
         new_PS[k] = cut
     return new_PS # distribution of bins_concat
 
