@@ -463,8 +463,8 @@ extra_out_dict = {
         'cmd':file['cmd'].item() + ' \n '+' '.join(sys.argv)
         }
 
-if ('theory_noise' and 'theoyr_noise_delta2') in file.keys():
-        extra_out_dict['theoury_noise']=file['theory_noise']
+if ('theory_noise' and 'theory_noise_delta2') in file.keys():
+        extra_out_dict['theory_noise']=file['theory_noise']
         extra_out_dict['theory_noise_delta2']=file['theory_noise_delta2']
 # Write out solutions
 outname = 'pspec_final_sep'+opts.sep+'.npz'
