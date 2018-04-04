@@ -1,7 +1,8 @@
 #! /usr/bin/env python
 """Compute Signal Loss factor via distribution method v6.
     -Reads in pspec_2d_to_1d.npz (contains PS points for aln bootstraps)
-    -Assumes dense sampling in P_in!
+    -Assumes dense sampling in P_in
+    -Plots all bootstraps per injection level at the same <P_in> value
     -For bins along the P_in axis, a 1D KDE is used to smooth out the points (along the P_out axis)
     -All KDE's are combined into a 2D transfer curve (P_in vs. P_r)
     -Takes a horizontal cut at P_out = peak of p_x (data) and sums to 1
@@ -10,6 +11,7 @@
 import numpy as n
 import pylab as p
 from matplotlib import gridspec
+from matplotlib.colors import LogNorm
 from scipy.interpolate import interp1d
 from scipy.stats import norm
 from capo.pspec import f2z
@@ -80,15 +82,11 @@ def smooth_dist(fold=True):
             else: fn = 'pspec_sigloss_terms.npz'
             print "Saving",fn,"which contains data values for k =",k
             n.savez(fn, k=k, pCv=file['pCv'][n.where(kpl==k)[0][0]], pIv=file['pIv'][n.where(kpl==k)[0][0]], Pins=Pins_fold[k], Pouts=Pouts_fold[k], Pouts_I=Pouts_I_fold[k], pCrs_fold=pCrs_fold[k], pCvs_Cr_fold=pCvs_Cr_fold[k], pCes_Cr_fold=pCes_Cr_fold[k], pCves_fold=pCves_fold[k], pIves_fold=pIves_fold[k])
-
+        
         # Get bins and data for transfer curve
         bins_inj = binsy_log[len(binsy_log)/2:] # positive half of binsy_log will be used as bin boundaries for P_in
         binsy_kde = binsy_log
         binsx_kde = []
-        for bb in range(len(bins_inj)-1): # find center P_in bins
-            binsx_kde.append((bins_inj[bb+1]+bins_inj[bb])/2)
-        binsx_kde = n.insert(binsx_kde,0,binsx_kde[0]-(binsx_kde[1]-binsx_kde[0]))
-        binsx_kde = n.insert(binsx_kde,len(binsx_kde),binsx_kde[-1] + (binsx_kde[-1]-binsx_kde[-2]))
         if fold == True:
             xs = n.array(Pins_fold[k])
             ys_C = n.array(Pouts_fold[k])
@@ -97,48 +95,38 @@ def smooth_dist(fold=True):
             xs = n.array(Pins[k])
             ys_C = n.array(Pouts[k])
             ys_I = n.array(Pouts_I[k])
-        xs_kde = (n.log10(xs)).flatten() # log-space
-        ys_kde = (n.sign(ys_C)*n.log10(n.abs(ys_C))).flatten()
-        ys_I_kde = (n.sign(ys_I)*n.log10(n.abs(ys_I))).flatten()
-        binning = n.digitize(xs_kde,bins_inj)
+        for ll,level in enumerate(xs): # find average P_in per injection level and use that
+            Pin_mid = n.mean(xs[ll])
+            binsx_kde.append(n.log10(Pin_mid))
+            xs[ll] = n.repeat(Pin_mid,len(level))
+        xs_kde = n.log10(xs) # log-space
+        ys_kde = n.sign(ys_C)*n.log10(n.abs(ys_C))
+        ys_I_kde = n.sign(ys_I)*n.log10(n.abs(ys_I))
         kdeC = n.zeros((len(binsy_kde),len(binsx_kde)))
         kdeI = n.zeros((len(binsy_kde),len(binsx_kde)))
+        binsx_kde = n.array(binsx_kde) # make an array
         for sub_bin in range(len(binsx_kde)): # loop over injection bins
-            # get x and y values for each sub_bin
-            xs_sub_bin = xs_kde[n.where(binning == sub_bin)[0]] 
-            ys_sub_bin = ys_kde[n.where(binning == sub_bin)[0]]
-            ys_I_sub_bin = ys_I_kde[n.where(binning == sub_bin)[0]]
+            xs_sub_bin = xs_kde[sub_bin]
+            ys_sub_bin = ys_kde[sub_bin]
+            ys_I_sub_bin = ys_I_kde[sub_bin]
             # find distribution for weighted case
-            if len(ys_sub_bin) == 1: # if only one value, use delta function
-                delta_loc = n.argmin(n.abs(binsy_kde - ys_sub_bin))
-                data_dist_C = n.zeros_like(binsy_kde)
-                data_dist_C[delta_loc] = 1.0
-            elif len(ys_sub_bin) == 0: # if no values, leave as zeros
-                data_dist_C = n.zeros_like(binsy_kde)
-            else: # if multiple values, use KDE
-                kernel_C = scipy.stats.gaussian_kde(ys_sub_bin) 
-                ratio = n.sqrt(n.cov(n.abs(ys_sub_bin)) / n.cov(ys_sub_bin))
-                factor = ratio * kernel_C.factor 
-                kernel_C = scipy.stats.gaussian_kde(ys_sub_bin,bw_method=factor)
-                data_dist_C = kernel_C(binsy_kde)
+            kernel_C = scipy.stats.gaussian_kde(ys_sub_bin) 
+            ratio = n.sqrt(n.cov(n.abs(ys_sub_bin)) / n.cov(ys_sub_bin))
+            factor = ratio * kernel_C.factor 
+            kernel_C = scipy.stats.gaussian_kde(ys_sub_bin,bw_method=factor)
+            data_dist_C = kernel_C(binsy_kde)
             # find distribution for unweighted case
-            if len(ys_I_sub_bin) == 1: 
-                delta_loc = n.argmin(n.abs(binsy_kde - ys_I_sub_bin))
-                data_dist_I = n.zeros_like(binsy_kde)
-                data_dist_I[delta_loc] = 1.0    
-            elif len(ys_I_sub_bin) == 0:
-                data_dist_I = n.zeros_like(binsy_kde)
-            else:
-                kernel_I = scipy.stats.gaussian_kde(ys_I_sub_bin) 
-                ratioI = n.sqrt(n.cov(n.abs(ys_I_sub_bin)) / n.cov(ys_I_sub_bin))
-                factorI = ratioI * kernel_I.factor 
-                kernel_I = scipy.stats.gaussian_kde(ys_I_sub_bin,bw_method=factorI)
-                data_dist_I = kernel_I(binsy_kde)
+            kernel_I = scipy.stats.gaussian_kde(ys_I_sub_bin) 
+            ratioI = n.sqrt(n.cov(n.abs(ys_I_sub_bin)) / n.cov(ys_I_sub_bin))
+            factorI = ratioI * kernel_I.factor 
+            kernel_I = scipy.stats.gaussian_kde(ys_I_sub_bin,bw_method=factorI)
+            data_dist_I = kernel_I(binsy_kde)
             # Normalize and save distribution as a column of the transfer matrix
             if n.sum(data_dist_C) != 0: data_dist_C /= n.sum(data_dist_C*bin_size(binsy_kde))
             if n.sum(data_dist_I) != 0: data_dist_I /= n.sum(data_dist_I*bin_size(binsy_kde))
-            kdeC[:,sub_bin] = data_dist_C
-            kdeI[:,sub_bin] = data_dist_I
+            # Multiply the P_in column by the linear-width of the bin (undo log-prior)
+            kdeC[:,sub_bin] = data_dist_C*prior_factor(10**binsx_kde)[sub_bin]
+            kdeI[:,sub_bin] = data_dist_I*prior_factor(10**binsx_kde)[sub_bin]
         
         # Save values to use for plotting sigloss plots
         if count == 0 and fold == True and kk == 8:
@@ -151,7 +139,7 @@ def smooth_dist(fold=True):
         if opts.plot:
             p.figure(figsize=(10,6))
             p.subplot(121)
-            p.pcolormesh(binsx_kde,binsy_kde,kdeC,cmap='hot_r')
+            p.pcolormesh(binsx_kde,binsy_kde,n.log10(kdeC),cmap='hot_r',vmax=15,vmin=0)
             if fold == True and count == 0: dataval = file['pCv_fold'][n.where(ks==k)[0][0]]
             if fold == False and count == 0: dataval = file['pCv'][n.where(ks==k)[0][0]]
             if fold == True and count == 1: dataval = file['pCn_fold'][n.where(ks==k)[0][0]]
@@ -161,7 +149,7 @@ def smooth_dist(fold=True):
             p.xlim(binsx_kde.min(), binsx_kde.max())
             p.ylim(binsy_kde.min(), binsy_kde.max()); p.grid()
             p.subplot(122)
-            p.pcolormesh(binsx_kde,binsy_kde,kdeI,cmap='hot_r')
+            p.pcolormesh(binsx_kde,binsy_kde,n.log10(kdeI),cmap='hot_r',vmax=15,vmin=0)
             if fold == True and count == 0: dataval = file['pIv_fold'][n.where(ks==k)[0][0]]
             if fold == False and count == 0: dataval = file['pIv'][n.where(ks==k)[0][0]]
             if fold == True and count == 1: dataval = file['pIn_fold'][n.where(ks==k)[0][0]]
@@ -195,7 +183,6 @@ def sigloss_func(pt, M_matrix):
         peak_ind = n.argmin(n.abs(binsy_lin-point)) # matching index
         cut = M[peak_ind] # cut of KDE at peak of data
         #if peak_ind < len(binsy_lin)/2: cut = M[len(binsy_lin)-peak_ind-1] # XXX positive cut instead
-        cut *= prior_factor(10**binsx_log) # normalize for prior
         cut /= n.sum(cut*bin_size(10**binsx_log)) # normal normalization
         new_PS[k] = cut
     return new_PS # distribution of bins_concat
@@ -363,8 +350,8 @@ for count in range(2):
     old_pCs = data_dist(pCs)
     old_pCs_fold = data_dist(pCs_fold)
     old_pIs = data_dist(pIs)
-    old_pIs_fold = data_dist(pIs_fold)   
-    
+    old_pIs_fold = data_dist(pIs_fold)
+
     # Get original PS points (from no-bootstrapping case)
     if count == 0: # data case
         pt_pC = file['pCv']
@@ -407,14 +394,14 @@ for count in range(2):
             p.figure(figsize=(10,10))
             xmin,xmax = 0,16
             p.subplot(221)
-            p.pcolormesh(binsx_log,binsy_log,kde_C[k],cmap='hot_r')
+            p.pcolormesh(binsx_log,binsy_log,n.log10(kde_C[k]),cmap='hot_r',vmin=0,vmax=15)
             if count == 0: dataval = file['pCv'][n.where(kpl==k)[0][0]]
             if count == 1: dataval = file['pCn'][n.where(kpl==k)[0][0]]
             p.axhline(y=n.sign(dataval)*n.log10(n.abs(dataval)),color='0.5',linewidth=2)
             p.xlim(xmin,xmax)
             p.ylim(binsy_log.min(), binsy_log.max()); p.grid()
             p.subplot(222)
-            p.pcolormesh(binsx_log,binsy_log,kde_I[k],cmap='hot_r')
+            p.pcolormesh(binsx_log,binsy_log,n.log10(kde_I[k]),cmap='hot_r',vmin=0,vmax=15)
             if count == 0: dataval = file['pIv'][n.where(kpl==k)[0][0]]
             if count == 1: dataval = file['pIn'][n.where(kpl==k)[0][0]]
             p.axhline(y=n.sign(dataval)*n.log10(n.abs(dataval)),color='0.5',linewidth=2)
@@ -476,8 +463,8 @@ extra_out_dict = {
         'cmd':file['cmd'].item() + ' \n '+' '.join(sys.argv)
         }
 
-if ('theory_noise' and 'theory_noise_delta2') in file.keys():
-        extra_out_dict['theory_noise']=file['theory_noise']
+if ('theory_noise' and 'theoyr_noise_delta2') in file.keys():
+        extra_out_dict['theoury_noise']=file['theory_noise']
         extra_out_dict['theory_noise_delta2']=file['theory_noise_delta2']
 # Write out solutions
 outname = 'pspec_final_sep'+opts.sep+'.npz'
