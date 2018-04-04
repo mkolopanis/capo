@@ -394,14 +394,14 @@ for count in range(2):
             p.figure(figsize=(10,10))
             xmin,xmax = 0,16
             p.subplot(221)
-            p.pcolormesh(binsx_log,binsy_log,kde_C[k],cmap='hot_r')
+            p.pcolormesh(binsx_log,binsy_log,n.log10(kde_C[k]),cmap='hot_r',vmin=0,vmax=15)
             if count == 0: dataval = file['pCv'][n.where(kpl==k)[0][0]]
             if count == 1: dataval = file['pCn'][n.where(kpl==k)[0][0]]
             p.axhline(y=n.sign(dataval)*n.log10(n.abs(dataval)),color='0.5',linewidth=2)
             p.xlim(xmin,xmax)
             p.ylim(binsy_log.min(), binsy_log.max()); p.grid()
             p.subplot(222)
-            p.pcolormesh(binsx_log,binsy_log,kde_I[k],cmap='hot_r')
+            p.pcolormesh(binsx_log,binsy_log,n.log10(kde_I[k]),cmap='hot_r',vmin=0,vmax=15)
             if count == 0: dataval = file['pIv'][n.where(kpl==k)[0][0]]
             if count == 1: dataval = file['pIn'][n.where(kpl==k)[0][0]]
             p.axhline(y=n.sign(dataval)*n.log10(n.abs(dataval)),color='0.5',linewidth=2)
