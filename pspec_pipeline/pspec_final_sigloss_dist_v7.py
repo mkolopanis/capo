@@ -363,8 +363,8 @@ for count in range(2):
     old_pCs = data_dist(pCs)
     old_pCs_fold = data_dist(pCs_fold)
     old_pIs = data_dist(pIs)
-    old_pIs_fold = data_dist(pIs_fold)
-
+    old_pIs_fold = data_dist(pIs_fold)   
+    
     # Get original PS points (from no-bootstrapping case)
     if count == 0: # data case
         pt_pC = file['pCv']
@@ -437,7 +437,7 @@ for count in range(2):
     pI_old, pI_err_old = compute_stats(binsy_lin, old_pIs, pt_pIs, old=True)
     pC_fold_old, pC_fold_err_old = compute_stats(binsy_lin, old_pCs_fold, pt_pCs_fold, old=True)
     pI_fold_old, pI_fold_err_old = compute_stats(binsy_lin, old_pIs_fold, pt_pIs_fold, old=True)
-
+    
     if count == 0: # data case
         pCv = pC; pCv_old = pC_old
         pCv_fold = pC_fold; pCv_fold_old = pC_fold_old
