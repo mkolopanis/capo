@@ -510,16 +510,19 @@ data_dict_v, flg_dict, lsts = oqe.lst_align_data(inds, dsets=data_dict_v,
 data_dict_n = oqe.lst_align_data(inds, dsets=data_dict_n)[0]
 nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
-
-# Save some information
-cnt_full = stats[stats.keys()[0]]['cnt'][inds[stats.keys()[0]]]
-cnt_full = cnt_full[:, chans]
-lsts = lsts[lsts.keys()[0]]
-# calculate the effective number of counts used in the data
-cnt_eff = 1./n.sqrt(n.ma.masked_invalid(1./cnt_full**2).mean())
-# calculate the effective number of baselines given grouping:
+lsts = lsts[lsts.keys()[0]] # same lsts for both even and odd
 N = len(bls_master)
 nbls = N
+
+# Calculate effective number of counts in the data
+cnts = []
+for key in stats.keys(): # loop through even and odd
+    cnt_full = stats[key]['cnt'][inds[key]]
+    cnt_full = cnt_full[:, chans]
+    cnts.append(cnt_full)
+cnts = n.array(cnts).flatten()
+cnts *= n.sqrt(len(stats.keys())) # multiply by sqrt(# of 'datasets')
+cnt_eff = 1./n.sqrt(n.ma.masked_invalid(1./cnts**2).mean())
 
 # Fringe-rate filter noise
 if opts.frf:
