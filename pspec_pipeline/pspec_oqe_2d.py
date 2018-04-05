@@ -512,7 +512,7 @@ nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
 lsts = lsts[lsts.keys()[0]] # same lsts for both even and odd
 N = len(bls_master)
-nbls = N
+nbls = N / n.sqrt(2) # divide by root 2 since we only do the top half of the BL cross-multiplications
 
 # Calculate effective number of counts in the data
 cnts = []
