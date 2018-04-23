@@ -719,17 +719,25 @@ for boot in xrange(opts.nboot):
         dsve.set_iC({key: n.einsum('ij,j,jk', V.T, iS, U.T)})
 
     # Make groups
-    if opts.nboot > 1:  # sample baselines w/replacement
-        gps = dsv.gen_gps(bls_master, ngps=NGPS)
-        nbls_g = n.int(n.round(N/NGPS))  # number of baselines per group
-    elif opts.nboot == 1:  # no sampling w/replacement (no bootstrapping)
-        gps = [bls_master[i::NGPS] for i in range(NGPS)]  # no repeated baselines between or within groups
-        nbls_g = n.int(n.round(N/NGPS))  # number of baselines per group
-        nbls = nbls_g  # over-ride nbls for proper sensitivity calculation later
-        NGPS = 1  # over-ride NGPS for proper sensitivity calculation later
+    gps = [bls_master[i::NGPS] for i in range(NGPS)]  # no repeated baselines between or within groups
+    nbls_g = n.int(n.round(N/NGPS))  # number of baselines per group
+    #nbls = nbls_g  # over-ride nbls for proper sensitivity calculation later
+    #NGPS = 1  # over-ride NGPS for proper sensitivity calculation later
     
     # Compute power spectra
     pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs, pCe_Cr, pCv_Cr, pCve, pIve = make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve, grouping=True)
+
+    # Bootstrap
+    if opts.nboot > 1: # sample cross-multiplications w/replacement
+        sample_ind = n.random.choice(opts.nboot,opts.nboot,replace=True)
+        pCv, pIv = pCv[sample_ind,:,:], pIv[sample_ind,:,:] 
+        pCn, pIn = pCn[sample_ind,:,:], pIn[sample_ind,:,:]
+        pCe, pIe = pCe[sample_ind,:,:], pIe[sample_ind,:,:]
+        pCr, pIr = pCr[sample_ind,:,:], pIr[sample_ind,:,:]
+        pCs, pIs = pCs[sample_ind,:,:], pIs[sample_ind,:,:]
+        pCe_Cr = pCe_Cr[sample_ind,:,:]
+        pCv_Cr = pCv_Cr[sample_ind,:,:]
+        pCve, pIve = pCve[sample_ind,:,:], pIve[sample_ind,:,:]
 
     print '     Data:         pCv =', n.median(pCv.real),
     print 'pIv =', n.median(pIv.real)
