@@ -92,15 +92,15 @@ class DataSet(oqe.DataSet):
             C = self.C(k)
             # CHANGE C HERE ###
             # OPTION 1: identity multiplication
-            #C = C * n.identity(len(C))
+            C = C * n.identity(len(C))
             # OPTION 2: identity addition
-            try:
-                C = C + n.identity(len(C))*n.trace(C)*float(opts.mode_num)
-            except(ValueError):
-                print "Tried to use this mode_num: ", opts.mode_num
-                print "using instead 0 regularization"
-                C = C
-            # C = C + n.identity(len(C))*int(opts.mode_num)
+            #try:
+            #    C = C + n.identity(len(C))*n.trace(C)*float(opts.mode_num)
+            #except(ValueError):
+            #    print "Tried to use this mode_num: ", opts.mode_num
+            #    print "using instead 0 regularization"
+            #    C = C
+            # C = C + n.identity(len(C))*int(opts.mode_num) # old
             # OPTION 3: multiplication by identity + 2 diagonals
 
             # C2 = n.zeros_like(C)
@@ -729,7 +729,7 @@ for boot in xrange(opts.nboot):
 
     # Bootstrap
     if opts.nboot > 1: # sample cross-multiplications w/replacement
-        sample_ind = n.random.choice(opts.nboot,opts.nboot,replace=True)
+        sample_ind = n.random.choice(pCv.shape[0],opts.nboot,replace=True)
         pCv, pIv = pCv[sample_ind,:,:], pIv[sample_ind,:,:] 
         pCn, pIn = pCn[sample_ind,:,:], pIn[sample_ind,:,:]
         pCe, pIe = pCe[sample_ind,:,:], pIe[sample_ind,:,:]
