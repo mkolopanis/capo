@@ -64,7 +64,7 @@ if opts.gains == True or opts.chisqant == True:
                 except: continue
                 try: gains[a].append(value)
                 except: gains[a] = [value]
-                vmax=0.05
+                vmax=0.5
                 vmin=0.0
             if opts.gains == True:
                 print "option doesn't exist yet"

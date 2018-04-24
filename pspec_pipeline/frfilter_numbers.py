@@ -11,7 +11,8 @@ def beam_area(hmap):
     return 4*n.pi*n.sum(hmap)/h.npix()
 
 #get antenna array
-aa = a.cal.get_aa('psa6622_v003', n.array([.159])) #XXX hard-coded
+aa = a.cal.get_aa('psa6622_v003', n.array([.149])) #XXX hard-coded
+inttime = 31.65 #XXX hard-coded
 
 h = a.healpix.HealpixMap(nside=64) #healpix map for the beam
 xyz = h.px2crd(n.arange( h.npix() ), ncrd=3)
@@ -26,7 +27,8 @@ print aa.get_baseline(0,26,'r')
 fng = fringe.mk_fng(bl,xyz)
 
 #get the fringe rate filter in frf_conv. aa only has one channel in it.
-frp, bins = fringe.aa_to_fr_profile(aa, (1,4), 0) #XXX hard-coded
+bins = fringe.gen_frbins(inttime)
+frp, bins = fringe.aa_to_fr_profile(aa, (1,4), 0, bins=bins) #XXX hard-coded
 tbins, firs = fringe.frp_to_firs(frp, bins, aa.get_freqs(), fq0=aa.get_freqs()[0],alietal=False)
 #frp = fringe.fir_to_frp(firs)
 
