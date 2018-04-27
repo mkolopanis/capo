@@ -29,16 +29,10 @@ parser.add_argument('--nboots', type=int, default=100,
                           'if using bootstrap versions 1 or 2.'))
 parser.add_argument('--Neff_lst', default=None,
                     help=('Number of effective LSTs '
-                          '(if using bootstrap versions 1 or 2). '
                           'If none (default), '
                           'it is calculated using Nlstbins and t_eff.'))
 parser.add_argument('--avg_func', default='np.mean', type=str,
                     help='Average function to use (default = np.mean).')
-parser.add_argument('-v', '--version', default=4, type=int,
-                    help=('Version of bootstrapping method. '
-                          'Existing versions are 1,2, or 4.'))
-parser.add_argument('--NGPS_LST', default=1, type=int,
-                    help='Number of total LST groups to average.')
 args = parser.parse_args()
 
 np.random.seed(0)
@@ -46,12 +40,8 @@ np.random.seed(0)
 pspecs = read_bootstraps_dcj(args.files)
 
 for key in pspecs:
-    if args.version == 4:
-        if key[0] == 'p':
-            pspecs[key] = pspecs[key][0] # turn 4-dimensional array back to 3-dim (this is okay since there was only one bootsigloss file read in)
-    if args.version == 1 or args.version == 2:
-        if key[0] == 'p':
-            pspecs[key] = np.average(pspecs[key],axis=1) # average along cross-multiplication axis (bl groups)
+    if key[0] == 'p':
+        pspecs[key] = np.average(pspecs[key],axis=1) # average along cross-multiplication axis (bl groups)
 
 if args.Neff_lst is None:
     Nlstbins = np.shape(pspecs['pCr'])[-1]
@@ -61,9 +51,6 @@ if args.Neff_lst is None:
 else:
     Neff_lst = int(float(args.Neff_lst))
 
-# compute the effective number of LST bins
-# print Neff_lst
-# lets round up because this 'N' is only approximate
 for key in pspecs.keys():
     if pspecs[key].dtype not in [np.float]:
         continue
@@ -78,37 +65,13 @@ pspecs['pCs-pCn'] = pspecs['pCs'] - pspecs['pCn']
 pspecs['pIr-pIv'] = pspecs['pIr'] - pspecs['pIv']
 pspecs['pIs-pIn'] = pspecs['pIs'] - pspecs['pIn']
 
-# decimate data in time
-# for key in pspecs:
-#    if key[0] == 'p':
-#        shape = pspecs[key].shape
-#        indices = np.linspace(0, shape[2], Neff_lst,
-#                              dtype='int', endpoint=False)
-#        pspecs[key] = pspecs[key][:,:,indices] # down-selecting in time
-
-# average LSTs within groups if given NGPS_LST (default is no averaging)
-if args.NGPS_LST == 0 and args.version == 4: NGPS_LST = Neff_lst
-elif args.NGPS_LST != 0 and args.version == 4: NGPS_LST = args.NGPS_LST
-else: NGPS_LST = 1  # 1 LST group if not version 4
-
-if args.version == 4:  # average in LST if version 4
-    for pspec in pspecs:
-        if pspec[0] == 'p':
-            temp_pspec = []
-            indices = np.linspace(0, pspecs[pspec].shape[2], NGPS_LST + 1,
-                                  endpoint=True, dtype='int')
-            for i, index in enumerate(range(len(indices) - 1)):
-                temp = pspecs[pspec][:, :, indices[i]:indices[i + 1]]
-                temp_pspec.append(np.ma.average(temp, axis=2))
-            avg_pspec = np.ma.array(temp_pspec).swapaxes(0, 2).swapaxes(0, 1)
-            pspecs[pspec] = avg_pspec
 
 # compute Pk vs kpl vs bootstraps
 print "   Bootstrapping..."
 pk_pspecs, vals = average_bootstraps(pspecs, Nt_eff=Neff_lst,
                                      Nboots=args.nboots,
                                      avg_func=eval(args.avg_func),
-                                     version=args.version)
+                                     version=2)
 
 # Over-write PS points from "pspec_noboot.npz" file
 pspec_noboot = read_bootstraps_dcj(['/'.join(args.files[0].split('/')[:-1])+'/pspec_noboot.npz'])
@@ -116,6 +79,7 @@ pspec_noboot['pCr-pCv'] = pspec_noboot['pCr'] - pspec_noboot['pCv']  # subtracte
 pspec_noboot['pCs-pCn'] = pspec_noboot['pCs'] - pspec_noboot['pCn']
 pspec_noboot['pIr-pIv'] = pspec_noboot['pIr'] - pspec_noboot['pIv']
 pspec_noboot['pIs-pIn'] = pspec_noboot['pIs'] - pspec_noboot['pIn']
+
 for key in pk_pspecs: # loop over all keys that will get saved in pspec_pk_k3pk file
     overwrite = False
     if len(key) == 3 and key[0] == 'p':  # "pIn", "pCv", etc.
@@ -145,18 +109,13 @@ print "   kperp = ", kperp
 pk_pspecs['k'] = np.sqrt(kperp**2 + pk_pspecs['kpl_fold']**2)
 pk_pspecs['kperp'] = np.ma.masked_invalid(kperp)
 pk_pspecs['cmd'] = pk_pspecs['cmd'].item() + ' \n ' + ' '.join(sys.argv)
-if NGPS_LST > 0: pk_pspecs['nlsts_g'] = Neff_lst / NGPS_LST  # number of lsts in one group
-else: pk_pspecs['nlsts_g'] = Neff_lst
-if args.version == 4: pk_pspecs['nPS'] = pspecs['pCv'].shape[0] * pspecs['pCv'].shape[2]
-else: pk_pspecs['nPS'] = pspecs['pCv'].shape[0]
+pk_pspecs['nPS'] = pspecs['pCv'].shape[0]
 
 # Important numbers
 print "   Total number of bls = ", pk_pspecs['nbls']
 print "      number of bl groups = ", pk_pspecs['ngps']
-print "      nbls in a group = ", pk_pspecs['nbls'] / pk_pspecs['ngps']
+print "      nbls in a group = ", pk_pspecs['nbls_g']
 print "   Total number of lsts = ", Neff_lst
-print "      number of lst groups = ", NGPS_LST
-print "      nlsts in a group  = ", pk_pspecs['nlsts_g']
 
 """ # Commented out because not sure if this expression is correct
 # Scale for error on error
@@ -181,9 +140,7 @@ redshift = f212z(pk_pspecs['freq'] * 1e9)
 inttime = pk_pspecs['frf_inttime']
 cnt = pk_pspecs['cnt_eff']
 nbls_g = pk_pspecs['nbls_g']
-nlsts = len(pk_pspecs['lsts']) * pk_pspecs['inttime']
-nlsts /= pk_pspecs['frf_inttime']
-nlsts_g = pk_pspecs['nlsts_g']
+nlsts = Neff_lst
 if pk_pspecs['frf_inttime'] == pk_pspecs['inttime']:
     omega_eff = .74**2/.32  # for capo analytical; from T1 of Parsons FRF paper
 else:
@@ -193,7 +150,7 @@ print '\tT_int:', inttime
 print '\tNbls:', pk_pspecs['nbls']
 print '\tNgps:', pk_pspecs['ngps']
 print '\tNdays:', cnt
-print '\tNlstbins:', nlsts_g
+print '\tNlstbins:', nlsts
 S = sensitivity.Sense()
 f = pk_pspecs['freq']
 S.z = f212z(f*1e9)
@@ -221,7 +178,7 @@ S.Nblgroups = pk_pspecs['ngps']
 S.Omega_eff = omega_eff
 k = pk_pspecs['k']
 S.Nbls = pk_pspecs['nbls']
-S.Nlstbins = nlsts_g
+S.Nlstbins = nlsts
 S.calc()
 print "capo.sensitivity Pk_noise = ", S.P_N
 pk_pspecs['theory_noise'] = np.repeat(S.P_N, len(pk_pspecs['kpl']))

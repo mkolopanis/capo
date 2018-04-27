@@ -120,7 +120,7 @@ if args.noisefiles:
 
 k_max = 0
 k_par_max = 0
-print 'Using these parameters for the Analytic Model:'
+
 for filename in args.files:
     pspec_dict = np.load(filename)
     if np.max(pspec_dict['k']) > k_max:
@@ -309,7 +309,7 @@ for filename in args.files:
                      '--', color='blue', label='pIn {0:02}%'.format(int(prob)))
 
     if ('theory_noise' and 'theory_noise_delta2') in pspec_dict.keys():
-        print '\tUsing save theory_noise and theory_delta_2'
+        print '\tUsing saved theory_noise and theory_delta_2'
         ax5[gs_ind].plot(pspec_dict['kpl'], 2*pspec_dict['theory_noise'],
                          color='g', marker='_', label='Analytical 2-sigma')
         ax6[gs_ind].plot(pspec_dict['kpl'], 2*pspec_dict['theory_noise'],
@@ -327,9 +327,7 @@ for filename in args.files:
             inttime = pspec_dict['frf_inttime']
             cnt = pspec_dict['cnt_eff']
             nbls_g = pspec_dict['nbls_g']
-            nlsts = len(pspec_dict['lsts']) * pspec_dict['inttime']
-            nlsts /= pspec_dict['frf_inttime']
-            nlsts_g = pspec_dict['nlsts_g']
+            nlsts = pspec_dict['nlsts']
             if pspec_dict['frf_inttime'] == pspec_dict['inttime']:
                 omega_eff = .74**2/.32  # for capo analytical; from T1 of Parsons FRF paper
             else:
@@ -339,8 +337,8 @@ for filename in args.files:
             print '\tNbls:', pspec_dict['nbls']
             print '\tNgps:', pspec_dict['ngps']
             print '\tNdays:', cnt
-            print '\tNlstbins:', nlsts_g
-            if old_analytical:  # XXX might not work anymore, since we should use nlsts_g and nbls_g
+            print '\tNlstbins:', nlsts
+            if old_analytical:  # XXX might not work anymore, since we should use nbls_g
                 tsys = 500e3  # mK
                 nseps = 1  # number of seps used
                 folding = 2  # XXX 2 for delta^2
@@ -393,7 +391,7 @@ for filename in args.files:
                 S.Omega_eff = omega_eff  # use the FRF weighted beams listed in T1 of Parsons etal beam sculpting paper
                 k = pspec_dict['k']
                 S.Nbls = pspec_dict['nbls']
-                S.Nlstbins = nlsts_g
+                S.Nlstbins = nlsts
                 S.calc()
                 print "capo.sensitivity Pk_noise = ", S.P_N
                 ax5[gs_ind].axhline(S.P_N*2, color='g',

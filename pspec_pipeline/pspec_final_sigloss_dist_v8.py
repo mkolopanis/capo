@@ -112,7 +112,7 @@ def smooth_dist(fold=True):
             # find distribution for weighted case
             kernel_C = scipy.stats.gaussian_kde(ys_sub_bin) 
             ratio = n.sqrt(n.cov(n.abs(ys_sub_bin)) / n.cov(ys_sub_bin))
-            factor = ratio * kernel_C.factor 
+            factor = ratio * kernel_C.factor  
             kernel_C = scipy.stats.gaussian_kde(ys_sub_bin,bw_method=factor)
             data_dist_C = kernel_C(binsy_kde)
             # find distribution for unweighted case
@@ -127,14 +127,12 @@ def smooth_dist(fold=True):
             # Multiply the P_in column by the linear-width of the bin (undo log-prior)
             kdeC[:,sub_bin] = data_dist_C*prior_factor(10**binsx_kde)[sub_bin]
             kdeI[:,sub_bin] = data_dist_I*prior_factor(10**binsx_kde)[sub_bin]
-        
         # Save values to use for plotting sigloss plots
         if count == 0 and fold == True and kk == 8:
             if opts.nosubtract: fn = 'pspec_sigloss_nosubtract.npz'
             else: fn = 'pspec_sigloss.npz'
             print "Saving",fn,"which contains data values for k =",k
             n.savez(fn, k=k, binsx=binsx_kde, binsy=binsy_kde, kdeC=kdeC, kdeI=kdeI, xs=xs_kde, ys=ys_kde, ysI=ys_I_kde, pC=file['pCv_fold'][n.where(ks==k)[0][0]], pI=file['pIv_fold'][n.where(ks==k)[0][0]])
-        
         # Plot KDE and points
         if opts.plot:
             p.figure(figsize=(10,6))
@@ -454,7 +452,6 @@ extra_out_dict = {
         'ngps':file['ngps'],
         'nbls':file['nbls'],
         'nbls_g':file['nbls_g'],
-        'nlsts_g':file['nlsts_g'],
         'lsts':file['lsts'],
         'afreqs':file['afreqs'],
         'cnt_eff':file['cnt_eff'],

@@ -512,7 +512,7 @@ nlst = data_dict_v[keys[0]].shape[0]
 # the lsts given is a dictionary with 'even','odd', etc.
 lsts = lsts[lsts.keys()[0]] # same lsts for both even and odd
 N = len(bls_master)
-nbls = N / n.sqrt(2) # divide by root 2 since we only do the top half of the BL cross-multiplications
+nbls = N 
 
 # Calculate effective number of counts in the data
 cnts = []
@@ -721,8 +721,6 @@ for boot in xrange(opts.nboot):
     # Make groups
     gps = [bls_master[i::NGPS] for i in range(NGPS)]  # no repeated baselines between or within groups
     nbls_g = n.int(n.round(N/NGPS))  # number of baselines per group
-    #nbls = nbls_g  # over-ride nbls for proper sensitivity calculation later
-    #NGPS = 1  # over-ride NGPS for proper sensitivity calculation later
     
     # Compute power spectra
     pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs, pCe_Cr, pCv_Cr, pCve, pIve = make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve, grouping=True)
