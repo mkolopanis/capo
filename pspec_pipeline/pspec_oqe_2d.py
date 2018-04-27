@@ -768,9 +768,15 @@ for boot in xrange(opts.nboot):
         else: outpath = '/pspec_bootsigloss%04d.npz' % boot
     print '   Writing ' + outpath
     n.savez(outpath, kpl=kpl, scalar=scalar, lsts=lsts,
-            pCr=pCr, pIr=pIr, pCv=pCv, pIv=pIv, pCe=pCe, pCe_Cr=pCe_Cr,
-            pIe=pIe, pCn=pCn, pIn=pIn, pCs=pCs, pIs=pIs, pCv_Cr=pCv_Cr,
-            pCve=pCve, pIve=pIve, sep=sep_type, uvw=uvw,
+            pCr=n.mean(pCr,axis=0), pIr=n.mean(pIr,axis=0), 
+            pCv=n.mean(pCv,axis=0), pIv=n.mean(pIv,axis=0), 
+            pCe=n.mean(pCe,axis=0), pIe=n.mean(pIe,axis=0),
+            pCe_Cr=n.mean(pCe_Cr,axis=0),
+            pCn=n.mean(pCn,axis=0), pIn=n.mean(pIn,axis=0), 
+            pCs=n.mean(pCs,axis=0), pIs=n.mean(pIs,axis=0), 
+            pCv_Cr=n.mean(pCv_Cr,axis=0),
+            pCve=n.mean(pCve,axis=0), pIve=n.mean(pIve,axis=0), 
+            sep=sep_type, uvw=uvw,
             frf_inttime=frf_inttime, inttime=inttime,
             inject_level=INJECT_SIG, freq=fq, afreqs=afreqs,
             cnt_eff=cnt_eff, nbls=nbls, ngps=NGPS, nbls_g=nbls_g,

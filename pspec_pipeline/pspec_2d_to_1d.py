@@ -39,10 +39,6 @@ np.random.seed(0)
 
 pspecs = read_bootstraps_dcj(args.files)
 
-for key in pspecs:
-    if key[0] == 'p':
-        pspecs[key] = np.average(pspecs[key],axis=1) # average along cross-multiplication axis (bl groups)
-
 if args.Neff_lst is None:
     Nlstbins = np.shape(pspecs['pCr'])[-1]
     # get the number of lst integrations in the dataset
@@ -83,14 +79,14 @@ pspec_noboot['pIs-pIn'] = pspec_noboot['pIs'] - pspec_noboot['pIn']
 for key in pk_pspecs: # loop over all keys that will get saved in pspec_pk_k3pk file
     overwrite = False
     if len(key) == 3 and key[0] == 'p':  # "pIn", "pCv", etc.
-        points = pspec_noboot[key][0, :, :, :]  # only one file so take that one
+        points = pspec_noboot[key][0, :, :]  # only one file so take that one
         overwrite = True
     if key[-4:] == "fold" and key != "kpl_fold":  # "pIn_fold", "pCv_fold", etc.
-        _, points = split_stack_kpl(pspec_noboot[key[:-5]][0, :, :, :],
+        _, points = split_stack_kpl(pspec_noboot[key[:-5]],
                                     pspec_noboot['kpl'])
+        points = points[0, :, :] # only one boot 
         overwrite = True
     if overwrite is True:
-        points = np.mean(points, axis=0) # average along cross-multiplication axis
         points = np.mean(points, axis=1)  # average along time
         pk_pspecs[key] = points  # function of k only
 
