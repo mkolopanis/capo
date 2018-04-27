@@ -37,7 +37,7 @@ args = parser.parse_args()
 
 np.random.seed(0)
 
-pspecs = read_bootstraps_dcj(args.files)
+pspecs = read_bootstraps_dcj(args.files) # (nboot, nks, ntimes)
 
 if args.Neff_lst is None:
     Nlstbins = np.shape(pspecs['pCr'])[-1]
