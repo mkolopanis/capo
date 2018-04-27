@@ -18,7 +18,7 @@ if True: # eigenmodes set to 1
     loop = n.arange(startmode,nmodes,deltamode)
 
 if True: # added identity parameters in LOG space
-    path_add = '/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity_trace_log_DENSE_NOSEED'
+    path_add = '/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity'#'/data4/paper/ctc/PSA64/PAPER_METHODS/rangeofaddedidentity_trace_log_DENSE_NOSEED'
     startmode_add=-4 
     endmode_add=0
     nmodes_add=20 #20000 
