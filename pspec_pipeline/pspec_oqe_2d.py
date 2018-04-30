@@ -723,8 +723,11 @@ for boot in xrange(opts.nboot):
     nbls_g = n.int(n.round(N/NGPS))  # number of baselines per group
     
     # Compute power spectra
-    pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs, pCe_Cr, pCv_Cr, pCve, pIve = make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve, grouping=True)
-
+    if NGPS > 1:
+        pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs, pCe_Cr, pCv_Cr, pCve, pIve = make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve, grouping=True)
+    elif NGPS == 1:
+        pCv, pIv, pCn, pIn, pCe, pIe, pCr, pIr, pCs, pIs, pCe_Cr, pCv_Cr, pCve, pIve = make_PS(keys, dsv, dsn, dse, dsr, dss, dse_Cr, dsv_Cr, dsve, grouping=False)
+    
     # Bootstrap
     if opts.nboot > 1: # sample cross-multiplications w/replacement
         sample_ind = n.random.choice(pCv.shape[0],opts.nboot,replace=True)

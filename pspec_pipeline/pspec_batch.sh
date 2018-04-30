@@ -74,7 +74,7 @@ LMODE='' #'--lmode=12'
 CHANGEC='' #'--changeC'
 MODE_NUM='0.04' # percentage of Tr(C) added to C for regularization if --changeC
 NBOOT=20 
-NGPS=5
+NGPS=1
 EVEN_FILES='/data4/paper/ctc/PSA64/even/*uvGAL'
 ODD_FILES='/data4/paper/ctc/PSA64/odd/*uvGAL'
 CALFILE='psa6240_v003'
@@ -122,7 +122,7 @@ for chan in ${CHAN}; do
     
     # Stage 1: pspec_oqe_2d.py over range of injection levels
     # Dense sampling:
-    for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-1,2.3,50)))"` ; do
+    for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-1,2.3,1)))"` ; do
     # Less dense sampling:
     #for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-3,5,25)))"` ; do
         out_dir_inject=${out_dir}_${inject}
