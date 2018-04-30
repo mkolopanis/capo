@@ -313,48 +313,15 @@ for filename in args.files:
                          -pCn[neg_ind_noise],
                          pCn_up[neg_ind_noise],
                          linestyle='', marker=marker, color='0.5')
-    """
-    ax1[gs_ind].errorbar(pspec_dict['k'][pos_ind_fold],
-                        pspec_dict['pC_fold'][pos_ind_fold],
-                        S.Delta2_N(pspec_dict['k'][pos_ind_fold])*2,
-                        label='pC', linestyle='', marker=marker, color='black')
-    ax1[gs_ind].errorbar(pspec_dict['k'][neg_ind_fold],
-                        -pspec_dict['pC_fold'][neg_ind_fold],
-                        S.Delta2_N(pspec_dict['k'][neg_ind_fold])*2,
-                        linestyle='', marker=marker, color='0.5')
-    ax2[gs_ind].errorbar(pspec_dict['kpl'][pos_ind],
-                        pspec_dict['pC'][pos_ind],
-                        S.P_N*2,
-                        label='pC', linestyle='', marker=marker, color='black')
-    ax2[gs_ind].errorbar(pspec_dict['kpl'][neg_ind],
-                        -pspec_dict['pC'][neg_ind],
-                        S.P_N*2,
-                        linestyle='', marker=marker, color='0.5')
-    ax3[gs_ind].errorbar(pspec_dict['k'][pos_ind_noise_fold],
-                        pspec_dict['pCn_fold'][pos_ind_noise_fold],
-                        S.Delta2_N(pspec_dict['k'][pos_ind_noise_fold])*2,
-                        label='pCn', linestyle='', marker=marker, color='black')
-    ax3[gs_ind].errorbar(pspec_dict['k'][neg_ind_noise_fold],
-                        -pspec_dict['pCn_fold'][neg_ind_noise_fold],
-                        S.Delta2_N(pspec_dict['k'][neg_ind_noise_fold])*2,
-                        linestyle='', marker=marker, color='0.5')
-    ax4[gs_ind].errorbar(pspec_dict['kpl'][pos_ind_noise],
-                        pspec_dict['pCn'][pos_ind_noise],
-                        S.P_N*2,
-                        label='pCn', linestyle='', marker=marker, color='black')
-    ax4[gs_ind].errorbar(pspec_dict['kpl'][neg_ind_noise],
-                        -pspec_dict['pCn'][neg_ind_noise],
-                        S.P_N*2,
-                        linestyle='', marker=marker, color='0.5')
-    """
+
     ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pCv_up),
-                    '--', color='black', label='pC {0:02}%'.format(int(prob)))
+                     '--', color='black', label='pC {0:02}%'.format(int(prob)))
     ax5[gs_ind].plot(pspec_dict['kpl'], np.abs(pIv_up),
-                    '--', color='blue', label='pI {0:02}%'.format(int(prob)))
+                     '--', color='blue', label='pI {0:02}%'.format(int(prob)))
     ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pCn_up),
-                    '--', color='black', label='pCn {0:02}%'.format(int(prob)))
+                     '--', color='black', label='pCn {0:02}%'.format(int(prob)))
     ax6[gs_ind].plot(pspec_dict['kpl'], np.abs(pIn_up),
-                    '--', color='blue', label='pIn {0:02}%'.format(int(prob)))
+                     '--', color='blue', label='pIn {0:02}%'.format(int(prob)))
 
 # set up some parameters to make the figures pretty
 for gs_ind in xrange(Nzs):
