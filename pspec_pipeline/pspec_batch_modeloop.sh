@@ -117,9 +117,7 @@ for mode_num in `python -c "import numpy; print ' '.join(map(str,numpy.logspace(
         
     # Stage 3: pspec_final_sigloss_dist_v3.py
     cd ${DIRNAME}/${name_dir}
-    ~/capo/pspec_pipeline/pspec_final_sigloss_dist_v4.py --sep=${SEP} --skip_sigloss
-    mv pspec_final_sep0,1.npz pspec_final_sep0,1_nosigloss.npz
-    ~/capo/pspec_pipeline/pspec_final_sigloss_dist_v4.py --sep=${SEP}
+    ~/capo/pspec_pipeline/pspec_final_sigloss_dist_v8.py --sep=${SEP} --nosubtract
     cd ../..
 
 done
