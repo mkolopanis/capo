@@ -14,6 +14,7 @@ import sys
 import random
 from capo import zsa, oqe, cosmo_units, frf_conv as fringe
 import capo
+import time
 
 o = optparse.OptionParser()
 a.scripting.add_standard_options(o, ant=True, pol=True, chan=True, cal=True)
@@ -57,8 +58,8 @@ opts, args = o.parse_args(sys.argv[1:])
 
 
 # Basic parameters
-random.seed(0)  # for oqe.py (eor generator)
-#n.random.seed(0)  # for noise generator
+#random.seed(0)  # for oqe.py (eor generator)
+n.random.seed(0)  # for noise generator
 POL = opts.pol
 if POL == 'xx' or POL == 'yy': NPOL = 1
 else: NPOL = 2
@@ -730,7 +731,8 @@ for boot in xrange(opts.nboot):
     
     # Bootstrap
     if opts.nboot > 1: # sample cross-multiplications w/replacement
-        sample_ind = n.random.choice(pCv.shape[0],opts.nboot,replace=True)
+        n.random.seed(int(time.time())) # random seed for bootstrapping
+        sample_ind = n.random.choice(pCv.shape[0],pCv.shape[0],replace=True)
         pCv, pIv = pCv[sample_ind,:,:], pIv[sample_ind,:,:] 
         pCn, pIn = pCn[sample_ind,:,:], pIn[sample_ind,:,:]
         pCe, pIe = pCe[sample_ind,:,:], pIe[sample_ind,:,:]
