@@ -489,6 +489,7 @@ for k in days:
         print '\n'
     print 'Generating noise for day: ' + str(k)
     for bl in data[k]:
+    # for bl in data[k].keys()[:len(data[k].keys())/2]: # jackknife in bls
         d = n.array(data[k][bl][POL])[:, chans] * jy2T  # extract freq range
         n_ = make_noise(d, stats[k]['cnt'][:, chans], inttime, sdf)
         flg = n.array(flgs[k][bl][POL])[:, chans]  # extract freq range
