@@ -96,10 +96,11 @@ print '   Saving', outname  # save all values used in bootstrapping
 np.savez(args.output + outname, **vals)
 
 # Compute |k|
+redshift = f212z(pk_pspecs['freq'] * 1e9)
 bl_length = np.linalg.norm(pspecs['uvw'])
 wavelength = cosmo_units.c / (pspecs['freq'] * 1e9)
 ubl = bl_length / wavelength
-kperp = dk_du(pspecs['freq']) * ubl
+kperp = dk_du(redshift) * ubl
 print "   freq = ", pspecs['freq']
 print "   kperp = ", kperp
 pk_pspecs['k'] = np.sqrt(kperp**2 + pk_pspecs['kpl_fold']**2)
@@ -132,7 +133,6 @@ for key in pk_pspecs:
 
 print('Computing 21cmSense_Calc Noise')
 print('Using these parameters:')
-redshift = f212z(pk_pspecs['freq'] * 1e9)
 inttime = pk_pspecs['frf_inttime']
 cnt = pk_pspecs['cnt_eff']
 nbls_g = pk_pspecs['nbls_g']
