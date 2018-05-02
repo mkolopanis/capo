@@ -54,6 +54,8 @@ o.add_option('--changeC', action='store_true',
 o.add_option('--mode_num', default=None,
              help=('Number to dial if changing regularization'
                    ' strength in pspec_batch_modeloop.py'))
+o.add_option('--nbls', default='all',
+            help=('Number of baselines to use in analysis. Default is all.'))
 opts, args = o.parse_args(sys.argv[1:])
 
 
@@ -488,7 +490,10 @@ for k in days:
             print bl,
         print '\n'
     print 'Generating noise for day: ' + str(k)
-    for bl in data[k]:
+    if opts.nbls == 'all': nbls = len(data[k].keys())
+    else: nbls = int(opts.nbls)
+    for bl in data[k].keys()[:nbls]:
+    #for bl in data[k].keys()[:nbls][nbls/2:]: # jackknife in bls
         d = n.array(data[k][bl][POL])[:, chans] * jy2T  # extract freq range
         n_ = make_noise(d, stats[k]['cnt'][:, chans], inttime, sdf)
         flg = n.array(flgs[k][bl][POL])[:, chans]  # extract freq range

@@ -82,6 +82,7 @@ CHAN='95_115'
 SEP='0,1'
 RA='0.5_8.6'
 TRCVR=144
+NBLS=10 #'all'
 RMBLS=''
 EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
@@ -122,7 +123,7 @@ for chan in ${CHAN}; do
     
     # Stage 1: pspec_oqe_2d.py over range of injection levels
     # Dense sampling:
-    for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-1,2.3,1)))"` ; do
+    for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-1,2.3,50)))"` ; do
     # Less dense sampling:
     #for inject in `python -c "import numpy; print ' '.join(map(str, numpy.logspace(-3,5,25)))"` ; do
         out_dir_inject=${out_dir}_${inject}
@@ -132,12 +133,12 @@ for chan in ${CHAN}; do
         # Run with no bootstrapping once to get PS points 
         ~/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${chan} \
         -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/${out_dir_inject} -b 1 --mode_num=${mode_num_array[${chan}]}\
-        ${EVEN_FILES} ${ODD_FILES} --NGPS=${NGPS} --rmbls=${RMBLS} --Trcvr=${TRCVR}
+        ${EVEN_FILES} ${ODD_FILES} --NGPS=${NGPS} --rmbls=${RMBLS} --Trcvr=${TRCVR} --nbls=${NBLS}
 
         # Bootstrap to get errors
         ~/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${chan} \
         -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/${out_dir_inject} -b ${NBOOT} --mode_num=${mode_num_array[${chan}]}\
-        ${EVEN_FILES} ${ODD_FILES} --NGPS=${NGPS} --rmbls=${RMBLS} --Trcvr=${TRCVR}
+        ${EVEN_FILES} ${ODD_FILES} --NGPS=${NGPS} --rmbls=${RMBLS} --Trcvr=${TRCVR} --nbls=${NBLS}
 
         # Stage 2: pspec_2d_to_1d.py
         ~/capo/pspec_pipeline/pspec_2d_to_1d.py \
