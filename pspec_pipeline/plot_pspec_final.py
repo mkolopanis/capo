@@ -132,8 +132,6 @@ for filename in args.files:
     cosmo_factor /= (1+z) * (ckm/Ho)
     horizon = 90 * cosmo_factor * np.pi/180 * pspec_dict['kperp']
     horizon_delta2 = np.sqrt(horizon**2 + pspec_dict['kperp']**2)
-    horizon /= 2 # XXX divide by 2 because of bug (kperp two times too big?)
-    horizon_delta2 /= 2
     for _ax in delta2_list:
         _ax[gs_ind].axvline(horizon_delta2, color='black', linestyle='--',
                             ymin=-.1, ymax=1.1)

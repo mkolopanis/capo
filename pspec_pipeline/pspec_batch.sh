@@ -6,24 +6,24 @@
 echo "Welcome to the power spectrum pipeline!"
 
 #PSA64
-if false
+if true
 then
 echo "Danny and Matt PSA64!"
 CALFILE='psa6240_v003'
 RA='.5_8.6'
-SEP='-1,1'
+SEP='0,1'
 DATA=$1
-EVEN_FILES=${DATA}'/even/sep'${SEP}'/*.uvHBL'
-ODD_FILES=${DATA}'/odd/sep'${SEP}'/*.uvHBL'
+EVEN_FILES=${DATA}'/even/sep'${SEP}'/*.uvGAL'
+ODD_FILES=${DATA}'/odd/sep'${SEP}'/*.uvGAL'
 DIRNAME=$2
 EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
-#CHAN='127_147'
-CHAN=' 30_50 51_71 78_98 95_115 103_123 127_147' #psa64 multiz bands
-#MODE_NUM='.010'
+CHAN='95_115'
+#CHAN=' 30_50 51_71 78_98 95_115 103_123 127_147' #psa64 multiz bands
+MODE_NUM='.035'
 #MODE_NUM='.005 .005 .240 .005 .060 .030' #sep0,1
 #MODE_NUM='.003 .005 .005 .005 .015 .010' #sep1,1
-MODE_NUM='.015 .010 .040 .005 .015 .010' #sep-1,1
+#MODE_NUM='.015 .010 .040 .005 .015 .010' #sep-1,1
 NBOOT=20
 POL='I'
 weight='I'
@@ -32,7 +32,7 @@ FRF='--frf'
 LMODE='' #'--lmode=12'
 CHANGEC='--changeC' #throw out off diagonal terms of covariance.
 TRCVR=144
-NGPS=5
+NGPS=1
 NGPS_LST=2
 VERSION=2
 
@@ -131,17 +131,17 @@ for chan in ${CHAN}; do
         echo SIGNAL_LEVEL=${inject}
    
         # Run with no bootstrapping once to get PS points 
-        ~/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${chan} \
+        /home/mkolopanis/src/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${chan} \
         -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/${out_dir_inject} -b 1 --mode_num=${mode_num_array[${chan}]}\
         ${EVEN_FILES} ${ODD_FILES} --NGPS=${NGPS} --rmbls=${RMBLS} --Trcvr=${TRCVR} --nbls=${NBLS}
 
         # Bootstrap to get errors
-        ~/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${chan} \
+        /home/mkolopanis/src/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${chan} \
         -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/${out_dir_inject} -b ${NBOOT} --mode_num=${mode_num_array[${chan}]}\
         ${EVEN_FILES} ${ODD_FILES} --NGPS=${NGPS} --rmbls=${RMBLS} --Trcvr=${TRCVR} --nbls=${NBLS}
 
         # Stage 2: pspec_2d_to_1d.py
-        ~/capo/pspec_pipeline/pspec_2d_to_1d.py \
+        /home/mkolopanis/src/capo/pspec_pipeline/pspec_2d_to_1d.py \
         --output=${DIRNAME}/${out_dir_inject}/ ${DIRNAME}/${out_dir_inject}/*bootsigloss*.npz
         
     done
