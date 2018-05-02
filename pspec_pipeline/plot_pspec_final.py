@@ -260,11 +260,11 @@ for filename in args.files:
     ax1[gs_ind].errorbar(k_vals[pos_ind_fold],
                          pIv_fold[pos_ind_fold],
                          pIv_fold_error[pos_ind_fold],
-                         marker=marker, color='black',
+                         marker=marker, color='black', linestyle='',
                          label='pI {0:02d}%'.format(int(prob)))
     ax1[gs_ind].errorbar(k_vals[neg_ind_fold],
                          -pIv_fold[neg_ind_fold],
-                         pIv_fold_error[neg_ind_fold],
+                         pIv_fold_error[neg_ind_fold], linestyle='',
                          color='black', marker=marker, alpha=.5)
 
     ax1[gs_ind].fill_between(k_vals,
@@ -283,11 +283,11 @@ for filename in args.files:
     ax2[gs_ind].errorbar(kpl_vals[pos_ind],
                          pIv[pos_ind],
                          pIv_error[pos_ind],
-                         marker=marker, color='black',
+                         marker=marker, color='black', linestyle='',
                          label='pI {0:02d}%'.format(int(prob)))
     ax2[gs_ind].errorbar(kpl_vals[neg_ind],
                          -pIv[neg_ind],
-                         pIv_error[neg_ind],
+                         pIv_error[neg_ind], linestyle='',
                          color='black', marker=marker, alpha=.5)
 
     ax2[gs_ind].fill_between(kpl_vals,
@@ -308,11 +308,11 @@ for filename in args.files:
     ax3[gs_ind].errorbar(k_vals[pos_ind_noise_fold],
                          pIn_fold[pos_ind_noise_fold],
                          pIn_fold_error[pos_ind_noise_fold],
-                         marker=marker, color='black',
+                         marker=marker, color='black', linestyle='',
                          label='pI {0:02d}%'.format(int(prob)))
     ax3[gs_ind].errorbar(k_vals[neg_ind_noise_fold],
                          -pIn_fold[neg_ind_noise_fold],
-                         pIn_fold_error[neg_ind_noise_fold],
+                         pIn_fold_error[neg_ind_noise_fold], linestyle='',
                          color='black', marker=marker, alpha=.5)
 
     ax3[gs_ind].fill_between(k_vals,
@@ -331,11 +331,11 @@ for filename in args.files:
     ax4[gs_ind].errorbar(kpl_vals[pos_ind_noise],
                          pIn_error[pos_ind_noise],
                          pIn[pos_ind_noise],
-                         marker=marker, color='black',
+                         marker=marker, color='black', linestyle='',
                          label='pI {0:02d}%'.format(int(prob)))
     ax4[gs_ind].errorbar(kpl_vals[neg_ind_noise],
                          -pIn[neg_ind_noise],
-                         pIn_error[neg_ind_noise],
+                         pIn_error[neg_ind_noise], linestyle='',
                          color='black', marker=marker, alpha=.5)
 
     ax4[gs_ind].fill_between(kpl_vals,
