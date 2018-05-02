@@ -132,15 +132,16 @@ for filename in args.files:
     cosmo_factor /= (1+z) * (ckm/Ho)
     horizon = 90 * cosmo_factor * np.pi/180 * pspec_dict['kperp']
     horizon_delta2 = np.sqrt(horizon**2 + pspec_dict['kperp']**2)
+    horizon /= 2 # XXX divide by 2 because of bug (kperp two times too big?)
+    horizon_delta2 /= 2
     for _ax in delta2_list:
-        _ax[gs_ind].axvline(horizon_delta2, color='black', linestyle=':',
+        _ax[gs_ind].axvline(horizon_delta2, color='black', linestyle='--',
                             ymin=-.1, ymax=1.1)
     for _ax in pk_list:
-        _ax[gs_ind].axvline(-horizon, color='black', linestyle=':',
+        _ax[gs_ind].axvline(-horizon, color='black', linestyle='--',
                             ymin=-.1, ymax=1.1)
-        _ax[gs_ind].axvline(horizon, linestyle=':', color='black',
+        _ax[gs_ind].axvline(horizon, linestyle='--', color='black',
                             ymin=-.1, ymax=1.1)
-
     k_vals = np.ma.masked_array(pspec_dict['k'])
     kpl_vals = np.ma.masked_array(pspec_dict['kpl'])
     kpl_vals.mask = np.abs(kpl_vals) < horizon
@@ -375,9 +376,9 @@ for gs_ind in xrange(Nzs):
     # only set ylabel for first plot
     if gs_ind == 0:
         for _ax in delta2_list:
-            _ax[gs_ind].set_ylabel('$\\frac{k^{3}}{2\pi^{2}}$ P(k) [mK$^{2}$]', fontsize=16)
+            _ax[gs_ind].set_ylabel('$\\frac{k^{3}}{2\pi^{2}}$ $P(k)$ [mK$^{2}$]', fontsize=16)
         for _ax in pk_list:
-            _ax[gs_ind].set_ylabel('P(k) [mK$^{2}(h^{-1}$ Mpc)$^{3}$]', fontsize=16)
+            _ax[gs_ind].set_ylabel('$P(k)$ [mK$^{2}(h^{-1}$ Mpc)$^{3}$]', fontsize=16)
 
     for _ax in delta2_list:
         _ax[gs_ind].set_title('z = {0:.2f}'.format(zs[gs_ind]), fontsize=14)
