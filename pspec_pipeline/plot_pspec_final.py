@@ -13,6 +13,7 @@ from capo.cosmo_units import f212z, DM, E, ckm, Ho
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from capo import sensitivity
+from scipy.interpolate import interp2d
 
 parser = argparse.ArgumentParser(
     description=('Calculate power spectra for a run '
