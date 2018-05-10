@@ -60,6 +60,7 @@ for file in args.files:  # XXX only compatible with pspec_pk_k3pk.npz files
     print 'Reading', file
     f = n.load(file)
     metakeys = [key for key in f.keys() if not (key.startswith('p') or key.startswith('k') or key.startswith('theory'))]  # all keys except PS values and k,kpl,kpl_fold,kperp
+    metakeys.append('prob')
     kperps.append(f['kperp'])
     seps.append(f['sep'])
     for kk, k in enumerate(f['kpl']):  # each dictionary has keys of k's and contains a list of values for that k (3 if there are 3 seps)
@@ -159,7 +160,7 @@ kperp = n.mean(kperps)  # XXX averaged together k_perps
 k = n.sqrt(f['kpl_fold']**2 + kperp**2)  # for folded
 kpl = f['kpl']
 kpl_fold = f['kpl_fold']
-final_file = 'pspec_final_combine.npz'
+final_file = 'pspec_final_combine_' + args.weight + '.npz'
 
 metadata = {}
 for metakey in metakeys: metadata[metakey] = f[metakey]
