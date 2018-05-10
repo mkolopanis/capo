@@ -139,8 +139,8 @@ def smooth_dist(fold=True):
             data_dist_C = make_gauss(binsy_lin,n.mean(ys_sub_bin),n.std(ys_sub_bin))
             data_dist_I = make_gauss(binsy_lin,n.mean(ys_I_sub_bin),n.std(ys_I_sub_bin))
             # Multiply the P_in column by the prior
-            TC[:,sub_bin] = data_dist_C*prior_factor(10**binsx_log)[sub_bin]#*jeffrey_prior[sub_bin]
-            TI[:,sub_bin] = data_dist_I*prior_factor(10**binsx_log)[sub_bin]#*jeffrey_prior_I[sub_bin]
+            TC[:,sub_bin] = data_dist_C#*prior_factor(10**binsx_log)[sub_bin]#*jeffrey_prior[sub_bin]
+            TI[:,sub_bin] = data_dist_I#*prior_factor(10**binsx_log)[sub_bin]#*jeffrey_prior_I[sub_bin]
 
         # Save values to use for plotting sigloss plots
         if count == 0 and fold == True and kk == 8:
@@ -394,7 +394,7 @@ for count in range(2):
         pI, pI_err = compute_stats(binsx_log, new_pIs, pt_pIs)
         pC_fold, pC_fold_err = compute_stats(binsx_log_fold, new_pCs_fold, pt_pCs_fold)
         pI_fold, pI_fold_err = compute_stats(binsx_log_fold, new_pIs_fold, pt_pIs_fold)
-        import IPython;IPython.embed()
+    
     # Plot un-folded case
     if opts.plot:
         for k in T_C:
