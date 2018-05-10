@@ -131,7 +131,7 @@ def smooth_dist(fold=True):
         if opts.plot:
             p.figure(figsize=(10,6))
             p.subplot(121)
-            p.pcolormesh(binsx_log,binsy_log,n.log10(TC),cmap='hot_r',vmax=5,vmin=0)
+            p.pcolormesh(binsx_log,binsy_log,TC,cmap='hot_r',vmax=0.05,vmin=0)
             if fold == True and count == 0: dataval = file['pCv_fold'][n.where(ks==k)[0][0]]
             if fold == False and count == 0: dataval = file['pCv'][n.where(ks==k)[0][0]]
             if fold == True and count == 1: dataval = file['pCn_fold'][n.where(ks==k)[0][0]]
@@ -141,7 +141,7 @@ def smooth_dist(fold=True):
             p.xlim(binsx_log.min(), binsx_log.max())
             p.ylim(binsy_log.min(), binsy_log.max()); p.grid()
             p.subplot(122)
-            p.pcolormesh(binsx_log,binsy_log,n.log10(TI),cmap='hot_r',vmax=5,vmin=0)
+            p.pcolormesh(binsx_log,binsy_log,TI,cmap='hot_r',vmax=0.05,vmin=0)
             if fold == True and count == 0: dataval = file['pIv_fold'][n.where(ks==k)[0][0]]
             if fold == False and count == 0: dataval = file['pIv'][n.where(ks==k)[0][0]]
             if fold == True and count == 1: dataval = file['pIn_fold'][n.where(ks==k)[0][0]]
@@ -379,14 +379,14 @@ for count in range(2):
             p.figure(figsize=(10,10))
             xmin,xmax = 0,16
             p.subplot(221)
-            p.pcolormesh(binsx_log[k],binsy_log,n.log10(T_C[k]),cmap='hot_r',vmin=0,vmax=15)
+            p.pcolormesh(binsx_log[k],binsy_log,T_C[k],cmap='hot_r',vmin=0,vmax=0.05)
             if count == 0: dataval = file['pCv'][n.where(kpl==k)[0][0]]
             if count == 1: dataval = file['pCn'][n.where(kpl==k)[0][0]]
             p.axhline(y=n.sign(dataval)*n.log10(n.abs(dataval)),color='0.5',linewidth=2)
             p.xlim(xmin,xmax)
             p.ylim(binsy_log.min(), binsy_log.max()); p.grid()
             p.subplot(222)
-            p.pcolormesh(binsx_log[k],binsy_log,n.log10(T_I[k]),cmap='hot_r',vmin=0,vmax=15)
+            p.pcolormesh(binsx_log[k],binsy_log,T_I[k],cmap='hot_r',vmin=0,vmax=0.5)
             if count == 0: dataval = file['pIv'][n.where(kpl==k)[0][0]]
             if count == 1: dataval = file['pIn'][n.where(kpl==k)[0][0]]
             p.axhline(y=n.sign(dataval)*n.log10(n.abs(dataval)),color='0.5',linewidth=2)
