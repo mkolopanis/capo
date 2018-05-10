@@ -359,15 +359,16 @@ for filename in args.files:
                                  EoR_MODEL_Delta2(redshift, pspec_dict['k']),
                                  'k', label='Fiducial 21cmFAST model')
             for _ax in pk_list:
-                _ax[gs_ind].plot(pspec_dict['kpl_fold'],
-                                 EoR_MODEL_Delta2(redshift, pspec_dict['k']) *
-                                 (2*np.pi**2) /
-                                 np.array(pspec_dict['k'].reshape(-1, 1))**3,
-                                 'k', label='Fiducial 21cmFAST model')
-                _ax[gs_ind].plot(-pspec_dict['kpl_fold'],
-                                 EoR_MODEL_Delta2(redshift, pspec_dict['k']) *
-                                 (2*np.pi**2) /
-                                 np.array(pspec_dict['k'].reshape(-1, 1))**3, 'k')
+                for inds in [k_vals > horizon/1.1]:
+                     _ax[gs_ind].plot(pspec_dict['kpl_fold'][inds],
+                                      EoR_MODEL_Delta2(redshift, pspec_dict['k'])[inds] *
+                                      (2*np.pi**2) /
+                                      np.array(pspec_dict['k'].reshape(-1, 1))[inds]**3,
+                                      'k', label='Fiducial 21cmFAST model')
+                     _ax[gs_ind].plot(-pspec_dict['kpl_fold'][inds],
+                                      EoR_MODEL_Delta2(redshift, pspec_dict['k'])[inds] *
+                                      (2*np.pi**2) /
+                                      np.array(pspec_dict['k'].reshape(-1, 1))[inds]**3, 'k')
 
 # set up some parameters to make the figures pretty
 # Loop over axes in each pk and delta 2 in case axes are added or deleted later
