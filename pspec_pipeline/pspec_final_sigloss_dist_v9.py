@@ -139,8 +139,8 @@ def smooth_dist(fold=True):
             data_dist_C = make_gauss(binsy_lin,n.mean(ys_sub_bin),n.std(ys_sub_bin))
             data_dist_I = make_gauss(binsy_lin,n.mean(ys_I_sub_bin),n.std(ys_I_sub_bin))
             # Multiply the P_in column by the prior
-            TC[:,sub_bin] = data_dist_C#*prior_factor(10**binsx_log)[sub_bin]#*jeffrey_prior[sub_bin]
-            TI[:,sub_bin] = data_dist_I#*prior_factor(10**binsx_log)[sub_bin]#*jeffrey_prior_I[sub_bin]
+            TC[:,sub_bin] = data_dist_C*prior_factor(10**binsx_log)[sub_bin]#*jeffrey_prior[sub_bin]
+            TI[:,sub_bin] = data_dist_I*prior_factor(10**binsx_log)[sub_bin]#*jeffrey_prior_I[sub_bin]
 
         # Save values to use for plotting sigloss plots
         if count == 0 and fold == True and kk == 8:
@@ -163,7 +163,7 @@ def smooth_dist(fold=True):
             p.xlim(binsx_log.min(), binsx_log.max())
             p.ylim(binsy_log.min(), binsy_log.max()); p.grid()
             p.subplot(122)
-            p.pcolormesh(binsx_log,binsy_log,TI,cmap='hot_r',vmax=0.05,vmin=0)
+            p.pcolormesh(binsx_log,binsy_log,n.log10(TI),cmap='hot_r',vmax=15,vmin=0)
             if fold == True and count == 0: dataval = file['pIv_fold'][n.where(ks==k)[0][0]]
             if fold == False and count == 0: dataval = file['pIv'][n.where(ks==k)[0][0]]
             if fold == True and count == 1: dataval = file['pIn_fold'][n.where(ks==k)[0][0]]
