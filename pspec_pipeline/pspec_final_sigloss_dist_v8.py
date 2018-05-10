@@ -81,7 +81,7 @@ def smooth_dist(fold=True):
             if opts.nosubtract: fn = 'pspec_sigloss_terms_nosubtract.npz'
             else: fn = 'pspec_sigloss_terms.npz'
             print "Saving",fn,"which contains data values for k =",k
-            n.savez(fn, k=k, pCv=file['pCv'][n.where(kpl==k)[0][0]], pIv=file['pIv'][n.where(kpl==k)[0][0]], Pins=Pins_fold[k], Pouts=Pouts_fold[k], Pouts_I=Pouts_I_fold[k], pCrs_fold=pCrs_fold[k], pCvs_Cr_fold=pCvs_Cr_fold[k], pCes_Cr_fold=pCes_Cr_fold[k], pCves_fold=pCves_fold[k], pIves_fold=pIves_fold[k])
+            n.savez(fn, k=k, pCv=file['pCv_fold'][n.where(kpl_fold==k)[0][0]], pIv=file['pIv_fold'][n.where(kpl_fold==k)[0][0]], Pins=Pins_fold[k], Pouts=Pouts_fold[k], Pouts_I=Pouts_I_fold[k], pCrs_fold=pCrs_fold[k], pCvs_Cr_fold=pCvs_Cr_fold[k], pCes_Cr_fold=pCes_Cr_fold[k], pCves_fold=pCves_fold[k], pIves_fold=pIves_fold[k])
         
         # Get bins and data for transfer curve
         bins_inj = binsy_log[len(binsy_log)/2:] # positive half of binsy_log will be used as bin boundaries for P_in
@@ -112,7 +112,7 @@ def smooth_dist(fold=True):
             # find distribution for weighted case
             kernel_C = scipy.stats.gaussian_kde(ys_sub_bin) 
             ratio = n.sqrt(n.cov(n.abs(ys_sub_bin)) / n.cov(ys_sub_bin))
-            factor = ratio * kernel_C.factor  
+            factor = ratio * kernel_C.factor
             kernel_C = scipy.stats.gaussian_kde(ys_sub_bin,bw_method=factor)
             data_dist_C = kernel_C(binsy_kde)
             # find distribution for unweighted case
