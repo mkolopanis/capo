@@ -73,6 +73,25 @@ def make_gauss(bins,mean,sigma):
     A = 1/(sigma*n.sqrt(2*n.pi))
     return A*n.exp((-1/2.)*((bins-mean)/sigma)**2) * bin_size(bins)
 
+# Compute Jeffrey prior
+def compute_jeffrey(xs,ys):
+    x,y_mean,y_std = [],[],[]
+    for i in range(xs.shape[0]): # loop over injections
+        x.append(xs[i][0])
+        y_mean.append(n.mean(ys[i]))
+        y_std.append(n.std(ys[i]))
+    x = n.array(x)
+    y_mean = n.array(y_mean)
+    y_std = n.array(y_std)
+    fit_mean = n.poly1d(n.polyfit(x,y_mean,2)) # fit polynomial
+    fit_std = n.poly1d(n.polyfit(x,y_std,2))
+    fit_mean_d = n.polyder(fit_mean, m=1) # derivative
+    fit_std_d = n.polyder(fit_std, m=1)
+    dsigma_dx = fit_std_d(x) # partial derivatives
+    dy_dx = fit_mean_d(x)
+    jeffrey = n.sqrt((1/y_std) * (2*(dsigma_dx)**2 + (dy_dx)**2))
+    return jeffrey
+
 # For all data points (full distributions), smooth the transfer curves for both the C and I cases using 1D KDE's per injection level
 def smooth_dist(fold=True):
     T_C = {}
@@ -108,7 +127,11 @@ def smooth_dist(fold=True):
         # Make empty 2D transfer curves that will hold distributions
         TC = n.zeros((len(binsy_log),len(binsx_log))) 
         TI = n.zeros((len(binsy_log),len(binsx_log)))
-        for sub_bin in range(len(binsx_log)): # loop over injection bins
+        # Compute Jeffrey prior
+        #jeffrey_prior = compute_jeffrey(xs,ys_C)
+        #jeffrey_prior_I = compute_jeffrey(xs,ys_I)
+        # loop over injections
+        for sub_bin in range(len(binsx_log)): 
             xs_sub_bin = xs[sub_bin] # P_in values for the injection bin
             ys_sub_bin = ys_C[sub_bin] # P_out values for the injection bin
             ys_I_sub_bin = ys_I[sub_bin]
@@ -116,9 +139,8 @@ def smooth_dist(fold=True):
             data_dist_C = make_gauss(binsy_lin,n.mean(ys_sub_bin),n.std(ys_sub_bin))
             data_dist_I = make_gauss(binsy_lin,n.mean(ys_I_sub_bin),n.std(ys_I_sub_bin))
             # Multiply the P_in column by the prior
-            #jeffrey_prior = n.load('jeffrey_prior.npz')['prior']
             TC[:,sub_bin] = data_dist_C#*prior_factor(10**binsx_log)[sub_bin]*jeffrey_prior[sub_bin]
-            TI[:,sub_bin] = data_dist_I#*prior_factor(10**binsx_log)[sub_bin]*jeffrey_prior[sub_bin]
+            TI[:,sub_bin] = data_dist_I#*prior_factor(10**binsx_log)[sub_bin]*jeffrey_prior_I[sub_bin]
 
         # Save values to use for plotting sigloss plots
         if count == 0 and fold == True and kk == 8:
