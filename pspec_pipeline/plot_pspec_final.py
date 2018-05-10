@@ -149,7 +149,7 @@ for filename in args.files:
 
     if args.analytical:
         if ('theory_noise' and 'theory_noise_delta2') in pspec_dict.keys():
-            print 'Using saved theory_noise and theory_noise_delta2 in pspec filez'
+            print 'Using saved theory_noise and theory_noise_delta2 in pspec file'
             k3pk_noise = 2*pspec_dict['theory_noise_delta2']
             pk_noise = 2*pspec_dict['theory_noise']
 
