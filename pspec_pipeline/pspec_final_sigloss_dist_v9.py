@@ -89,7 +89,7 @@ def compute_jeffrey(xs,ys):
     fit_std_d = n.polyder(fit_std, m=1)
     dsigma_dx = fit_std_d(x) # partial derivatives
     dy_dx = fit_mean_d(x)
-    jeffrey = n.sqrt((1/y_std) * (2*(dsigma_dx)**2 + (dy_dx)**2))
+    jeffrey = n.sqrt((1/y_std**2) * (2*(dsigma_dx)**2 + (dy_dx)**2))
     return jeffrey
 
 # For all data points (full distributions), smooth the transfer curves for both the C and I cases using 1D KDE's per injection level
@@ -129,7 +129,7 @@ def smooth_dist(fold=True):
         TI = n.zeros((len(binsy_log),len(binsx_log)))
         # Compute Jeffrey prior
         #jeffrey_prior = compute_jeffrey(xs,ys_C)
-        #jeffrey_prior_I = compute_jeffrey(xs,ys_I)
+        #compute_jeffrey(xs,ys_I)
         # loop over injections
         for sub_bin in range(len(binsx_log)): 
             xs_sub_bin = xs[sub_bin] # P_in values for the injection bin
