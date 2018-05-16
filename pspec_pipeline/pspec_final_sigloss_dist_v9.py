@@ -59,7 +59,7 @@ def bin_size(bins): # XXX approximation since they're just divided in two
 
 # Make bins (grid), which is used for sampling distributions
 def make_bins():
-    nbins = 101 # XXX hard-coded number of bins for P_out axis
+    nbins = 701 # XXX hard-coded number of bins for P_out axis
     dmax = max(n.max(Pins_fold.values()),n.max(pIs.values())) # maximum is determined from whichever is largest: EoR injection or "I" value
     dg = n.min(Pins_fold.values()) #1 # XXX artificially set based on starting P_in values
     grid = n.logspace(n.log10(dg),n.log10(dmax),nbins) # logspace sampling
@@ -128,8 +128,8 @@ def smooth_dist(fold=True):
         TC = n.zeros((len(binsy_log),len(binsx_log))) 
         TI = n.zeros((len(binsy_log),len(binsx_log)))
         # Compute Jeffrey prior
-        #jeffrey_prior = compute_jeffrey(xs,ys_C)
-        #compute_jeffrey(xs,ys_I)
+        jeffrey_prior = compute_jeffrey(xs,ys_C)
+        jeffrey_prior_I = compute_jeffrey(xs,ys_I)
         # loop over injections
         for sub_bin in range(len(binsx_log)): 
             xs_sub_bin = xs[sub_bin] # P_in values for the injection bin
@@ -172,7 +172,15 @@ def smooth_dist(fold=True):
             p.plot(n.sign(xs)*n.log10(n.abs(xs)), n.sign(ys_I)*n.log10(n.abs(ys_I)), 'k.')
             p.xlim(binsx_log.min(), binsx_log.max())
             p.ylim(binsy_log.min(), binsy_log.max())
-            p.tight_layout(); p.suptitle("k = " + str(k)); p.grid(); p.show()
+            p.tight_layout(); p.suptitle("k = " + str(k)); p.grid();
+            if count ==0:
+                if fold:
+                    p.savefig('sigloss_fig_fold_k_{0:.3f}.png'.format(k))
+                else:
+                    p.savefig('sigloss_fig_k_{0:.3f}.png'.format(k))
+                if kk==8:
+                    p.show()
+            p.close()
 
         T_C[k] = TC # populate dictionary
         T_I[k] = TI
@@ -420,7 +428,10 @@ for count in range(2):
             p.subplot(224)
             p.plot(binsx_log[k],new_pIs[k],'k-'); p.grid()
             p.xlim(xmin,xmax)
-            p.tight_layout(); p.suptitle("k = " + str(k)); p.show()
+            p.tight_layout(); p.suptitle("k = " + str(k));
+            #p.close()
+            if count ==0:
+                p.show()
 
     if count == 0: # data case
         pCv = pC; pCv_old = pC_old

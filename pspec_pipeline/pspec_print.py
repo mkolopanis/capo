@@ -56,7 +56,6 @@ for index, file in enumerate(files):
     nbls_g = pspec_dict['nbls_g']
     nlsts = len(pspec_dict['lsts']) * pspec_dict['inttime']
     nlsts /= pspec_dict['frf_inttime']
-    nlsts_g = pspec_dict['nlsts_g']
     if pspec_dict['frf_inttime'] == pspec_dict['inttime']:
         omega_eff = .74**2/.32
         # for capo analytical; from T1 of Parsons FRF paper
@@ -69,39 +68,47 @@ for index, file in enumerate(files):
     #print '\tNgps:', pspec_dict['ngps']
     #print '\tNdays:', cnt
     #print '\tNlstbins:', nlsts_g
-    S = sensitivity.Sense()
-    S.z = redshift
+    if 'theory_noise' and 'theory_noise_delta2' not in pspec_dict:
+        S = sensitivity.Sense()
+        S.z = redshift
 
-    #   Tsys
-    # S.Tsys = 551e3  #set to match 21cmsense exactly
-    # S.Tsys = 505e3 #Ali et al, at 164MHz
-    # set to match noise realization
-    S.Tsys = (200 + 180.*(freqs[index]/.180)**-2.55)*1e3
-    #print "Tsys = ", S.Tsys
+        #   Tsys
+        # S.Tsys = 551e3  #set to match 21cmsense exactly
+        # S.Tsys = 505e3 #Ali et al, at 164MHz
+        # set to match noise realization
+        S.Tsys = (200 + 180.*(freqs[index]/.180)**-2.55)*1e3
+        #print "Tsys = ", S.Tsys
 
-    S.t_int = inttime
-    S.Ndays = cnt  # effective number of days
-    S.Npols = 2
-    S.Nseps = 3
-    S.Nblgroups = pspec_dict['ngps']
-    S.Omega_eff = omega_eff
-    # use the FRF weighted beams listed in
-    # T1 of Parsons etal beam sculpting paper
-    k = pspec_dict['k']
-    S.Nbls = pspec_dict['nbls']
-    S.Nlstbins = nlsts_g
-    S.calc()
+        S.t_int = inttime
+        S.Ndays = cnt  # effective number of days
+        S.Npols = 2
+        S.Nseps = 3
+        S.Nblgroups = pspec_dict['ngps']
+        S.Omega_eff = omega_eff
+        # use the FRF weighted beams listed in
+        # T1 of Parsons etal beam sculpting paper
+        k = pspec_dict['k']
+        S.Nbls = pspec_dict['nbls']
+        S.Nlsthours = nlsts
+        S.calc()
+
+        pk_noise = {k:S.P_N for k in pspec_dict['k']}
+        delta2_noise = {k:S.Delta2_N(k) for k in pspec_dict['k']}
+    else:
+        pk_noise = {k:pspec_dict['theory_noise'][kk] for kk,k in enumerate(pspec_dict['k'])}
+        delta2_noise = {k:pspec_dict['theory_noise_delta2'][kk] for kk,k in enumerate(pspec_dict['k'])}
     #print 'Beggining Table Data: '
     #print '\n'
     for k in args.kmags:
         k_ind = np.argmin(np.abs(k - f['k']))
+        k_val = f['k'][k_ind]
         try: # find from signal loss results
-            delta2_value = pspec_dict['pC_fold'][k_ind]
-            bootstrap_error = pspec_dict['pC_fold_up'][k_ind]
+            delta2_value = pspec_dict['pI_fold'][k_ind]
+            bootstrap_error = pspec_dict['pI_fold_up'][k_ind]
         except: # find from pspec_2d_to_1d results
             fold_factor = pspec_dict['k'][k_ind]**3/(2*np.pi**2)
-            delta2_value = pspec_dict['pCv_fold'][k_ind]*fold_factor
-            bootstrap_error = pspec_dict['pCv_fold_err'][k_ind]*2*fold_factor
+            delta2_value = pspec_dict['pIv_fold_old'][k_ind]*fold_factor
+            bootstrap_error = pspec_dict['pIv_fold_err_old'][k_ind]*2*fold_factor
 
         # Formatting here for a LaTEX table
         # Need to print:
@@ -110,9 +117,9 @@ for index, file in enumerate(files):
         print k, '&',
         print r(redshift), '&',
         print r(delta2_value), '&',
-        print '$\pm$ '+  r(S.Delta2_N(k)*2), '&',
-        print r(delta2_value/(S.Delta2_N(k))), '&',
-        if delta2_value - (S.Delta2_N(k)*2) > 0:
+        print '$\pm$ '+  r(delta2_noise[k_val]*2), '&',
+        print r(delta2_value/(delta2_noise[k_val])), '&',
+        if delta2_value - (delta2_noise[k_val]*2) > 0:
             print 'Det', '&',
         else:
             print 'ULim', '&',

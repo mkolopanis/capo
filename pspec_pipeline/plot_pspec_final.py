@@ -431,10 +431,10 @@ for ax_set in pk_list:
 # round up the power of 10 and add 1
 # this will set the ymax value to 10 * the highest value rounded up
 # across all plots of each type
-max_val_d2 = np.ceil(np.log10(max_d2))
+max_val_d2 = np.ceil(np.log10(max_d2)) +1
 ymax_d2 = np.power(10., max_val_d2)
 
-max_val_pk = np.ceil(np.log10(max_pk))
+max_val_pk = np.ceil(np.log10(max_pk)) +1 
 ymax_pk = np.power(10., max_val_pk)
 
 if ymax_d2 > ymax_pk:  # use highest ymax for both delta^2 and p(k) plots, so that they're both the same
