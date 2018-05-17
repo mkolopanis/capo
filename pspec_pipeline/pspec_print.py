@@ -100,8 +100,8 @@ for index, file in enumerate(files):
     #print 'Beggining Table Data: '
     #print '\n'
     for k in args.kmags:
-        k_ind = np.argmin(np.abs(k - f['k']))
-        k_val = f['k'][k_ind]
+        k_ind = np.argmin(np.abs(k - pspec_dict['k']))
+        k_val = pspec_dict['k'][k_ind]
         try: # find from signal loss results
             delta2_value = pspec_dict['pI_fold'][k_ind]
             bootstrap_error = pspec_dict['pI_fold_up'][k_ind]
@@ -114,6 +114,7 @@ for index, file in enumerate(files):
         # Need to print:
         # k, redshift, delta^2, theoretical error, theory sigma, (Det/Ulim)
         #                       bootstrap error, bootstrap sigma, (Det/Ulim)
+        #from IPython import embed; embed()
         print k, '&',
         print r(redshift), '&',
         print r(delta2_value), '&',
