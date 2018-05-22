@@ -90,7 +90,10 @@ def compute_jeffrey(xs,ys):
     dsigma_dx = fit_std_d(x) # partial derivatives
     dy_dx = fit_mean_d(x)
     jeffrey = n.sqrt((1/y_std**2) * (2*(dsigma_dx)**2 + (dy_dx)**2))
-    return jeffrey
+    # average 10% of all points together to smooth
+    num_samps = int(len(x)*.1) # XXX hard-coded 0.1
+    jeffrey_smooth = n.convolve(jeffrey, n.ones(num_samps)/num_samps, mode='same')
+    return jeffrey_smooth
 
 # For all data points (full distributions), smooth the transfer curves for both the C and I cases using 1D KDE's per injection level
 def smooth_dist(fold=True):
