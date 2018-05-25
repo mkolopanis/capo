@@ -102,7 +102,7 @@ pkhi=1e11#1e13
 plt.figure(figsize=(12,6))
 plt.subplot(121)
 plt.plot(xs,ys,'k.')
-plt.pcolormesh(10**binsx,binsy_full,M,cmap='hot_r',vmin=0,vmax=0.5)
+plt.pcolormesh(10**binsx,binsy_full,M,cmap='hot_r',vmin=0,vmax=0.02)
 plt.plot([pklo, pkhi], [pklo, pkhi], 'k:')  # diagonal line
 plt.plot([pklo, pkhi], [-pklo,-pkhi], 'k:')  # diagonal line
 #plt.hlines(y=n.abs(file_pts[k_pts_ind]),xmin=pklo,xmax=pkhi,color='0.5',linewidth=3) # peak of original distribution
@@ -124,7 +124,7 @@ plt.subplot(122)
 #plt.hlines(y=file_pts_I[k_pts_ind],xmin=pklo,xmax=pkhi,color='0.5',linewidth=3)
 plt.hlines(y=pI,xmin=pklo,xmax=pkhi,color='0.5',linewidth=3)
 plt.plot(xs,ysI,'k.')
-plt.pcolormesh(10**binsx,binsy_full,M_I,cmap='hot_r',vmin=0,vmax=0.5)
+plt.pcolormesh(10**binsx,binsy_full,M_I,cmap='hot_r',vmin=0,vmax=0.02)
 plt.plot([pklo, pkhi], [pklo, pkhi], 'k:')  # diagonal line
 plt.plot([pklo, pkhi], [-pklo,-pkhi], 'k:')  # diagonal line
 plt.yscale('symlog',linthreshy=1e2)

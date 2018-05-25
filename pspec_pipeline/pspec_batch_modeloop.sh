@@ -67,7 +67,7 @@ FRF='--frf'
 LMODE='' #'--lmode=12'
 CHANGEC='--changeC'
 NBOOT=20 
-NGPS=5
+NGPS=1 # no groups!
 EVEN_FILES='/data4/paper/ctc/PSA64/even/*uvGAL'
 ODD_FILES='/data4/paper/ctc/PSA64/odd/*uvGAL'
 CALFILE='psa6240_v003'
@@ -76,6 +76,7 @@ SEP='0,1'
 RA='0.5_8.6'
 RMBLS=''
 TRCVR=144
+NBLS=10
 EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
 DIRNAME=$2
@@ -88,11 +89,11 @@ mkdir ${DIRNAME}
 echo Making Directory ${DIRNAME}
 
 # Range of added identity:
-for mode_num in `python -c "import numpy; print ' '.join(map(str,numpy.logspace(-4,0,20)))"` ; do
+#for mode_num in `python -c "import numpy; print ' '.join(map(str,numpy.logspace(-4,0,20)))"` ; do
 # Range of projected modes:
-#for mode_num in `python -c "import numpy; print ' '.join(map(str,numpy.arange(0,22,1)))"` ; do
-    #name_dir=project_${mode_num}_modes
-    name_dir=add_${mode_num}_identity
+for mode_num in `python -c "import numpy; print ' '.join(map(str,numpy.arange(0,22,1)))"` ; do
+    name_dir=project_${mode_num}_modes
+    #name_dir=add_${mode_num}_identity
     #mkdir -p ${DIRNAME}/${name_dir}
     out_dir=${name_dir}/inject_sep${SEP}
     echo MODE_NUM=${mode_num}
@@ -104,10 +105,10 @@ for mode_num in `python -c "import numpy; print ' '.join(map(str,numpy.logspace(
         echo SIGNAL_LEVEL=${inject}
 
         # Run once for PS points (no bootstrapping)    
-        ~/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/${out_dir_pspec} -b 1 --NGPS=${NGPS} --Trcvr=${TRCVR} --rmbls=${RMBLS} --mode_num=${mode_num} ${EVEN_FILES} ${ODD_FILES}
+        ~/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/${out_dir_pspec} -b 1 --NGPS=${NGPS} --Trcvr=${TRCVR} --rmbls=${RMBLS} --mode_num=${mode_num} --nbls=${NBLS} ${EVEN_FILES} ${ODD_FILES}
         
         # Bootstrap for errors
-        ~/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/${out_dir_pspec} -b ${NBOOT} --NGPS=${NGPS} --Trcvr=${TRCVR} --rmbls=${RMBLS} --mode_num=${mode_num} ${EVEN_FILES} ${ODD_FILES}
+        ~/capo/pspec_pipeline/pspec_oqe_2d.py ${LMODE} ${CHANGEC} --window=${WINDOW} -a cross -p ${POL} -c ${CHAN} -C ${CALFILE} -i ${inject} --weight=${weight} ${FRF} --output ${DIRNAME}/${out_dir_pspec} -b ${NBOOT} --NGPS=${NGPS} --Trcvr=${TRCVR} --rmbls=${RMBLS} --mode_num=${mode_num} --nbls=${NBLS} ${EVEN_FILES} ${ODD_FILES}
     
         # Stage 2: pspec_2d_to_1d.py
         ~/capo/pspec_pipeline/pspec_2d_to_1d.py \
@@ -115,9 +116,9 @@ for mode_num in `python -c "import numpy; print ' '.join(map(str,numpy.logspace(
        
     done
         
-    # Stage 3: pspec_final_sigloss_dist_v3.py
+    # Stage 3: pspec_final_sigloss_dist_v9.py
     cd ${DIRNAME}/${name_dir}
-    ~/capo/pspec_pipeline/pspec_final_sigloss_dist_v8.py --sep=${SEP} --nosubtract
+    ~/capo/pspec_pipeline/pspec_final_sigloss_dist_v9.py --sep=${SEP} --nosubtract
     cd ../..
 
 done

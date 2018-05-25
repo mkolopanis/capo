@@ -61,7 +61,7 @@ def bin_size(bins): # XXX approximation since they're just divided in two
 def make_bins():
     nbins = 701 # XXX hard-coded number of bins for P_out axis
     dmax = max(n.max(Pins_fold.values()),n.max(pIs.values())) # maximum is determined from whichever is largest: EoR injection or "I" value
-    dg = n.min(Pins_fold.values()) #1 # XXX artificially set based on starting P_in values
+    dg = min(1,n.min(Pins_fold.values())) # minimum is determined from whichever is smallest: 1 or starting P_in value
     grid = n.logspace(n.log10(dg),n.log10(dmax),nbins) # logspace sampling
     binsy_log = n.log10(grid) # log-space
     binsy_lin = n.concatenate((-10**binsy_log[::-1],10**binsy_log)) # real numbers (not log-space)
@@ -90,7 +90,10 @@ def compute_jeffrey(xs,ys):
     dsigma_dx = fit_std_d(x) # partial derivatives
     dy_dx = fit_mean_d(x)
     jeffrey = n.sqrt((1/y_std**2) * (2*(dsigma_dx)**2 + (dy_dx)**2))
-    return jeffrey
+    # average 10% of all points together to smooth
+    num_samps = int(len(x)*.1) # XXX hard-coded 0.1
+    jeffrey_smooth = n.convolve(jeffrey, n.ones(num_samps)/num_samps, mode='same')
+    return jeffrey_smooth
 
 # For all data points (full distributions), smooth the transfer curves for both the C and I cases using 1D KDE's per injection level
 def smooth_dist(fold=True):
@@ -139,8 +142,8 @@ def smooth_dist(fold=True):
             data_dist_C = make_gauss(binsy_lin,n.mean(ys_sub_bin),n.std(ys_sub_bin))
             data_dist_I = make_gauss(binsy_lin,n.mean(ys_I_sub_bin),n.std(ys_I_sub_bin))
             # Multiply the P_in column by the prior
-            TC[:,sub_bin] = data_dist_C#*prior_factor(10**binsx_log)[sub_bin]*jeffrey_prior[sub_bin]
-            TI[:,sub_bin] = data_dist_I#*prior_factor(10**binsx_log)[sub_bin]*jeffrey_prior_I[sub_bin]
+            TC[:,sub_bin] = data_dist_C*prior_factor(10**binsx_log)[sub_bin]*jeffrey_prior[sub_bin]
+            TI[:,sub_bin] = data_dist_I*prior_factor(10**binsx_log)[sub_bin]*jeffrey_prior_I[sub_bin]
 
         # Save values to use for plotting sigloss plots
         if count == 0 and fold == True and kk == 8:
@@ -153,7 +156,7 @@ def smooth_dist(fold=True):
         if opts.plot:
             p.figure(figsize=(10,6))
             p.subplot(121)
-            p.pcolormesh(binsx_log,binsy_log,TC,cmap='hot_r',vmax=0.05,vmin=0)
+            p.pcolormesh(binsx_log,binsy_log,TC,cmap='hot_r',vmax=0.02,vmin=0)
             if fold == True and count == 0: dataval = file['pCv_fold'][n.where(ks==k)[0][0]]
             if fold == False and count == 0: dataval = file['pCv'][n.where(ks==k)[0][0]]
             if fold == True and count == 1: dataval = file['pCn_fold'][n.where(ks==k)[0][0]]
@@ -163,7 +166,7 @@ def smooth_dist(fold=True):
             p.xlim(binsx_log.min(), binsx_log.max())
             p.ylim(binsy_log.min(), binsy_log.max()); p.grid()
             p.subplot(122)
-            p.pcolormesh(binsx_log,binsy_log,TI,cmap='hot_r',vmax=0.05,vmin=0)
+            p.pcolormesh(binsx_log,binsy_log,TI,cmap='hot_r',vmax=0.02,vmin=0)
             if fold == True and count == 0: dataval = file['pIv_fold'][n.where(ks==k)[0][0]]
             if fold == False and count == 0: dataval = file['pIv'][n.where(ks==k)[0][0]]
             if fold == True and count == 1: dataval = file['pIn_fold'][n.where(ks==k)[0][0]]
@@ -409,14 +412,14 @@ for count in range(2):
             p.figure(figsize=(10,10))
             xmin,xmax = 0,16
             p.subplot(221)
-            p.pcolormesh(binsx_log[k],binsy_log,T_C[k],cmap='hot_r',vmin=0,vmax=0.05)
+            p.pcolormesh(binsx_log[k],binsy_log,T_C[k],cmap='hot_r',vmin=0,vmax=0.02)
             if count == 0: dataval = file['pCv'][n.where(kpl==k)[0][0]]
             if count == 1: dataval = file['pCn'][n.where(kpl==k)[0][0]]
             p.axhline(y=n.sign(dataval)*n.log10(n.abs(dataval)),color='0.5',linewidth=2)
             p.xlim(xmin,xmax)
             p.ylim(binsy_log.min(), binsy_log.max()); p.grid()
             p.subplot(222)
-            p.pcolormesh(binsx_log[k],binsy_log,T_I[k],cmap='hot_r',vmin=0,vmax=0.5)
+            p.pcolormesh(binsx_log[k],binsy_log,T_I[k],cmap='hot_r',vmin=0,vmax=0.02)
             if count == 0: dataval = file['pIv'][n.where(kpl==k)[0][0]]
             if count == 1: dataval = file['pIn'][n.where(kpl==k)[0][0]]
             p.axhline(y=n.sign(dataval)*n.log10(n.abs(dataval)),color='0.5',linewidth=2)
