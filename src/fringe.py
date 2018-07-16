@@ -168,7 +168,7 @@ def apply_frf(aa, data, wgts, i, j, pol='I', firs=None, alietal=False,
     for ch in xrange(nchan):
         #datf[:,ch] = n.convolve(data[:,ch], fir[ch,:], mode='same')
         #wgtf[:,ch] = n.convolve(wgts[:,ch], n.abs(fir[ch,:]), mode='same')
-        datf[:,ch] = n.convolve(data[:,ch]*wgts[:,ch], n.conj(fir[ch,:]), mode='same')
-        wgtf[:,ch] = n.convolve(wgts[:,ch], n.abs(n.conj(fir[ch,:])), mode='same')
+        datf[:,ch] = n.convolve(data[:,ch]*wgts[:,ch], fir[ch,:], mode='same')
+        wgtf[:,ch] = n.convolve(wgts[:,ch], n.abs(fir[ch,:]), mode='same')
     datf = n.where(wgtf > 0, datf/wgtf, 0)
     return datf, wgtf, tbins, firs
