@@ -2,7 +2,7 @@
 
 import aipy as a
 import capo.arp as arp
-import capo.frf_conv as fringe
+from capo import fringe
 import capo.zsa as zsa
 import capo as C
 import numpy as n
