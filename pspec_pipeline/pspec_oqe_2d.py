@@ -12,7 +12,7 @@ import glob
 import optparse
 import sys
 import random
-from capo import zsa, oqe, cosmo_units, frf_conv as fringe
+from capo import zsa, oqe, cosmo_units, fringe
 import capo
 import time
 
