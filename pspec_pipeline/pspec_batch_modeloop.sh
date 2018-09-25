@@ -68,15 +68,15 @@ LMODE='' #'--lmode=12'
 CHANGEC='--changeC'
 NBOOT=20 
 NGPS=1 # no groups!
-EVEN_FILES='/data4/paper/ctc/PSA64/even/*uvGAL'
-ODD_FILES='/data4/paper/ctc/PSA64/odd/*uvGAL'
+EVEN_FILES='/data4/paper/ctc/PSA64/even/*uvGAL2'
+ODD_FILES='/data4/paper/ctc/PSA64/odd/*uvGAL2'
 CALFILE='psa6240_v003'
 CHAN='95_115'
 SEP='0,1'
 RA='0.5_8.6'
-RMBLS=''
 TRCVR=144
 NBLS=10
+RMBLS='3_25,16_62,3_10,31_45,15_16'
 EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
 DIRNAME=$2
