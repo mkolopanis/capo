@@ -75,15 +75,15 @@ CHANGEC='' #'--changeC'
 MODE_NUM='0.04' # percentage of Tr(C) added to C for regularization if --changeC
 NBOOT=20 
 NGPS=1
-EVEN_FILES='/data4/paper/ctc/PSA64/even/*uvGAL'
-ODD_FILES='/data4/paper/ctc/PSA64/odd/*uvGAL'
+EVEN_FILES='/data4/paper/ctc/PSA64/even/*uvGAL2'
+ODD_FILES='/data4/paper/ctc/PSA64/odd/*uvGAL2'
 CALFILE='psa6240_v003'
 CHAN='95_115'
 SEP='0,1'
 RA='0.5_8.6'
 TRCVR=144
 NBLS=10 #'all'
-RMBLS=''
+RMBLS='3_25,16_62,3_10,31_45,15_16'
 EVEN_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${EVEN_FILES[@]}`
 ODD_FILES=`lst_select.py -C ${CALFILE} --ra=${RA} ${ODD_FILES[@]}`
 DIRNAME=$2
